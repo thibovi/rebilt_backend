@@ -28,67 +28,11 @@ const ProductSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  sizeOptions: {
+  colors: {
     type: [String],
     required: true,
   },
   images: {
-    type: [String],
-    required: true,
-  },
-  lacesColor: {
-    type: [String],
-    required: true,
-  },
-  lacesTexture: {
-    type: [String],
-    required: true,
-  },
-  soleBottomColor: {
-    type: [String],
-    required: true,
-  },
-  soleBottomTexture: {
-    type: [String],
-    required: true,
-  },
-  soleTopColor: {
-    type: [String],
-    required: true,
-  },
-  soleTopTexture: {
-    type: [String],
-    required: true,
-  },
-  insideColor: {
-    type: [String],
-    required: true,
-  },
-  insideTexture: {
-    type: [String],
-    required: true,
-  },
-  outside1Color: {
-    type: [String],
-    required: true,
-  },
-  outside1Texture: {
-    type: [String],
-    required: true,
-  },
-  outside2Color: {
-    type: [String],
-    required: true,
-  },
-  outside2Texture: {
-    type: [String],
-    required: true,
-  },
-  outside3Color: {
-    type: [String],
-    required: true,
-  },
-  outside3Texture: {
     type: [String],
     required: true,
   },

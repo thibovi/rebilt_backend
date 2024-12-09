@@ -11,6 +11,7 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+// Create Product
 const create = async (req, res) => {
   try {
     // Extracting product data from the request body
@@ -21,22 +22,8 @@ const create = async (req, res) => {
       typeOfProduct,
       description,
       brand,
-      sizeOptions,
-      images,
-      lacesColor,
-      lacesTexture,
-      soleBottomColor,
-      soleBottomTexture,
-      soleTopColor,
-      soleTopTexture,
-      insideColor,
-      insideTexture,
-      outside1Color,
-      outside1Texture,
-      outside2Color,
-      outside2Texture,
-      outside3Color,
-      outside3Texture,
+      colors, // Add colors
+      images, // Add images
     } = req.body;
 
     // Ensure all required fields are present
@@ -79,7 +66,7 @@ const create = async (req, res) => {
     }
 
     // Define the folder path structure
-    const cloudinaryFolder = `Odette Lunettes/Products/${productName}`;
+    const cloudinaryFolder = `Products/${productName}`;
 
     let uploadedImages = [];
 
@@ -93,7 +80,7 @@ const create = async (req, res) => {
       } else {
         // If it's not a valid URL, we upload the image to Cloudinary
         const result = await cloudinary.uploader.upload(image, {
-          folder: cloudinaryFolder, // Place the image inside Odette Lunettes/Products/{productName}
+          folder: cloudinaryFolder, // Place the image inside Products/{productName}
           resource_type: "auto", // Automatically detect the resource type
           format: "png", // Default to PNG format
           transformation: [
@@ -112,22 +99,8 @@ const create = async (req, res) => {
       typeOfProduct,
       description,
       brand,
-      sizeOptions,
+      colors, // Store the array of colors
       images: uploadedImages,
-      lacesColor,
-      lacesTexture,
-      soleBottomColor,
-      soleBottomTexture,
-      soleTopColor,
-      soleTopTexture,
-      insideColor,
-      insideTexture,
-      outside1Color,
-      outside1Texture,
-      outside2Color,
-      outside2Texture,
-      outside3Color,
-      outside3Texture,
       partnerId, // associate the partnerId with the product
     });
 
@@ -229,6 +202,7 @@ function validateColorArray(colorArray, fieldName) {
   });
 }
 
+// Update Product
 const update = async (req, res) => {
   const { id } = req.params;
   const product = req.body.product;
@@ -244,25 +218,11 @@ const update = async (req, res) => {
     productCode,
     productName,
     productPrice,
-    typeOfProduct = "sneaker",
+    typeOfProduct,
     description,
     brand,
-    sizeOptions,
-    images = [],
-    lacesColor,
-    lacesTexture,
-    soleBottomColor,
-    soleBottomTexture,
-    soleTopColor,
-    soleTopTexture,
-    insideColor,
-    insideTexture,
-    outside1Color,
-    outside1Texture,
-    outside2Color,
-    outside2Texture,
-    outside3Color,
-    outside3Texture,
+    colors, // Added colors
+    images = [], // Added images
   } = product;
 
   if (
@@ -271,22 +231,7 @@ const update = async (req, res) => {
     !productPrice ||
     !description ||
     !brand ||
-    !sizeOptions ||
-    !lacesColor ||
-    !lacesTexture ||
-    !soleBottomColor ||
-    !soleBottomTexture ||
-    !soleTopColor ||
-    !soleTopTexture ||
-    !insideColor ||
-    !insideTexture ||
-    !outside1Color ||
-    !outside1Texture ||
-    !outside1Texture ||
-    !outside2Color ||
-    !outside2Texture ||
-    !outside3Color ||
-    !outside3Texture
+    !colors
   ) {
     return res.status(400).json({
       status: "error",
@@ -295,15 +240,6 @@ const update = async (req, res) => {
   }
 
   try {
-    // Valideer de kleurarrays
-    validateColorArray(lacesColor, "lacesColor");
-    validateColorArray(soleBottomColor, "soleBottomColor");
-    validateColorArray(soleTopColor, "soleTopColor");
-    validateColorArray(insideColor, "insideColor");
-    validateColorArray(outside1Color, "outside1Color");
-    validateColorArray(outside2Color, "outside2Color");
-    validateColorArray(outside3Color, "outside3Color");
-
     let uploadedImages = [];
     for (const image of images) {
       if (
@@ -312,15 +248,13 @@ const update = async (req, res) => {
       ) {
         uploadedImages.push(image);
       } else {
-        // Zorg ervoor dat image een geldige URL is of een string die je kunt uploaden naar Cloudinary
-        // Als de afbeelding geen geldige Cloudinary-URL is (bijvoorbeeld een lokaal bestandspad of andere URL), upload deze dan naar Cloudinary
         const result = await cloudinary.uploader.upload(image, {
-          folder: "products", // Nieuwe map 'products' waar je afbeeldingen wilt opslaan
-          resource_type: "auto", // Cloudinary detecteert automatisch het bestandstype (afbeelding, video, etc.)
-          format: "png", // Bestandsformaat, je kunt dit aanpassen afhankelijk van je behoeften
+          folder: "products", // Cloudinary folder for images
+          resource_type: "auto", // Automatically detect the resource type
+          format: "png", // Use PNG format
         });
 
-        uploadedImages.push(result.secure_url); // Voeg de Cloudinary URL van de afbeelding toe aan de lijst van geüploade afbeeldingen
+        uploadedImages.push(result.secure_url); // Store Cloudinary URL
       }
     }
 
@@ -333,22 +267,8 @@ const update = async (req, res) => {
         typeOfProduct,
         description,
         brand,
-        sizeOptions,
-        images: uploadedImages,
-        lacesColor,
-        lacesTexture,
-        soleBottomColor,
-        soleBottomTexture,
-        soleTopColor,
-        soleTopTexture,
-        insideColor,
-        insideTexture,
-        outside1Color,
-        outside1Texture,
-        outside2Color,
-        outside2Texture,
-        outside3Color,
-        outside3Texture,
+        colors, // Store colors array
+        images: uploadedImages, // Store uploaded image URLs
       },
       { new: true, runValidators: true }
     );
