@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 const Product = require("../../../models/api/v1/Product");
-require("dotenv").config(); // Zorg ervoor dat je dotenv geladen is
+require("dotenv").config();
 const cloudinary = require("cloudinary").v2;
 const mongoose = require("mongoose");
 
@@ -78,6 +78,32 @@ const create = async (req, res) => {
         .json({ message: "Token does not contain valid companyId" });
     }
 
+    // Define the folder path structure
+    const cloudinaryFolder = `Odette Lunettes/Products/${productName}`;
+
+    let uploadedImages = [];
+
+    // Process the images
+    for (const image of images) {
+      if (
+        typeof image === "string" &&
+        image.startsWith("https://res.cloudinary.com")
+      ) {
+        uploadedImages.push(image); // Already a valid Cloudinary URL
+      } else {
+        // If it's not a valid URL, we upload the image to Cloudinary
+        const result = await cloudinary.uploader.upload(image, {
+          folder: cloudinaryFolder, // Place the image inside Odette Lunettes/Products/{productName}
+          resource_type: "auto", // Automatically detect the resource type
+          format: "png", // Default to PNG format
+          transformation: [
+            { width: 1024, height: 1024, crop: "limit" }, // Resize to fit within 1024x1024 pixels
+          ],
+        });
+        uploadedImages.push(result.secure_url); // Get the URL of the uploaded image
+      }
+    }
+
     // Create a new product object
     const newProduct = new Product({
       productCode,
@@ -87,7 +113,7 @@ const create = async (req, res) => {
       description,
       brand,
       sizeOptions,
-      images,
+      images: uploadedImages,
       lacesColor,
       lacesTexture,
       soleBottomColor,
@@ -287,12 +313,14 @@ const update = async (req, res) => {
         uploadedImages.push(image);
       } else {
         // Zorg ervoor dat image een geldige URL is of een string die je kunt uploaden naar Cloudinary
+        // Als de afbeelding geen geldige Cloudinary-URL is (bijvoorbeeld een lokaal bestandspad of andere URL), upload deze dan naar Cloudinary
         const result = await cloudinary.uploader.upload(image, {
-          folder: "Odette Lunettes",
-          resource_type: "auto",
-          format: "png",
+          folder: "products", // Nieuwe map 'products' waar je afbeeldingen wilt opslaan
+          resource_type: "auto", // Cloudinary detecteert automatisch het bestandstype (afbeelding, video, etc.)
+          format: "png", // Bestandsformaat, je kunt dit aanpassen afhankelijk van je behoeften
         });
-        uploadedImages.push(result.secure_url);
+
+        uploadedImages.push(result.secure_url); // Voeg de Cloudinary URL van de afbeelding toe aan de lijst van geüploade afbeeldingen
       }
     }
 
