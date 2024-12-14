@@ -20,6 +20,11 @@ const ConfigurationSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  partnerId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Partner",
+    required: true,
+  },
 });
 
 const Configuration = mongoose.model("Configuration", ConfigurationSchema);
