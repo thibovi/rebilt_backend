@@ -33,6 +33,8 @@ const userRouter = require("./routes/api/v1/users");
 const productRouter = require("./routes/api/v1/products");
 const houseStyleRouter = require("./routes/api/v1/houseStyle");
 const orderRouter = require("./routes/api/v1/orders");
+const categoryRouter = require("./routes/api/v1/categories"); // Voeg deze import toe
+const configurationRouter = require("./routes/api/v1/configurations"); // Voeg deze import toe
 
 // View engine instellen
 app.set("views", path.join(__dirname, "views"));
@@ -44,21 +46,20 @@ app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static(path.join(__dirname, "public"))); // Zorg ervoor dat je statische bestanden goed zijn geconfigureerd
 
-// API-routes
 app.use("/api/v1/partners", partnerRouter);
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/products", productRouter);
 app.use("/api/v1/houseStyle", houseStyleRouter);
 app.use("/api/v1/orders", orderRouter);
+app.use("/api/v1/categories", categoryRouter); // Voeg deze route toe
+app.use("/api/v1/configurations", configurationRouter); // Voeg deze route toe
 
-// Foutafhandeling voor 404
 app.use(function (req, res, next) {
   next(createError(404));
 });
 
-// Algemene foutafhandeling
 app.use(function (err, req, res, next) {
   res.locals.message = err.message;
   res.locals.error = req.app.get("env") === "development" ? err : {};
@@ -66,7 +67,6 @@ app.use(function (err, req, res, next) {
   res.render("error");
 });
 
-// Server starten
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });

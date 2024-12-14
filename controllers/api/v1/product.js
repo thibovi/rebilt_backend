@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const Product = require("../../../models/api/v1/Product");
+const Configuration = require("../../../models/api/v1/Configuration");
 require("dotenv").config();
 const cloudinary = require("cloudinary").v2;
 const mongoose = require("mongoose");
@@ -11,53 +12,65 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+// Function to upload image to Cloudinary
+const uploadImageToCloudinary = async (image, folder) => {
+  return new Promise((resolve, reject) => {
+    cloudinary.uploader.upload(image, { folder: folder }, (error, result) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(result.secure_url); // Return the URL of the uploaded image
+      }
+    });
+  });
+};
+
 // Create Product
 const create = async (req, res) => {
   try {
-    // Extracting product data from the request body
     const {
       productCode,
       productName,
       productPrice,
-      typeOfProduct,
+      subType,
+      category, // Add category here
       description,
       brand,
-      colors, // Add colors
-      images, // Add images
+      images = [],
+      configurations = [],
     } = req.body;
 
-    // Ensure all required fields are present
+    // Validate required fields
     if (
       !productCode ||
       !productName ||
       !productPrice ||
+      !category || // Ensure category is provided
+      !subType ||
       !description ||
       !brand
     ) {
       return res.status(400).json({
         message:
-          "Missing required fields: productCode, productName, productPrice, description, brand",
+          "Missing required fields: productCode, productName, productPrice, category, subType, description, brand",
       });
     }
 
-    // Extract token from Authorization header
-    const token = req.headers.authorization?.split(" ")[1]; // Expecting "Bearer <token>"
-
+    // Token validation
+    const token = req.headers.authorization?.split(" ")[1];
     if (!token) {
       return res
         .status(401)
         .json({ message: "No token provided, authorization required" });
     }
 
-    // Verify and decode the JWT token
     let decoded;
     try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET); // Verify using the secret key
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
     } catch (err) {
       return res.status(401).json({ message: "Invalid or expired token" });
     }
 
-    // Extract partnerId from the decoded token
     const partnerId = decoded.companyId;
     if (!partnerId) {
       return res
@@ -65,53 +78,34 @@ const create = async (req, res) => {
         .json({ message: "Token does not contain valid companyId" });
     }
 
-    // Define the folder path structure
+    // Process images
     const cloudinaryFolder = `Products/${productName}`;
+    const uploadedImages = await Promise.all(
+      images.map((image) => uploadImageToCloudinary(image, cloudinaryFolder))
+    );
 
-    let uploadedImages = [];
+    // Fetch the actual configuration documents
+    const configurationDocuments = await Configuration.find({
+      _id: { $in: configurations },
+    });
 
-    // Process the images
-    for (const image of images) {
-      if (
-        typeof image === "string" &&
-        image.startsWith("https://res.cloudinary.com")
-      ) {
-        uploadedImages.push(image); // Already a valid Cloudinary URL
-      } else {
-        // If it's not a valid URL, we upload the image to Cloudinary
-        const result = await cloudinary.uploader.upload(image, {
-          folder: cloudinaryFolder, // Place the image inside Products/{productName}
-          resource_type: "auto", // Automatically detect the resource type
-          format: "png", // Default to PNG format
-          transformation: [
-            { width: 1024, height: 1024, crop: "limit" }, // Resize to fit within 1024x1024 pixels
-          ],
-        });
-        uploadedImages.push(result.secure_url); // Get the URL of the uploaded image
-      }
-    }
-
-    // Create a new product object
+    // Create the product
     const newProduct = new Product({
       productCode,
       productName,
       productPrice,
-      typeOfProduct,
+      subType,
+      category, // Include the category in the product creation
       description,
       brand,
-      colors, // Store the array of colors
       images: uploadedImages,
-      partnerId, // associate the partnerId with the product
+      partnerId,
+      configurations: configurationDocuments.map((config) => config._id),
     });
 
-    // Save the new product to the database
+    // Save and return response
     await newProduct.save();
-
-    // Respond with the created product
-    res.status(201).json({
-      status: "success",
-      data: newProduct,
-    });
+    res.status(201).json({ status: "success", data: newProduct });
   } catch (error) {
     console.error("Error creating product:", error);
     res.status(500).json({
@@ -150,7 +144,7 @@ const index = async (req, res) => {
 
 const show = async (req, res) => {
   try {
-    const { id } = req.params; // Neem de id uit de parameters
+    const { id } = req.params;
 
     if (!id) {
       return res.status(400).json({
@@ -159,7 +153,6 @@ const show = async (req, res) => {
       });
     }
 
-    // Zorg ervoor dat de id een geldige MongoDB ObjectId is
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({
         status: "error",
@@ -167,8 +160,7 @@ const show = async (req, res) => {
       });
     }
 
-    // Zoek het product op basis van de MongoDB _id
-    const product = await Product.findById(id);
+    const product = await Product.findById(id).populate("configurations");
 
     if (!product) {
       return res.status(404).json({
@@ -203,60 +195,58 @@ function validateColorArray(colorArray, fieldName) {
 }
 
 // Update Product
+// Update Product
 const update = async (req, res) => {
   const { id } = req.params;
-  const product = req.body.product;
-
-  if (!product) {
-    return res.status(400).json({
-      status: "error",
-      message: "Product data is required for update.",
-    });
-  }
-
   const {
     productCode,
     productName,
     productPrice,
-    typeOfProduct,
+    category, // New required field
+    subType, // New required field
     description,
     brand,
-    colors, // Added colors
-    images = [], // Added images
-  } = product;
+    images = [],
+  } = req.body;
 
   if (
     !productCode ||
     !productName ||
     !productPrice ||
+    !category ||
+    !subType ||
     !description ||
-    !brand ||
-    !colors
+    !brand
   ) {
     return res.status(400).json({
-      status: "error",
       message: "Product is missing required fields.",
     });
   }
 
-  try {
-    let uploadedImages = [];
-    for (const image of images) {
-      if (
-        typeof image === "string" &&
-        image.startsWith("https://res.cloudinary.com")
-      ) {
-        uploadedImages.push(image);
-      } else {
-        const result = await cloudinary.uploader.upload(image, {
-          folder: "products", // Cloudinary folder for images
-          resource_type: "auto", // Automatically detect the resource type
-          format: "png", // Use PNG format
-        });
+  if (productPrice <= 0) {
+    return res.status(400).json({
+      message: "productPrice must be greater than zero",
+    });
+  }
 
-        uploadedImages.push(result.secure_url); // Store Cloudinary URL
-      }
+  try {
+    // Validate if subType exists in the given category
+    const categoryDoc = await mongoose.model("Category").findById(category);
+    if (!categoryDoc) {
+      return res.status(400).json({ message: "Invalid category" });
     }
+
+    if (!categoryDoc.subTypes.includes(subType)) {
+      return res.status(400).json({
+        message: `${subType} is not a valid subtype for the selected category`,
+      });
+    }
+
+    // Process images
+    const cloudinaryFolder = `Products/${productName}`;
+    const uploadedImages = await Promise.all(
+      images.map((image) => uploadImageToCloudinary(image, cloudinaryFolder))
+    );
 
     const updatedProduct = await Product.findByIdAndUpdate(
       id,
@@ -264,11 +254,11 @@ const update = async (req, res) => {
         productCode,
         productName,
         productPrice,
-        typeOfProduct,
+        category, // Add category field
+        subType, // Add subType field
         description,
         brand,
-        colors, // Store colors array
-        images: uploadedImages, // Store uploaded image URLs
+        images: uploadedImages,
       },
       { new: true, runValidators: true }
     );
