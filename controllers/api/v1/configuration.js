@@ -136,7 +136,7 @@ const update = async (req, res) => {
 const destroy = async (req, res) => {
   try {
     const { id } = req.params;
-    const partnerId = req.user.partnerId; // Haal partnerId uit het token van de gebruiker
+    const partnerId = req.user.partnerId; // partnerId from the authenticated user
 
     // Delete the configuration by id and partnerId to ensure it's for the correct partner
     const deletedConfiguration = await Configuration.findOneAndDelete({
