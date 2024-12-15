@@ -7,9 +7,9 @@ const create = async (req, res) => {
     const { fieldName, fieldType, options, isRequired, partnerId } = req.body;
 
     // Validate required fields
-    if (!fieldName || !fieldType || !partnerId) {
+    if (!fieldName || !fieldType) {
       return res.status(400).json({
-        message: "Missing required fields: fieldName, fieldType, partnerId",
+        message: "Missing required fields: fieldName, fieldType",
       });
     }
 
@@ -19,7 +19,7 @@ const create = async (req, res) => {
       fieldType,
       options,
       isRequired,
-      partnerId, // partnerId moet hier goed worden doorgegeven
+      partnerId, // partnerId wordt alleen opgeslagen als het is meegegeven
     });
 
     // Save and return response
@@ -92,44 +92,39 @@ const show = async (req, res) => {
 };
 
 // Update Configuration
-// Update Configuration
 const update = async (req, res) => {
-  try {
-    // Controleer of partnerId aanwezig is in de request body
-    if (!req.body.partnerId) {
-      return res.status(400).json({ message: "partnerId is required" });
-    }
+  const { id } = req.params;
+  const { fieldName, fieldType, options, isRequired, partnerId } = req.body;
 
-    const partnerId = req.body.partnerId;
-    const { id } = req.params; // Haal id van de URL parameters
-    const updateFields = req.body; // De velden die bijgewerkt moeten worden
-
-    // Haal de configuratie op basis van de id en partnerId
-    const configuration = await Configuration.findOne({ _id: id, partnerId });
-
-    if (!configuration) {
-      return res.status(404).json({
-        status: "error",
-        message: `Configuration with id ${id} not found or does not belong to the current partner`,
-      });
-    }
-
-    // Werk de configuratie bij met de nieuwe gegevens
-    const updatedConfiguration = await Configuration.findByIdAndUpdate(
-      id,
-      updateFields,
-      { new: true }
-    );
-
-    // Stuur het resultaat terug naar de client
-    res.json({
-      status: "success",
-      data: updatedConfiguration,
-    });
-  } catch (err) {
-    console.error("Error updating configuration:", err);
-    res.status(500).json({ message: "Internal Server Error" });
+  // Controleer of partnerId aanwezig is in de body
+  if (!partnerId) {
+    return res.status(400).json({ message: "partnerId is required" });
   }
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ message: "Invalid configuration id" });
+  }
+
+  const configuration = await Configuration.findOne({ _id: id });
+
+  if (!configuration) {
+    return res.status(404).json({
+      status: "error",
+      message: `Configuration with id ${id} not found or does not belong to the partner`,
+    });
+  }
+
+  // Werk de configuratie bij
+  const updatedConfiguration = await Configuration.findByIdAndUpdate(
+    id,
+    { fieldName, fieldType, options, isRequired, partnerId },
+    { new: true }
+  );
+
+  res.json({
+    status: "success",
+    data: updatedConfiguration,
+  });
 };
 
 // Delete Configuration
