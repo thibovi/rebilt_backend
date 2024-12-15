@@ -31,7 +31,7 @@ mongoose
 const partnerRouter = require("./routes/api/v1/partners");
 const userRouter = require("./routes/api/v1/users");
 const productRouter = require("./routes/api/v1/products");
-const houseStyleRouter = require("./routes/api/v1/houseStyle");
+const houseStylesRoutes = require("./routes/api/v1/houseStyles");
 const orderRouter = require("./routes/api/v1/orders");
 const categoryRouter = require("./routes/api/v1/categories"); // Voeg deze import toe
 const configurationRouter = require("./routes/api/v1/configurations"); // Voeg deze import toe
@@ -51,10 +51,10 @@ app.use(express.static(path.join(__dirname, "public"))); // Zorg ervoor dat je s
 app.use("/api/v1/partners", partnerRouter);
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/products", productRouter);
-app.use("/api/v1/houseStyle", houseStyleRouter);
 app.use("/api/v1/orders", orderRouter);
 app.use("/api/v1/categories", categoryRouter); // Voeg deze route toe
 app.use("/api/v1/configurations", configurationRouter); // Voeg deze route toe
+app.use("/api/v1/houseStyles", houseStylesRoutes);
 
 app.use(function (req, res, next) {
   next(createError(404));
