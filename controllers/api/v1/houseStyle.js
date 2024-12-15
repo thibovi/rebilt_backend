@@ -11,6 +11,9 @@ module.exports = {
         text_color,
         titles_color,
         background_color,
+        fontFamilyBodyText,
+        fontFamilyTitles,
+        logo_url, // Added new fields
       } = req.body;
 
       // Controleer of alle vereiste velden aanwezig zijn
@@ -20,7 +23,9 @@ module.exports = {
         !secondary_color ||
         !text_color ||
         !titles_color ||
-        !background_color
+        !background_color ||
+        !fontFamilyBodyText ||
+        !fontFamilyTitles
       ) {
         return res.status(400).json({ message: "Alle velden zijn verplicht" });
       }
@@ -33,6 +38,9 @@ module.exports = {
         text_color,
         titles_color,
         background_color,
+        fontFamilyBodyText,
+        fontFamilyTitles,
+        logo_url, // Added new field
       });
 
       // Sla de huisstijl op in de database
@@ -98,6 +106,9 @@ module.exports = {
       text_color,
       titles_color,
       background_color,
+      fontFamilyBodyText,
+      fontFamilyTitles,
+      logo_url, // Added new fields
     } = req.body;
 
     console.log("Update ontvangen voor userId:", userId);
@@ -107,6 +118,9 @@ module.exports = {
       text_color,
       titles_color,
       background_color,
+      fontFamilyBodyText,
+      fontFamilyTitles,
+      logo_url, // New field added to logging
     });
 
     try {
@@ -127,6 +141,11 @@ module.exports = {
       houseStyle.titles_color = titles_color || houseStyle.titles_color;
       houseStyle.background_color =
         background_color || houseStyle.background_color;
+      houseStyle.fontFamilyBodyText =
+        fontFamilyBodyText || houseStyle.fontFamilyBodyText;
+      houseStyle.fontFamilyTitles =
+        fontFamilyTitles || houseStyle.fontFamilyTitles;
+      houseStyle.logo_url = logo_url || houseStyle.logo_url; // Update logo_url
 
       // Sla de geüpdate huisstijl op
       await houseStyle.save();
