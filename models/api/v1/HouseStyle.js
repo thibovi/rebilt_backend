@@ -20,11 +20,12 @@ const houseStyleSchema = new mongoose.Schema({
   },
   fontFamilyBodyText: { type: String, required: true },
   fontFamilyTitles: { type: String, required: true },
-  logo_url: { type: String, required: false }, // Add logo_url field
-  userId: {
+  logo_url: { type: String, required: false }, // Added logo_url field
+  partnerId: {
+    // Changed from userId to partnerId
     type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    required: false,
+    ref: "Partner", // Assuming you have a Partner model
+    required: false, // Make it optional depending on your use case
   },
 });
 

@@ -5,7 +5,7 @@ module.exports = {
   async create(req, res) {
     try {
       const {
-        userId,
+        partnerId, // Change from userId to partnerId
         primary_color,
         secondary_color,
         text_color,
@@ -18,7 +18,7 @@ module.exports = {
 
       // Controleer of alle vereiste velden aanwezig zijn
       if (
-        !userId ||
+        !partnerId || // Changed to partnerId
         !primary_color ||
         !secondary_color ||
         !text_color ||
@@ -32,7 +32,7 @@ module.exports = {
 
       // Maak een nieuwe huisstijl aan
       const newHouseStyle = new HouseStyle({
-        userId,
+        partnerId, // Changed from userId to partnerId
         primary_color,
         secondary_color,
         text_color,
@@ -73,17 +73,17 @@ module.exports = {
     }
   },
 
-  // SHOW: Haal een specifieke huisstijl op basis van userId
+  // SHOW: Haal een specifieke huisstijl op basis van partnerId
   async show(req, res) {
-    const { userId } = req.params;
+    const { partnerId } = req.params; // Changed from userId to partnerId
 
     try {
-      // Zoek de huisstijl op basis van userId
-      const houseStyle = await HouseStyle.findOne({ userId });
+      // Zoek de huisstijl op basis van partnerId
+      const houseStyle = await HouseStyle.findOne({ partnerId }); // Changed from userId to partnerId
 
       if (!houseStyle) {
         return res.status(404).json({
-          message: `Huisstijl niet gevonden voor gebruiker met ID ${userId}`,
+          message: `Huisstijl niet gevonden voor partner met ID ${partnerId}`, // Updated message
         });
       }
 
@@ -97,9 +97,9 @@ module.exports = {
     }
   },
 
-  // UPDATE: Werk een specifieke huisstijl bij op basis van userId
+  // UPDATE: Werk een specifieke huisstijl bij op basis van partnerId
   async update(req, res) {
-    const { userId } = req.params;
+    const { partnerId } = req.params; // Changed from userId to partnerId
     const {
       primary_color,
       secondary_color,
@@ -111,7 +111,7 @@ module.exports = {
       logo_url, // Added new fields
     } = req.body;
 
-    console.log("Update ontvangen voor userId:", userId);
+    console.log("Update ontvangen voor partnerId:", partnerId); // Updated log message
     console.log("Gegevens ontvangen:", {
       primary_color,
       secondary_color,
@@ -124,12 +124,12 @@ module.exports = {
     });
 
     try {
-      // Zoek de huisstijl op basis van userId
-      const houseStyle = await HouseStyle.findOne({ userId });
+      // Zoek de huisstijl op basis van partnerId
+      const houseStyle = await HouseStyle.findOne({ partnerId }); // Changed from userId to partnerId
 
       if (!houseStyle) {
         return res.status(404).json({
-          message: `Huisstijl niet gevonden voor gebruiker met ID ${userId}`,
+          message: `Huisstijl niet gevonden voor partner met ID ${partnerId}`, // Updated message
         });
       }
 
@@ -162,17 +162,17 @@ module.exports = {
     }
   },
 
-  // DESTROY: Verwijder een specifieke huisstijl op basis van userId
+  // DESTROY: Verwijder een specifieke huisstijl op basis van partnerId
   async destroy(req, res) {
-    const { userId } = req.params;
+    const { partnerId } = req.params; // Changed from userId to partnerId
 
     try {
-      // Verwijder de huisstijl op basis van userId
-      const result = await HouseStyle.deleteOne({ userId });
+      // Verwijder de huisstijl op basis van partnerId
+      const result = await HouseStyle.deleteOne({ partnerId }); // Changed from userId to partnerId
 
       if (result.deletedCount === 0) {
         return res.status(404).json({
-          message: `Huisstijl niet gevonden voor gebruiker met ID ${userId}`,
+          message: `Huisstijl niet gevonden voor partner met ID ${partnerId}`, // Updated message
         });
       }
 
