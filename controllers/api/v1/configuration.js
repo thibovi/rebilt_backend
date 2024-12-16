@@ -4,7 +4,7 @@ const mongoose = require("mongoose");
 // Create Configuration
 const create = async (req, res) => {
   try {
-    const { fieldName, fieldType, options, isRequired, partnerId } = req.body;
+    const { fieldName, fieldType, options, partnerId } = req.body;
 
     // Validate required fields
     if (!fieldName || !fieldType) {
@@ -18,7 +18,6 @@ const create = async (req, res) => {
       fieldName,
       fieldType,
       options,
-      isRequired,
       partnerId, // partnerId wordt alleen opgeslagen als het is meegegeven
     });
 
@@ -93,38 +92,56 @@ const show = async (req, res) => {
 
 // Update Configuration
 const update = async (req, res) => {
-  const { id } = req.params;
-  const { fieldName, fieldType, options, isRequired, partnerId } = req.body;
+  try {
+    const { id } = req.params;
+    const { fieldName, fieldType, options, isActive, partnerId } = req.body;
 
-  // Controleer of partnerId aanwezig is in de body
-  if (!partnerId) {
-    return res.status(400).json({ message: "partnerId is required" });
-  }
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid configuration id" });
+    }
 
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(400).json({ message: "Invalid configuration id" });
-  }
+    const configuration = await Configuration.findOne({ _id: id });
 
-  const configuration = await Configuration.findOne({ _id: id });
+    if (!configuration) {
+      return res.status(404).json({
+        status: "error",
+        message: `Configuration with id ${id} not found`,
+      });
+    }
 
-  if (!configuration) {
-    return res.status(404).json({
+    const updateFields = {
+      ...(fieldName !== undefined && { fieldName }),
+      ...(fieldType !== undefined && { fieldType }),
+      ...(options !== undefined && { options }),
+      ...(isActive !== undefined && { isActive }),
+    };
+
+    if (partnerId === "" || partnerId === null) {
+      updateFields.partnerId = null; // Verwijder partnerId
+    } else if (partnerId && mongoose.Types.ObjectId.isValid(partnerId)) {
+      updateFields.partnerId = partnerId;
+    }
+
+    const updatedConfiguration = await Configuration.findByIdAndUpdate(
+      id,
+      updateFields,
+      { new: true }
+    );
+
+    delete updatedConfiguration.partnerId; // Verwijder de partnerId uit de response voordat deze wordt verzonden
+
+    res.json({
+      status: "success",
+      data: updatedConfiguration,
+    });
+  } catch (error) {
+    console.error("Error updating configuration:", error);
+    res.status(500).json({
       status: "error",
-      message: `Configuration with id ${id} not found or does not belong to the partner`,
+      message: "An error occurred while updating the configuration",
+      error: error.message,
     });
   }
-
-  // Werk de configuratie bij
-  const updatedConfiguration = await Configuration.findByIdAndUpdate(
-    id,
-    { fieldName, fieldType, options, isRequired, partnerId },
-    { new: true }
-  );
-
-  res.json({
-    status: "success",
-    data: updatedConfiguration,
-  });
 };
 
 // Delete Configuration

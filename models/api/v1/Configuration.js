@@ -8,8 +8,12 @@ const ConfigurationSchema = new mongoose.Schema({
     enum: ["Text", "Number", "Boolean", "Dropdown"],
   },
   options: { type: [String], default: [] },
-  isRequired: { type: Boolean, default: false },
-  partnerId: { type: mongoose.Schema.Types.ObjectId, ref: "Partner" },
+  partnerId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Partner",
+    required: false,
+    default: null,
+  }, // PartnerId is nu optioneel en heeft een default van null
 });
 
 const Configuration = mongoose.model("Configuration", ConfigurationSchema);
