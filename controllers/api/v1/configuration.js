@@ -4,41 +4,39 @@ const mongoose = require("mongoose");
 // Create Configuration
 const create = async (req, res) => {
   try {
-    const { fieldName, fieldType, options, partnerId } = req.body;
+    const { fieldName, fieldType, options, isActive, partnerId } = req.body;
 
-    // Validate required fields
-    if (!fieldName || !fieldType) {
-      return res.status(400).json({
-        message: "Missing required fields: fieldName, fieldType",
-      });
-    }
+    // Haal de partnerId uit de token of body (indien optioneel)
+    const partnerIdFromToken = req.user?.partnerId || partnerId;
 
-    // Create a new configuration
     const newConfiguration = new Configuration({
       fieldName,
       fieldType,
       options,
-      partnerId, // partnerId wordt alleen opgeslagen als het is meegegeven
+      isActive,
+      partnerId: partnerIdFromToken || null, // PartnerId kan null zijn
     });
 
-    // Save and return response
-    await newConfiguration.save();
+    const savedConfiguration = await newConfiguration.save();
+
     res.status(201).json({
       status: "success",
-      data: newConfiguration,
+      data: savedConfiguration,
     });
   } catch (error) {
     console.error("Error creating configuration:", error);
     res.status(500).json({
-      message: "An error occurred while creating the configuration.",
+      status: "error",
+      message: "An error occurred while creating the configuration",
       error: error.message,
     });
   }
 };
 
+// List all configurations
 const index = async (req, res) => {
   try {
-    const configurations = await Configuration.find(); // Haal alle configuraties op
+    const configurations = await Configuration.find(); // Retrieve all configurations
 
     res.json({
       status: "success",
@@ -53,13 +51,26 @@ const index = async (req, res) => {
   }
 };
 
-// Get a single Configuration by ID
+// Show a specific configuration by ID
 const show = async (req, res) => {
   try {
     const { id } = req.params;
-    const partnerId = req.user.partnerId; // Haal partnerId uit het token van de gebruiker
+    let partnerId = req.query.partnerId;
 
-    // Ensure the id is a valid MongoDB ObjectId
+    // If partnerId is an empty string or "null", set it to null
+    if (partnerId === "" || partnerId === "null") {
+      partnerId = null;
+    }
+
+    // Check if partnerId is explicitly undefined (but not null)
+    if (partnerId === undefined) {
+      return res.status(400).json({
+        status: "error",
+        message: "Partner ID is required",
+      });
+    }
+
+    // Check if id is valid MongoDB ObjectId
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({
         status: "error",
@@ -67,7 +78,7 @@ const show = async (req, res) => {
       });
     }
 
-    // Find the configuration by id and partnerId to ensure it's for the correct partner
+    // Query the configuration using the provided partnerId (which could be null)
     const configuration = await Configuration.findOne({ _id: id, partnerId });
 
     if (!configuration) {
@@ -82,6 +93,7 @@ const show = async (req, res) => {
       data: configuration,
     });
   } catch (error) {
+    console.error("Error retrieving configuration:", error);
     res.status(500).json({
       status: "error",
       message: "Could not retrieve configuration",
@@ -90,7 +102,6 @@ const show = async (req, res) => {
   }
 };
 
-// Update Configuration
 const update = async (req, res) => {
   try {
     const { id } = req.params;
@@ -99,6 +110,10 @@ const update = async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ message: "Invalid configuration id" });
     }
+
+    // Haal partnerId uit JWT of request body
+    const partnerIdFromToken = req.user?.partnerId;
+    const updatedPartnerId = req.body.partnerId || partnerIdFromToken;
 
     const configuration = await Configuration.findOne({ _id: id });
 
@@ -109,26 +124,20 @@ const update = async (req, res) => {
       });
     }
 
+    // Update velden en partnerId
     const updateFields = {
       ...(fieldName !== undefined && { fieldName }),
       ...(fieldType !== undefined && { fieldType }),
       ...(options !== undefined && { options }),
       ...(isActive !== undefined && { isActive }),
+      partnerId: updatedPartnerId || null, // Vul partnerId in of maak null
     };
-
-    if (partnerId === "" || partnerId === null) {
-      updateFields.partnerId = null; // Verwijder partnerId
-    } else if (partnerId && mongoose.Types.ObjectId.isValid(partnerId)) {
-      updateFields.partnerId = partnerId;
-    }
 
     const updatedConfiguration = await Configuration.findByIdAndUpdate(
       id,
       updateFields,
       { new: true }
     );
-
-    delete updatedConfiguration.partnerId; // Verwijder de partnerId uit de response voordat deze wordt verzonden
 
     res.json({
       status: "success",
