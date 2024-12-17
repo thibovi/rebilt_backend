@@ -1,105 +1,69 @@
 const mongoose = require("mongoose");
 const Partner = require("../../../models/api/v1/Partner");
-const cloudinary = require("cloudinary").v2;
-const fs = require("fs"); // We gebruiken fs om het JSON-bestand lokaal te maken
 require("dotenv").config();
 
-// Configure Cloudinary
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
-
+// Functie voor het aanmaken van een nieuwe partner
 const create = async (req, res) => {
-  const { name, address, contact_email, contact_phone, package } = req.body;
+  const {
+    name,
+    address,
+    contact_email,
+    contact_phone,
+    package,
+    primary_color,
+    secondary_color,
+    titles_color,
+    text_color,
+    background_color,
+    fontFamilyBodyText,
+    fontFamilyTitles,
+    logo_url,
+  } = req.body;
 
-  if (!name || !package) {
+  // Validatie voor verplichte velden
+  if (
+    !name ||
+    !package ||
+    !primary_color ||
+    !secondary_color ||
+    !titles_color ||
+    !text_color ||
+    !background_color ||
+    !fontFamilyBodyText ||
+    !fontFamilyTitles
+  ) {
     return res.status(400).json({
       status: "error",
-      message: "Name and package are required.",
+      message: "Name, package, colors, and fonts are required.",
     });
   }
 
   try {
-    // Hardcoded huisstijlgegevens
-    const primaryColor = "#9747ff"; // Primaire kleur
-    const secondaryColor = "#000000"; // Secundaire kleur
-    const titleColor = "#ffffff"; // Secundaire kleur
-    const colorForButtons = "#0071e3"; // Secundaire kleur
-    const fonts = [
-      {
-        name: "DM Sans",
-        path: "https://metejoor.be/assets/fonts/DINCondensedWeb.woff2",
-      },
-      {
-        name: "Syne",
-        path: "https://metejoor.be/assets/fonts/DINCondensedWeb.woff2",
-      },
-    ]; // Fonts
-    const logoPath =
-      "https://img-cdn.pixlr.com/image-generator/history/65bb506dcb310754719cf81f/ede935de-1138-4f66-8ed7-44bd16efc709/medium.webp"; // Logo
-    const backgroundImagePath =
-      "https://img-cdn.pixlr.com/image-generator/history/65bb506dcb310754719cf81f/ede935de-1138-4f66-8ed7-44bd16efc709/medium.webp"; // Achtergrondafbeelding
-
-    // Hoofdmap voor de partner
-    const cloudinaryFolder = `${name}`;
-
-    // Submap "Huisstijl" in de hoofdmap
-    const huisstijlFolder = `${cloudinaryFolder}/Huisstijl`;
-
-    // JSON object voor huisstijldata
-    const huisstijlData = {
-      primaryColor,
-      secondaryColor,
-      titleColor,
-      colorForButtons,
-      fonts,
-      logo: logoPath,
-      backgroundImage: backgroundImagePath,
-    };
-
-    // Zet de huisstijlgegevens om in een JSON-bestand
-    const huisstijlJson = JSON.stringify(huisstijlData);
-
-    // Sla het bestand op lokaal voordat we het uploaden naar Cloudinary
-    fs.writeFileSync("huisstijl.json", huisstijlJson);
-
-    // Upload het JSON-bestand naar Cloudinary
-    const uploadResult = await cloudinary.uploader.upload("huisstijl.json", {
-      folder: huisstijlFolder,
-      resource_type: "raw", // Aangeven dat het een raw bestand is (geen afbeelding of video)
-      public_id: "huisstijl_data", // Specifieke public_id voor het huisstijlbestand
-    });
-
-    // Maak de partner aan in de database
+    // Maak een nieuw partner object aan
     const newPartner = new Partner({
       name,
-      address: address || {},
+      address: address || {}, // Als er geen adres is, gebruik een leeg object
       contact_email: contact_email || null,
       contact_phone: contact_phone || null,
       package,
+      primary_color,
+      secondary_color,
+      titles_color,
+      text_color,
+      background_color,
+      fontFamilyBodyText,
+      fontFamilyTitles,
+      logo_url: logo_url || null, // Logo is optioneel
     });
 
+    // Sla de nieuwe partner op in de database
     await newPartner.save();
 
-    // Stuur succesresponse terug
+    // Stuur een succesresponse terug
     res.status(201).json({
       status: "success",
       data: {
         partner: newPartner,
-        folders: {
-          main: cloudinaryFolder,
-          huisstijl: huisstijlFolder,
-        },
-        huisstijlData: {
-          primaryColor,
-          secondaryColor,
-          fonts,
-          logo: logoPath,
-          backgroundImage: backgroundImagePath,
-          huisstijlJsonUrl: uploadResult.secure_url, // URL van het geüploade JSON bestand
-        },
       },
     });
   } catch (err) {
@@ -112,7 +76,7 @@ const create = async (req, res) => {
   }
 };
 
-// List all partners
+// Functie om alle partners op te halen
 const index = async (req, res) => {
   try {
     const partners = await Partner.find();
@@ -131,10 +95,10 @@ const index = async (req, res) => {
   }
 };
 
-// Retrieve a specific partner by ID
+// Functie om een specifieke partner op te halen via ID
 const show = async (req, res) => {
   try {
-    const { id } = req.params; // Let op de parameternaam 'id'
+    const { id } = req.params;
 
     // Controleer of id aanwezig is
     if (!id) {
@@ -175,20 +139,45 @@ const show = async (req, res) => {
   }
 };
 
-// Update a partner
+// Functie om een partner bij te werken
 const update = async (req, res) => {
   try {
-    const { id } = req.params; // Gebruik nu :id zoals gedefinieerd in de route
-    const { name, address, contact_email, contact_phone, package } = req.body;
+    const { id } = req.params;
+    const {
+      name,
+      address,
+      contact_email,
+      contact_phone,
+      package,
+      primary_color,
+      secondary_color,
+      titles_color,
+      text_color,
+      background_color,
+      fontFamilyBodyText,
+      fontFamilyTitles,
+      logo_url,
+    } = req.body;
 
-    if (!name || !package) {
+    // Validatie voor verplichte velden
+    if (
+      !name ||
+      !package ||
+      !primary_color ||
+      !secondary_color ||
+      !titles_color ||
+      !text_color ||
+      !background_color ||
+      !fontFamilyBodyText ||
+      !fontFamilyTitles
+    ) {
       return res.status(400).json({
         status: "error",
-        message: "Name and package are required.",
+        message: "Name, package, colors, and fonts are required.",
       });
     }
 
-    const partner = await Partner.findById(id); // Gebruik id hier
+    const partner = await Partner.findById(id);
 
     if (!partner) {
       return res.status(404).json({
@@ -197,12 +186,20 @@ const update = async (req, res) => {
       });
     }
 
-    // Update de partner met de nieuwe gegevens
+    // Werk de partnergegevens bij
     partner.name = name;
     partner.address = address || partner.address;
     partner.contact_email = contact_email || partner.contact_email;
     partner.contact_phone = contact_phone || partner.contact_phone;
     partner.package = package;
+    partner.primary_color = primary_color;
+    partner.secondary_color = secondary_color;
+    partner.titles_color = titles_color;
+    partner.text_color = text_color;
+    partner.background_color = background_color;
+    partner.fontFamilyBodyText = fontFamilyBodyText;
+    partner.fontFamilyTitles = fontFamilyTitles;
+    partner.logo_url = logo_url || partner.logo_url;
 
     // Sla de bijgewerkte partner op
     await partner.save();
@@ -221,7 +218,7 @@ const update = async (req, res) => {
   }
 };
 
-// Delete a partner
+// Functie om een partner te verwijderen
 const destroy = async (req, res) => {
   try {
     const { id } = req.params;
