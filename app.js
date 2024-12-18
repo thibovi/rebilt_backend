@@ -15,7 +15,6 @@ const PORT = process.env.PORT || 3000;
 // Configuratie op basis van de poort
 let connection;
 if (PORT == 3000) {
-  // Gebruik "==" zodat het werkt voor zowel string als number
   connection = config.get("mongodb"); // default.json voor lokale ontwikkeling
 } else {
   connection = config.get("mongodb"); // production.json voor productie
@@ -28,12 +27,14 @@ mongoose
   .catch((err) => console.error("MongoDB connection error:", err));
 
 // Routers
-const partnerRouter = require("./routes/api/v1/partners");
 const userRouter = require("./routes/api/v1/users");
 const productRouter = require("./routes/api/v1/products");
 const orderRouter = require("./routes/api/v1/orders");
-const categoryRouter = require("./routes/api/v1/categories"); // Voeg deze import toe
-const configurationRouter = require("./routes/api/v1/configurations"); // Voeg deze import toe
+const categoryRouter = require("./routes/api/v1/categories");
+const partnerRouter = require("./routes/api/v1/partners");
+const configurationRouter = require("./routes/api/v1/configurations");
+const partnerConfigurationRouter = require("./routes/api/v1/partnerConfigurations");
+const optionRouter = require("./routes/api/v1/options");
 
 // View engine instellen
 app.set("views", path.join(__dirname, "views"));
@@ -47,12 +48,15 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public"))); // Zorg ervoor dat je statische bestanden goed zijn geconfigureerd
 
+// Definieer de routes
 app.use("/api/v1/partners", partnerRouter);
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/products", productRouter);
 app.use("/api/v1/orders", orderRouter);
-app.use("/api/v1/categories", categoryRouter); // Voeg deze route toe
-app.use("/api/v1/configurations", configurationRouter); // Voeg deze route toe
+app.use("/api/v1/categories", categoryRouter);
+app.use("/api/v1/configurations", configurationRouter);
+app.use("/api/v1/partnerConfigurations", partnerConfigurationRouter);
+app.use("/api/v1/options", optionRouter);
 
 app.use(function (req, res, next) {
   next(createError(404));
