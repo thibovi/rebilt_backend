@@ -93,6 +93,7 @@ const show = async (req, res) => {
 };
 
 // Update Configuration
+// Update Configuration
 const update = async (req, res) => {
   try {
     const { fieldName, fieldType, options, isActive, partnerId, isColor } =
@@ -108,19 +109,38 @@ const update = async (req, res) => {
 
     // Als opties worden meegegeven, zorg ervoor dat ze bestaan in de 'Option' collectie
     if (options && options.length > 0) {
-      const validOptions = await Option.find({ _id: { $in: options } });
-      if (validOptions.length !== options.length) {
-        return res.status(400).json({
-          status: "error",
-          message: "Some options are invalid or do not exist.",
-        });
+      const optionIds = [];
+
+      for (let optionName of options) {
+        let option = await Option.findOne({ name: optionName });
+
+        if (!option) {
+          // Maak de optie aan als deze niet bestaat
+          option = new Option({
+            name: optionName,
+            type: fieldType, // Voeg type toe indien nodig
+          });
+          await option.save();
+        }
+
+        optionIds.push(option._id); // Voeg de ObjectId toe
       }
+
+      // Werk de options bij naar de verzamelde ObjectId's
+      req.body.options = optionIds;
     }
 
     // Update de configuratie
     const updatedConfig = await Configuration.findByIdAndUpdate(
       req.params.id,
-      { fieldName, fieldType, options, isActive, partnerId, isColor },
+      {
+        fieldName,
+        fieldType,
+        options: req.body.options,
+        isActive,
+        partnerId,
+        isColor,
+      },
       { new: true }
     );
 
