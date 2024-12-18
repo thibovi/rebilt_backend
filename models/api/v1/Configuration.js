@@ -6,7 +6,7 @@ const ConfigurationSchema = new mongoose.Schema({
   fieldType: {
     type: String,
     required: true,
-    enum: ["Text", "Number", "Boolean", "Dropdown"], // Soorten velden
+    enum: ["Text", "Number", "Boolean", "Dropdown", "Color"], // Soorten velden, nu inclusief 'Color' voor kleurkeuzes
   },
   options: [
     {
@@ -20,6 +20,7 @@ const ConfigurationSchema = new mongoose.Schema({
     required: false,
     default: null, // PartnerId is optioneel
   },
+  isColor: { type: Boolean, default: false }, // Is dit een kleuroptie? Voeg toe voor kleuranticipatie
 });
 
 const Configuration = mongoose.model("Configuration", ConfigurationSchema);
