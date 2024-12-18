@@ -7,33 +7,35 @@ const create = async (req, res) => {
     const { fieldName, fieldType, options, isActive, partnerId, isColor } =
       req.body;
 
-    // Controleer of de configuratie van het type "Color" is en of de opties valid zijn (optionele validatie)
-    if (fieldType === "Color" && !isColor) {
-      return res.status(400).json({
-        status: "error",
-        message: "For 'Color' field type, isColor must be true.",
-      });
-    }
+    let optionIds = [];
 
-    // Als opties worden meegegeven, zorg ervoor dat ze bestaan in de 'Option' collectie
+    // Verwerk opties
     if (options && options.length > 0) {
-      const validOptions = await Option.find({ _id: { $in: options } });
-      if (validOptions.length !== options.length) {
-        return res.status(400).json({
-          status: "error",
-          message: "Some options are invalid or do not exist.",
-        });
+      for (let option of options) {
+        let existingOption = await Option.findOne({ name: option });
+
+        if (!existingOption) {
+          // Als de optie niet bestaat, maak een nieuwe optie aan
+          const newOption = new Option({
+            name: option, // Gebruik de hexkleur (zoals '#ffffff') als naam
+            type: fieldType, // Optioneel, je kunt ook "Color" hardcoderen
+          });
+          await newOption.save();
+          optionIds.push(newOption._id); // Gebruik de nieuwe ID
+        } else {
+          optionIds.push(existingOption._id); // Gebruik de bestaande ID
+        }
       }
     }
 
-    // Maak een nieuwe configuratie aan
+    // Maak de configuratie aan
     const newConfiguration = new Configuration({
       fieldName,
       fieldType,
-      options,
-      isActive,
+      options: optionIds, // Gebruik de verzamelde optie-ID's
+      isActive: isActive || true, // Default op true
       partnerId: partnerId || null,
-      isColor: isColor || false, // Voeg de isColor toe voor kleurconfiguraties
+      isColor: isColor || false,
     });
 
     // Sla de configuratie op
