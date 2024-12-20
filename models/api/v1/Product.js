@@ -1,6 +1,4 @@
 const mongoose = require("mongoose");
-
-// ProductSchema
 const ProductSchema = new mongoose.Schema({
   productCode: {
     type: String,
@@ -39,24 +37,15 @@ const ProductSchema = new mongoose.Schema({
   },
   configurations: [
     {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Configuration",
-    },
-  ],
-  customConfigurations: [
-    {
-      fieldName: {
-        type: String,
-        required: true, // Naam van het configuratieveld, zoals kleur, maat, etc.
-      },
-      fieldType: {
-        type: String,
-        required: true, // Type van het veld (bijvoorbeeld Text, Dropdown, Color, etc.)
+      configurationId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Configuration", // Referentie naar Configuration collectie
+        required: true,
       },
       selectedOption: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Option", // Verwijzing naar een optie uit de 'Option' collectie
-        required: false, // Dit kan null zijn als er geen optie geselecteerd is
+        ref: "Option", // Verwijzing naar de geselecteerde optie
+        required: true,
       },
     },
   ],

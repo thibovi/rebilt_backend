@@ -40,7 +40,6 @@ const create = async (req, res) => {
       brand,
       images = [],
       configurations = [],
-      customConfigurations = [], // Nieuwe veld voor custom configuraties
     } = req.body;
 
     // Validate required fields
@@ -86,22 +85,24 @@ const create = async (req, res) => {
       images.map((image) => uploadImageToCloudinary(image, cloudinaryFolder))
     );
 
-    // Fetch the actual configuration documents
-    const configurationDocuments = await Configuration.find({
-      _id: { $in: configurations },
-    });
+    // Process configurations
+    const configurationDocuments = await Promise.all(
+      configurations.map(async (config) => {
+        const configuration = await Configuration.findById(
+          config.configurationId
+        );
+        const selectedOption = await Option.findById(config.selectedOption);
 
-    // Verwerk de custom configuraties
-    const customConfigDocuments = await Promise.all(
-      customConfigurations.map(async (config) => {
-        // Hier verifiëren we of de geselecteerde optie geldig is
-        const selectedOption = config.selectedOption
-          ? await Option.findById(config.selectedOption)
-          : null;
+        // Validatie: Controleer of de configuratie en geselecteerde optie bestaan
+        if (!configuration || !selectedOption) {
+          return res.status(400).json({
+            message: `Invalid configuration or selected option: ${config.configurationId} or ${config.selectedOption}`,
+          });
+        }
+
         return {
-          fieldName: config.fieldName,
-          fieldType: config.fieldType,
-          selectedOption: selectedOption ? selectedOption._id : null,
+          configurationId: configuration._id,
+          selectedOption: selectedOption._id,
         };
       })
     );
@@ -116,8 +117,7 @@ const create = async (req, res) => {
       brand,
       images: uploadedImages,
       partnerId,
-      configurations: configurationDocuments.map((config) => config._id),
-      customConfigurations: customConfigDocuments, // Voeg custom configuraties toe
+      configurations: configurationDocuments, // Voeg de configuraties toe
     });
 
     // Save and return response
@@ -181,8 +181,8 @@ const show = async (req, res) => {
     }
 
     const product = await Product.findById(id)
-      .populate("configurations")
-      .populate("customConfigurations.selectedOption"); // Populate de geselecteerde optie
+      .populate("configurations.configurationId") // Populeren van de configuratie
+      .populate("configurations.selectedOption"); // Populeren van de geselecteerde optie
 
     if (!product) {
       return res.status(404).json({
