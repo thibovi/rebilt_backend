@@ -1,6 +1,8 @@
 const jwt = require("jsonwebtoken");
 const Product = require("../../../models/api/v1/Product");
 const Configuration = require("../../../models/api/v1/Configuration");
+const Option = require("../../../models/api/v1/Option");
+
 require("dotenv").config();
 const cloudinary = require("cloudinary").v2;
 const mongoose = require("mongoose");
@@ -26,33 +28,33 @@ const uploadImageToCloudinary = async (image, folder) => {
 };
 
 // Create Product
+// Create Product
 const create = async (req, res) => {
   try {
     const {
       productCode,
       productName,
+      productType,
       productPrice,
-      subType,
-      category, // Add category here
       description,
       brand,
       images = [],
       configurations = [],
+      customConfigurations = [], // Nieuwe veld voor custom configuraties
     } = req.body;
 
     // Validate required fields
     if (
       !productCode ||
       !productName ||
+      !productType ||
       !productPrice ||
-      !category || // Ensure category is provided
-      !subType ||
       !description ||
       !brand
     ) {
       return res.status(400).json({
         message:
-          "Missing required fields: productCode, productName, productPrice, category, subType, description, brand",
+          "Missing required fields: productCode, productName, productType, productPrice, description, brand",
       });
     }
 
@@ -89,18 +91,33 @@ const create = async (req, res) => {
       _id: { $in: configurations },
     });
 
+    // Verwerk de custom configuraties
+    const customConfigDocuments = await Promise.all(
+      customConfigurations.map(async (config) => {
+        // Hier verifiëren we of de geselecteerde optie geldig is
+        const selectedOption = config.selectedOption
+          ? await Option.findById(config.selectedOption)
+          : null;
+        return {
+          fieldName: config.fieldName,
+          fieldType: config.fieldType,
+          selectedOption: selectedOption ? selectedOption._id : null,
+        };
+      })
+    );
+
     // Create the product
     const newProduct = new Product({
       productCode,
       productName,
+      productType,
       productPrice,
-      subType,
-      category, // Include the category in the product creation
       description,
       brand,
       images: uploadedImages,
       partnerId,
       configurations: configurationDocuments.map((config) => config._id),
+      customConfigurations: customConfigDocuments, // Voeg custom configuraties toe
     });
 
     // Save and return response
@@ -115,13 +132,14 @@ const create = async (req, res) => {
   }
 };
 
+// Get Products with Filters
 const index = async (req, res) => {
   try {
-    const { typeOfProduct, brand } = req.query;
+    const { productType, brand } = req.query;
     const filter = {};
 
-    if (typeOfProduct) {
-      filter.typeOfProduct = typeOfProduct;
+    if (productType) {
+      filter.productType = productType; // Nieuwe veld toevoegen aan de filter
     }
     if (brand) {
       filter.brand = brand;
@@ -142,6 +160,8 @@ const index = async (req, res) => {
   }
 };
 
+// Get Single Product by ID
+// Get Single Product by ID
 const show = async (req, res) => {
   try {
     const { id } = req.params;
@@ -160,7 +180,9 @@ const show = async (req, res) => {
       });
     }
 
-    const product = await Product.findById(id).populate("configurations");
+    const product = await Product.findById(id)
+      .populate("configurations")
+      .populate("customConfigurations.selectedOption"); // Populate de geselecteerde optie
 
     if (!product) {
       return res.status(404).json({
@@ -182,18 +204,6 @@ const show = async (req, res) => {
   }
 };
 
-function validateColorArray(colorArray, fieldName) {
-  if (!Array.isArray(colorArray)) {
-    throw new Error(`${fieldName} should be an array`);
-  }
-
-  colorArray.forEach((color, index) => {
-    if (typeof color !== "string") {
-      throw new Error(`${fieldName}[${index}] should be a string`);
-    }
-  });
-}
-
 // Update Product
 // Update Product
 const update = async (req, res) => {
@@ -201,20 +211,19 @@ const update = async (req, res) => {
   const {
     productCode,
     productName,
+    productType,
     productPrice,
-    category, // New required field
-    subType, // New required field
     description,
     brand,
     images = [],
+    customConfigurations = [], // Nieuwe veld voor custom configuraties
   } = req.body;
 
   if (
     !productCode ||
     !productName ||
+    !productType ||
     !productPrice ||
-    !category ||
-    !subType ||
     !description ||
     !brand
   ) {
@@ -230,35 +239,39 @@ const update = async (req, res) => {
   }
 
   try {
-    // Validate if subType exists in the given category
-    const categoryDoc = await mongoose.model("Category").findById(category);
-    if (!categoryDoc) {
-      return res.status(400).json({ message: "Invalid category" });
-    }
-
-    if (!categoryDoc.subTypes.includes(subType)) {
-      return res.status(400).json({
-        message: `${subType} is not a valid subtype for the selected category`,
-      });
-    }
-
     // Process images
     const cloudinaryFolder = `Products/${productName}`;
     const uploadedImages = await Promise.all(
       images.map((image) => uploadImageToCloudinary(image, cloudinaryFolder))
     );
 
+    // Verwerk de custom configuraties
+    const customConfigDocuments = await Promise.all(
+      customConfigurations.map(async (config) => {
+        // Hier verifiëren we of de geselecteerde optie geldig is
+        const selectedOption = config.selectedOption
+          ? await Option.findById(config.selectedOption)
+          : null;
+        return {
+          fieldName: config.fieldName,
+          fieldType: config.fieldType,
+          selectedOption: selectedOption ? selectedOption._id : null,
+        };
+      })
+    );
+
+    // Update the product
     const updatedProduct = await Product.findByIdAndUpdate(
       id,
       {
         productCode,
         productName,
+        productType,
         productPrice,
-        category, // Add category field
-        subType, // Add subType field
         description,
         brand,
         images: uploadedImages,
+        customConfigurations: customConfigDocuments, // Update custom configuraties
       },
       { new: true, runValidators: true }
     );
@@ -284,6 +297,7 @@ const update = async (req, res) => {
   }
 };
 
+// Delete Product
 const destroy = async (req, res) => {
   try {
     const { id } = req.params;

@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 
+// ProductSchema
 const ProductSchema = new mongoose.Schema({
   productCode: {
     type: String,
@@ -10,46 +11,14 @@ const ProductSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  productType: {
+    type: String,
+    required: true,
+  },
   productPrice: {
     type: Number,
     required: true,
     min: 0,
-  },
-  category: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Category",
-    required: true, // Ensures that a category is always selected
-  },
-  subType: {
-    type: String,
-    required: true,
-    validate: {
-      validator: async function (value) {
-        if (!this.category) {
-          return false; // If there's no category, validation fails
-        }
-
-        // Fetch category from the database
-        const category = await mongoose
-          .model("Category")
-          .findById(this.category);
-
-        if (!category) {
-          throw new Error("Category not found");
-        }
-
-        // Validate if subType exists within the category's subTypes
-        if (!category.subTypes.includes(value)) {
-          throw new Error(
-            `${value} is not a valid subtype for the selected category`
-          );
-        }
-
-        return true;
-      },
-      message: (props) =>
-        `${props.value} is not a valid subtype for the selected category`,
-    },
   },
   description: {
     type: String,
@@ -72,6 +41,23 @@ const ProductSchema = new mongoose.Schema({
     {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Configuration",
+    },
+  ],
+  customConfigurations: [
+    {
+      fieldName: {
+        type: String,
+        required: true, // Naam van het configuratieveld, zoals kleur, maat, etc.
+      },
+      fieldType: {
+        type: String,
+        required: true, // Type van het veld (bijvoorbeeld Text, Dropdown, Color, etc.)
+      },
+      selectedOption: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Option", // Verwijzing naar een optie uit de 'Option' collectie
+        required: false, // Dit kan null zijn als er geen optie geselecteerd is
+      },
     },
   ],
 });
