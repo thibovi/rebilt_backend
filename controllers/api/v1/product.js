@@ -2,6 +2,7 @@ const jwt = require("jsonwebtoken");
 const Product = require("../../../models/api/v1/Product");
 const Configuration = require("../../../models/api/v1/Configuration");
 const Option = require("../../../models/api/v1/Option");
+const Partner = require("../../../models/api/v1/Partner");
 
 require("dotenv").config();
 const cloudinary = require("cloudinary").v2;
@@ -135,16 +136,37 @@ const create = async (req, res) => {
 // Get Products with Filters
 const index = async (req, res) => {
   try {
-    const { productType, brand } = req.query;
+    const { partnerName, productType, brand } = req.query;
     const filter = {};
 
-    if (productType) {
-      filter.productType = productType; // Nieuwe veld toevoegen aan de filter
-    }
-    if (brand) {
-      filter.brand = brand;
+    // Zoek de partner op basis van de naam (inclusief spaties)
+    if (partnerName) {
+      // Voeg spaties toe in de partnernaam, bijv. OdetteLunettes -> Odette Lunettes
+      const partnerNameWithSpaces = partnerName.replace(
+        /([a-z])([A-Z])/g,
+        "$1 $2"
+      );
+
+      // Zoek de partner met de naam inclusief spaties
+      const partner = await Partner.findOne({
+        name: { $regex: new RegExp(`^${partnerNameWithSpaces}$`, "i") }, // Case-insensitive zoekopdracht
+      });
+
+      if (!partner) {
+        return res.status(404).json({
+          status: "error",
+          message: `No partner found with name ${partnerName}`,
+        });
+      }
+
+      filter.partnerId = partner._id; // Gebruik het gevonden partnerId
     }
 
+    // Voeg extra filters toe
+    if (productType) filter.productType = productType;
+    if (brand) filter.brand = brand;
+
+    // Haal producten op met de filter
     const products = await Product.find(filter);
 
     res.json({
@@ -152,9 +174,10 @@ const index = async (req, res) => {
       data: { products },
     });
   } catch (error) {
+    console.error("Error fetching products:", error);
     res.status(500).json({
       status: "error",
-      message: "Could not retrieve products",
+      message: "An error occurred while retrieving products",
       error: error.message,
     });
   }
