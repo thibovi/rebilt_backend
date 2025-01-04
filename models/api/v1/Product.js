@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+
 const ProductSchema = new mongoose.Schema({
   productCode: {
     type: String,
@@ -26,10 +27,18 @@ const ProductSchema = new mongoose.Schema({
     type: String,
     required: false,
   },
-  images: {
-    type: [String],
-    required: false,
-  },
+  images: [
+    {
+      url: {
+        type: String,
+        required: true,
+      },
+      colors: {
+        type: [String], // Array van kleuren als hex-codes
+        required: false, // Niet verplicht, voor het geval een afbeelding geen kleuren heeft
+      },
+    },
+  ],
   partnerId: {
     type: mongoose.Schema.Types.ObjectId,
     required: true,

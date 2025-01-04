@@ -29,7 +29,6 @@ const uploadImageToCloudinary = async (image, folder) => {
 };
 
 // Create Product
-// Create Product
 const create = async (req, res) => {
   try {
     const {
@@ -39,7 +38,7 @@ const create = async (req, res) => {
       productPrice,
       description,
       brand,
-      images = [],
+      images = [], // Verwacht een array van objecten met url en colors
       configurations = [],
     } = req.body;
 
@@ -82,8 +81,17 @@ const create = async (req, res) => {
 
     // Process images
     const cloudinaryFolder = `Products/${productName}`;
-    const uploadedImages = await Promise.all(
-      images.map((image) => uploadImageToCloudinary(image, cloudinaryFolder))
+    const processedImages = await Promise.all(
+      images.map(async (image) => {
+        const imageUrl = await uploadImageToCloudinary(
+          image.url,
+          cloudinaryFolder
+        );
+        return {
+          url: imageUrl,
+          colors: image.colors || [], // Voeg kleuren toe als array (leeg als niet opgegeven)
+        };
+      })
     );
 
     // Process configurations
@@ -94,7 +102,6 @@ const create = async (req, res) => {
         );
         const selectedOption = await Option.findById(config.selectedOption);
 
-        // Validatie: Controleer of de configuratie en geselecteerde optie bestaan
         if (!configuration || !selectedOption) {
           return res.status(400).json({
             message: `Invalid configuration or selected option: ${config.configurationId} or ${config.selectedOption}`,
@@ -116,9 +123,9 @@ const create = async (req, res) => {
       productPrice,
       description,
       brand,
-      images: uploadedImages,
+      images: processedImages,
       partnerId,
-      configurations: configurationDocuments, // Voeg de configuraties toe
+      configurations: configurationDocuments,
     });
 
     // Save and return response
@@ -184,7 +191,6 @@ const index = async (req, res) => {
 };
 
 // Get Single Product by ID
-// Get Single Product by ID
 const show = async (req, res) => {
   try {
     const { id } = req.params;
@@ -228,7 +234,6 @@ const show = async (req, res) => {
 };
 
 // Update Product
-// Update Product
 const update = async (req, res) => {
   const { id } = req.params;
   const {
@@ -238,8 +243,7 @@ const update = async (req, res) => {
     productPrice,
     description,
     brand,
-    images = [],
-    customConfigurations = [], // Nieuwe veld voor custom configuraties
+    images = [], // Verwacht een array van objecten met url en colors
   } = req.body;
 
   if (
@@ -264,21 +268,15 @@ const update = async (req, res) => {
   try {
     // Process images
     const cloudinaryFolder = `Products/${productName}`;
-    const uploadedImages = await Promise.all(
-      images.map((image) => uploadImageToCloudinary(image, cloudinaryFolder))
-    );
-
-    // Verwerk de custom configuraties
-    const customConfigDocuments = await Promise.all(
-      customConfigurations.map(async (config) => {
-        // Hier verifiëren we of de geselecteerde optie geldig is
-        const selectedOption = config.selectedOption
-          ? await Option.findById(config.selectedOption)
-          : null;
+    const processedImages = await Promise.all(
+      images.map(async (image) => {
+        const imageUrl = await uploadImageToCloudinary(
+          image.url,
+          cloudinaryFolder
+        );
         return {
-          fieldName: config.fieldName,
-          fieldType: config.fieldType,
-          selectedOption: selectedOption ? selectedOption._id : null,
+          url: imageUrl,
+          colors: image.colors || [], // Voeg kleuren toe als array (leeg als niet opgegeven)
         };
       })
     );
@@ -293,8 +291,7 @@ const update = async (req, res) => {
         productPrice,
         description,
         brand,
-        images: uploadedImages,
-        customConfigurations: customConfigDocuments, // Update custom configuraties
+        images: processedImages,
       },
       { new: true, runValidators: true }
     );
