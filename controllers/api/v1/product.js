@@ -42,22 +42,13 @@ const create = async (req, res) => {
       configurations = [],
     } = req.body;
 
-    // Validate required fields
-    if (
-      !productCode ||
-      !productName ||
-      !productType ||
-      !productPrice ||
-      !description ||
-      !brand
-    ) {
+    if (!productName || !productType || !productPrice || !description) {
       return res.status(400).json({
         message:
-          "Missing required fields: productCode, productName, productType, productPrice, description, brand",
+          "Missing required fields: productName, productType, productPrice, description",
       });
     }
 
-    // Token validation
     const token = req.headers.authorization?.split(" ")[1];
     if (!token) {
       return res
@@ -65,13 +56,7 @@ const create = async (req, res) => {
         .json({ message: "No token provided, authorization required" });
     }
 
-    let decoded;
-    try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET);
-    } catch (err) {
-      return res.status(401).json({ message: "Invalid or expired token" });
-    }
-
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const partnerId = decoded.companyId;
     if (!partnerId) {
       return res
@@ -79,7 +64,6 @@ const create = async (req, res) => {
         .json({ message: "Token does not contain valid companyId" });
     }
 
-    // Process images
     const cloudinaryFolder = `Products/${productName}`;
     const processedImages = await Promise.all(
       images.map(async (image) => {
@@ -89,12 +73,11 @@ const create = async (req, res) => {
         );
         return {
           url: imageUrl,
-          colors: image.colors || [], // Voeg kleuren toe als array (leeg als niet opgegeven)
+          colors: image.colors || [],
         };
       })
     );
 
-    // Process configurations
     const configurationDocuments = await Promise.all(
       configurations.map(async (config) => {
         const configuration = await Configuration.findById(
@@ -103,9 +86,9 @@ const create = async (req, res) => {
         const selectedOption = await Option.findById(config.selectedOption);
 
         if (!configuration || !selectedOption) {
-          return res.status(400).json({
-            message: `Invalid configuration or selected option: ${config.configurationId} or ${config.selectedOption}`,
-          });
+          throw new Error(
+            `Invalid configuration or selected option: ${config.configurationId} or ${config.selectedOption}`
+          );
         }
 
         return {
@@ -115,7 +98,6 @@ const create = async (req, res) => {
       })
     );
 
-    // Create the product
     const newProduct = new Product({
       productCode,
       productName,
@@ -128,11 +110,9 @@ const create = async (req, res) => {
       configurations: configurationDocuments,
     });
 
-    // Save and return response
     await newProduct.save();
     res.status(201).json({ status: "success", data: newProduct });
   } catch (error) {
-    console.error("Error creating product:", error);
     res.status(500).json({
       message: "An error occurred while creating the product.",
       error: error.message,
@@ -146,17 +126,13 @@ const index = async (req, res) => {
     const { partnerName, productType, brand } = req.query;
     const filter = {};
 
-    // Zoek de partner op basis van de naam (inclusief spaties)
     if (partnerName) {
-      // Voeg spaties toe in de partnernaam, bijv. OdetteLunettes -> Odette Lunettes
       const partnerNameWithSpaces = partnerName.replace(
         /([a-z])([A-Z])/g,
         "$1 $2"
       );
-
-      // Zoek de partner met de naam inclusief spaties
       const partner = await Partner.findOne({
-        name: { $regex: new RegExp(`^${partnerNameWithSpaces}$`, "i") }, // Case-insensitive zoekopdracht
+        name: { $regex: new RegExp(`^${partnerNameWithSpaces}$`, "i") },
       });
 
       if (!partner) {
@@ -166,22 +142,16 @@ const index = async (req, res) => {
         });
       }
 
-      filter.partnerId = partner._id; // Gebruik het gevonden partnerId
+      filter.partnerId = partner._id;
     }
 
-    // Voeg extra filters toe
     if (productType) filter.productType = productType;
     if (brand) filter.brand = brand;
 
-    // Haal producten op met de filter
     const products = await Product.find(filter);
 
-    res.json({
-      status: "success",
-      data: { products },
-    });
+    res.json({ status: "success", data: { products } });
   } catch (error) {
-    console.error("Error fetching products:", error);
     res.status(500).json({
       status: "error",
       message: "An error occurred while retrieving products",
@@ -195,23 +165,16 @@ const show = async (req, res) => {
   try {
     const { id } = req.params;
 
-    if (!id) {
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({
         status: "error",
-        message: "Product id is required to retrieve a single product",
-      });
-    }
-
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({
-        status: "error",
-        message: "Invalid product id",
+        message: "Invalid or missing product id",
       });
     }
 
     const product = await Product.findById(id)
-      .populate("configurations.configurationId") // Populeren van de configuratie
-      .populate("configurations.selectedOption"); // Populeren van de geselecteerde optie
+      .populate("configurations.configurationId")
+      .populate("configurations.selectedOption");
 
     if (!product) {
       return res.status(404).json({
@@ -220,10 +183,7 @@ const show = async (req, res) => {
       });
     }
 
-    res.json({
-      status: "success",
-      data: { product },
-    });
+    res.json({ status: "success", data: { product } });
   } catch (error) {
     res.status(500).json({
       status: "error",
@@ -243,30 +203,23 @@ const update = async (req, res) => {
     productPrice,
     description,
     brand,
-    images = [], // Verwacht een array van objecten met url en colors
+    images = [],
+    configurations = [],
   } = req.body;
 
-  if (
-    !productCode ||
-    !productName ||
-    !productType ||
-    !productPrice ||
-    !description ||
-    !brand
-  ) {
-    return res.status(400).json({
-      message: "Product is missing required fields.",
-    });
+  if (!productName || !productType || !productPrice || !description) {
+    return res
+      .status(400)
+      .json({ message: "Product is missing required fields." });
   }
 
   if (productPrice <= 0) {
-    return res.status(400).json({
-      message: "productPrice must be greater than zero",
-    });
+    return res
+      .status(400)
+      .json({ message: "productPrice must be greater than zero" });
   }
 
   try {
-    // Process images
     const cloudinaryFolder = `Products/${productName}`;
     const processedImages = await Promise.all(
       images.map(async (image) => {
@@ -276,12 +229,31 @@ const update = async (req, res) => {
         );
         return {
           url: imageUrl,
-          colors: image.colors || [], // Voeg kleuren toe als array (leeg als niet opgegeven)
+          colors: image.colors || [],
         };
       })
     );
 
-    // Update the product
+    const configurationDocuments = await Promise.all(
+      configurations.map(async (config) => {
+        const configuration = await Configuration.findById(
+          config.configurationId
+        );
+        const selectedOption = await Option.findById(config.selectedOption);
+
+        if (!configuration || !selectedOption) {
+          throw new Error(
+            `Invalid configuration or selected option: ${config.configurationId} or ${config.selectedOption}`
+          );
+        }
+
+        return {
+          configurationId: configuration._id,
+          selectedOption: selectedOption._id,
+        };
+      })
+    );
+
     const updatedProduct = await Product.findByIdAndUpdate(
       id,
       {
@@ -292,23 +264,17 @@ const update = async (req, res) => {
         description,
         brand,
         images: processedImages,
+        configurations: configurationDocuments,
       },
       { new: true, runValidators: true }
     );
 
     if (!updatedProduct) {
-      return res.status(404).json({
-        status: "error",
-        message: "Product not found",
-      });
+      return res.status(404).json({ message: "Product not found" });
     }
 
-    res.json({
-      status: "success",
-      data: { product: updatedProduct },
-    });
+    res.json({ status: "success", data: { product: updatedProduct } });
   } catch (err) {
-    console.error("Error updating product:", err);
     res.status(500).json({
       status: "error",
       message: "Product could not be updated",

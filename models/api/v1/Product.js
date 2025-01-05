@@ -27,18 +27,6 @@ const ProductSchema = new mongoose.Schema({
     type: String,
     required: false,
   },
-  images: [
-    {
-      url: {
-        type: String,
-        required: true,
-      },
-      colors: {
-        type: [String], // Array van kleuren als hex-codes
-        required: false, // Niet verplicht, voor het geval een afbeelding geen kleuren heeft
-      },
-    },
-  ],
   partnerId: {
     type: mongoose.Schema.Types.ObjectId,
     required: true,
@@ -48,12 +36,12 @@ const ProductSchema = new mongoose.Schema({
     {
       configurationId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Configuration", // Referentie naar Configuration collectie
+        ref: "Configuration",
         required: true,
       },
       selectedOption: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Option", // Verwijzing naar de geselecteerde optie
+        ref: "Option",
         required: true,
       },
     },

@@ -3,7 +3,17 @@ const mongoose = require("mongoose");
 const configurationSchema = new mongoose.Schema({
   fieldName: { type: String, required: true },
   fieldType: { type: String, required: true },
-  options: [{ type: mongoose.Schema.Types.ObjectId, ref: "Option" }], // Dit maakt het een ObjectId
+  options: [
+    {
+      value: { type: String, required: true },
+      images: [
+        {
+          url: { type: String, required: true },
+          altText: { type: String, required: false },
+        },
+      ],
+    },
+  ],
   isColor: { type: Boolean, required: true },
 });
 
