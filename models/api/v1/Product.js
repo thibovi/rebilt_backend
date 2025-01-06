@@ -27,6 +27,11 @@ const ProductSchema = new mongoose.Schema({
     type: String,
     required: false,
   },
+  activeUnactive: {
+    type: String,
+    enum: ["active", "inactive"],
+    default: "active",
+  },
   partnerId: {
     type: mongoose.Schema.Types.ObjectId,
     required: true,

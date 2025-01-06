@@ -37,6 +37,7 @@ const create = async (req, res) => {
       productPrice,
       description,
       brand,
+      activeInactive = "active", // Zorgt ervoor dat de default expliciet is
       configurations = [],
     } = req.body;
 
@@ -60,7 +61,6 @@ const create = async (req, res) => {
       });
     }
 
-    // Controleer JWT-token en decode partnerId
     const token = req.headers.authorization?.split(" ")[1];
     if (!token) {
       return res
@@ -70,16 +70,15 @@ const create = async (req, res) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const partnerId = decoded.companyId;
+
     if (!partnerId) {
       return res
         .status(401)
         .json({ message: "Token does not contain valid companyId." });
     }
 
-    // Verwerk configuraties en valideer ze
     const configurationDocuments = await Promise.all(
       configurations.map(async (config) => {
-        // Zoek de configuratie
         const configuration = await Configuration.findById(
           config.configurationId
         );
@@ -89,10 +88,10 @@ const create = async (req, res) => {
           );
         }
 
-        // Controleer of de geselecteerde optie in de configuratie bestaat
         const isValidOption = configuration.options.some(
           (option) => option.optionId.toString() === config.selectedOption
         );
+
         if (!isValidOption) {
           throw new Error(
             `Selected option ID ${config.selectedOption} is not valid for configuration ${config.configurationId}.`
@@ -106,7 +105,6 @@ const create = async (req, res) => {
       })
     );
 
-    // Maak het product aan
     const newProduct = new Product({
       productCode,
       productName,
@@ -114,11 +112,11 @@ const create = async (req, res) => {
       productPrice,
       description,
       brand,
+      activeUnactive: activeInactive, // Opslaan van actieve status
       partnerId,
       configurations: configurationDocuments,
     });
 
-    // Sla het product op in de database
     await newProduct.save();
     res.status(201).json({ status: "success", data: newProduct });
   } catch (error) {
@@ -132,7 +130,7 @@ const create = async (req, res) => {
 // Get Products with Filters
 const index = async (req, res) => {
   try {
-    const { partnerName, productType, brand } = req.query;
+    const { partnerName, productType, brand, activeInactive } = req.query;
     const filter = {};
 
     if (partnerName) {
@@ -156,6 +154,7 @@ const index = async (req, res) => {
 
     if (productType) filter.productType = productType;
     if (brand) filter.brand = brand;
+    if (activeInactive) filter.activeInactive = activeInactive;
 
     const products = await Product.find(filter);
 
@@ -212,6 +211,7 @@ const update = async (req, res) => {
     productPrice,
     description,
     brand,
+    activeInactive,
     images = [],
     configurations = [],
   } = req.body;
@@ -272,6 +272,7 @@ const update = async (req, res) => {
         productPrice,
         description,
         brand,
+        activeInactive,
         images: processedImages,
         configurations: configurationDocuments,
       },
@@ -304,10 +305,10 @@ const destroy = async (req, res) => {
 
     res.status(200).json({ message: "Product deleted successfully" });
   } catch (error) {
-    console.error(error);
-    res
-      .status(500)
-      .json({ message: "Error deleting Product", error: error.message });
+    res.status(500).json({
+      message: "Error deleting Product",
+      error: error.message,
+    });
   }
 };
 
