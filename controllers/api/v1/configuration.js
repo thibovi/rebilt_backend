@@ -28,19 +28,45 @@ const create = async (req, res) => {
 
     if (options && options.length > 0) {
       for (let option of options) {
-        const { value, images } = option;
+        const { optionId, images } = option;
 
+        // Controleer of optionId is meegegeven
+        if (!optionId) {
+          return res.status(400).json({
+            status: "error",
+            message: "Each option must include an optionId",
+          });
+        }
+
+        // Valideer of optionId bestaat in de database
+        const existingOption = await Option.findById(optionId);
+        if (!existingOption) {
+          return res.status(400).json({
+            status: "error",
+            message: `Option with id ${optionId} does not exist`,
+          });
+        }
+
+        const sanitizeForCloudinary = (input) => {
+          return input.replace(/[^a-zA-Z0-9-_]/g, "_"); // Alleen letters, cijfers, _ en - toegestaan
+        };
+
+        // Verwerk de images en upload ze naar Cloudinary
         const processedImages = await Promise.all(
           (images || []).map(async (image) => {
+            const safeFieldName = sanitizeForCloudinary(fieldName);
+            const safeOptionName = sanitizeForCloudinary(existingOption.name);
+
             const imageUrl = await uploadImageToCloudinary(
               image.url,
-              `Configurations/${fieldName}/${value}`
+              `Configurations/${safeFieldName}/${safeOptionName}`
             );
             return { url: imageUrl, altText: image.altText || "" };
           })
         );
 
-        processedOptions.push({ value, images: processedImages });
+        // Voeg de optie met optionId en verwerkte images toe
+        processedOptions.push({ optionId, images: processedImages });
       }
     }
 
@@ -111,11 +137,18 @@ const update = async (req, res) => {
       for (let option of options) {
         const { value, images } = option;
 
+        const sanitizeForCloudinary = (input) => {
+          return input.replace(/[^a-zA-Z0-9-_]/g, "_"); // Alleen letters, cijfers, _ en - toegestaan
+        };
+
         const processedImages = await Promise.all(
           (images || []).map(async (image) => {
+            const safeFieldName = sanitizeForCloudinary(fieldName);
+            const safeOptionName = sanitizeForCloudinary(existingOption.name);
+
             const imageUrl = await uploadImageToCloudinary(
               image.url,
-              `Configurations/${fieldName}/${value}`
+              `Configurations/${safeFieldName}/${safeOptionName}`
             );
             return { url: imageUrl, altText: image.altText || "" };
           })

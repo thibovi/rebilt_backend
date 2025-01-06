@@ -5,7 +5,11 @@ const configurationSchema = new mongoose.Schema({
   fieldType: { type: String, required: true },
   options: [
     {
-      value: { type: String, required: true },
+      optionId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Option",
+        required: true,
+      },
       images: [
         {
           url: { type: String, required: true },

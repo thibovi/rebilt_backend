@@ -28,7 +28,6 @@ const uploadImageToCloudinary = async (image, folder) => {
   });
 };
 
-// Create Product
 const create = async (req, res) => {
   try {
     const {
@@ -38,22 +37,35 @@ const create = async (req, res) => {
       productPrice,
       description,
       brand,
-      images = [], // Verwacht een array van objecten met url en colors
       configurations = [],
     } = req.body;
 
-    if (!productName || !productType || !productPrice || !description) {
+    // Controleer verplichte velden
+    if (
+      !productName ||
+      !productType ||
+      !productPrice ||
+      !description ||
+      !brand
+    ) {
       return res.status(400).json({
         message:
-          "Missing required fields: productName, productType, productPrice, description",
+          "Missing required fields: productName, productType, productPrice, description, brand",
       });
     }
 
+    if (isNaN(productPrice) || productPrice <= 0) {
+      return res.status(400).json({
+        message: "Invalid productPrice. It must be a positive number.",
+      });
+    }
+
+    // Controleer JWT-token en decode partnerId
     const token = req.headers.authorization?.split(" ")[1];
     if (!token) {
       return res
         .status(401)
-        .json({ message: "No token provided, authorization required" });
+        .json({ message: "No token provided, authorization required." });
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -61,43 +73,40 @@ const create = async (req, res) => {
     if (!partnerId) {
       return res
         .status(401)
-        .json({ message: "Token does not contain valid companyId" });
+        .json({ message: "Token does not contain valid companyId." });
     }
 
-    const cloudinaryFolder = `Products/${productName}`;
-    const processedImages = await Promise.all(
-      images.map(async (image) => {
-        const imageUrl = await uploadImageToCloudinary(
-          image.url,
-          cloudinaryFolder
-        );
-        return {
-          url: imageUrl,
-          colors: image.colors || [],
-        };
-      })
-    );
-
+    // Verwerk configuraties en valideer ze
     const configurationDocuments = await Promise.all(
       configurations.map(async (config) => {
+        // Zoek de configuratie
         const configuration = await Configuration.findById(
           config.configurationId
         );
-        const selectedOption = await Option.findById(config.selectedOption);
-
-        if (!configuration || !selectedOption) {
+        if (!configuration) {
           throw new Error(
-            `Invalid configuration or selected option: ${config.configurationId} or ${config.selectedOption}`
+            `Invalid configuration ID: ${config.configurationId}`
+          );
+        }
+
+        // Controleer of de geselecteerde optie in de configuratie bestaat
+        const isValidOption = configuration.options.some(
+          (option) => option.optionId.toString() === config.selectedOption
+        );
+        if (!isValidOption) {
+          throw new Error(
+            `Selected option ID ${config.selectedOption} is not valid for configuration ${config.configurationId}.`
           );
         }
 
         return {
           configurationId: configuration._id,
-          selectedOption: selectedOption._id,
+          selectedOption: config.selectedOption,
         };
       })
     );
 
+    // Maak het product aan
     const newProduct = new Product({
       productCode,
       productName,
@@ -105,11 +114,11 @@ const create = async (req, res) => {
       productPrice,
       description,
       brand,
-      images: processedImages,
       partnerId,
       configurations: configurationDocuments,
     });
 
+    // Sla het product op in de database
     await newProduct.save();
     res.status(201).json({ status: "success", data: newProduct });
   } catch (error) {
