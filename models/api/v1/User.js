@@ -17,7 +17,7 @@ const userSchema = new mongoose.Schema({
     default: "customer",
   },
   company: { type: String, required: false },
-  activeUnactive: {
+  activeInactive: {
     type: String,
     enum: ["active", "inactive"],
     default: "active",

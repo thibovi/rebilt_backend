@@ -13,7 +13,7 @@ const signup = async (req, res) => {
       password,
       role,
       company, // Dit gebruiken we om de partner te vinden, optioneel
-      activeUnactive,
+      activeInactive,
       country,
       city,
       postalCode,
@@ -28,7 +28,7 @@ const signup = async (req, res) => {
       !email ||
       !password ||
       !role ||
-      !activeUnactive
+      !activeInactive
     ) {
       return res
         .status(400)
@@ -60,7 +60,7 @@ const signup = async (req, res) => {
       lastname,
       email,
       role,
-      activeUnactive,
+      activeInactive,
       company, // Optioneel om te bewaren voor de leesbaarheid
       partnerId, // Koppel de partnerId aan de gebruiker (kan null zijn)
       country,
@@ -98,7 +98,7 @@ const signup = async (req, res) => {
           email: user.email,
           role: user.role,
           company: user.company, // Handig voor leesbaarheid
-          activeUnactive: user.activeUnactive,
+          activeInactive: user.activeInactive,
           country: user.country,
           city: user.city,
           postalCode: user.postalCode,
@@ -236,7 +236,7 @@ const show = async (req, res) => {
           role: user.role,
           company: user.company,
           partnerId: partner ? partner._id : null, // PartnerId toevoegen of null als niet gevonden
-          activeUnactive: user.activeUnactive,
+          activeInactive: user.activeInactive,
           country: user.country,
           city: user.city,
           postalCode: user.postalCode,
@@ -307,7 +307,7 @@ const update = async (req, res) => {
       email: userData.email,
       role: userData.role,
       company: userData.company,
-      activeUnactive: userData.activeUnactive,
+      activeInactive: userData.activeInactive,
       country: userData.country, // New fields
       city: userData.city, // New fields
       postalCode: userData.postalCode, // New fields
@@ -327,7 +327,7 @@ const update = async (req, res) => {
           email: updatedUser.email,
           id: updatedUser._id,
           company: updatedUser.company,
-          activeUnactive: updatedUser.activeUnactive,
+          activeInactive: updatedUser.activeInactive,
           country: updatedUser.country, // New fields
           city: updatedUser.city, // New fields
           postalCode: updatedUser.postalCode, // New fields

@@ -112,7 +112,7 @@ const create = async (req, res) => {
       productPrice,
       description,
       brand,
-      activeUnactive: activeInactive, // Opslaan van actieve status
+      activeInactive: activeInactive, // Opslaan van actieve status
       partnerId,
       configurations: configurationDocuments,
     });
