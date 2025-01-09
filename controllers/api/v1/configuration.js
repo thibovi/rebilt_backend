@@ -25,8 +25,15 @@ const sanitizeForCloudinary = (input) => {
 // Create Configuration
 const create = async (req, res) => {
   try {
-    const { fieldName, fieldType, options, isActive, partnerId, isColor } =
-      req.body;
+    const {
+      fieldName,
+      fieldType,
+      options,
+      isActive,
+      partnerId,
+      isColor,
+      configurationId,
+    } = req.body;
 
     if (!fieldName || !fieldType) {
       return res.status(400).json({
@@ -72,6 +79,7 @@ const create = async (req, res) => {
       isActive: isActive !== undefined ? isActive : true,
       partnerId: partnerId || null,
       isColor: isColor || false,
+      configurationId: configurationId || null, // Add the configurationId here
     });
 
     const savedConfig = await newConfiguration.save();
@@ -118,11 +126,17 @@ const show = async (req, res) => {
   }
 };
 
-// Update Configuration
 const update = async (req, res) => {
   try {
-    const { fieldName, fieldType, options, isActive, partnerId, isColor } =
-      req.body;
+    const {
+      fieldName,
+      fieldType,
+      options,
+      isActive,
+      partnerId,
+      isColor,
+      configurationId,
+    } = req.body;
 
     const processedOptions = await Promise.all(
       (options || []).map(async (option) => {
@@ -163,6 +177,7 @@ const update = async (req, res) => {
         isActive,
         partnerId,
         isColor,
+        configurationId: configurationId || null, // Add configurationId to update
       },
       { new: true }
     );

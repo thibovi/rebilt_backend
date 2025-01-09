@@ -2,6 +2,7 @@ const jwt = require("jsonwebtoken");
 const Product = require("../../../models/api/v1/Product");
 const Configuration = require("../../../models/api/v1/Configuration");
 const Option = require("../../../models/api/v1/Option");
+const PartnerConfiguration = require("../../../models/api/v1/PartnerConfiguration");
 const Partner = require("../../../models/api/v1/Partner");
 
 require("dotenv").config();
@@ -37,7 +38,7 @@ const create = async (req, res) => {
       productPrice,
       description,
       brand,
-      activeInactive = "active", // Zorgt ervoor dat de default expliciet is
+      activeInactive = "active", // Default value for activeInactive
       configurations = [],
     } = req.body;
 
@@ -77,34 +78,54 @@ const create = async (req, res) => {
         .json({ message: "Token does not contain valid companyId." });
     }
 
+    // Stap 1: Zoek de partnerconfiguraties voor de juiste partner
+    const partnerConfigurations = await PartnerConfiguration.find({
+      partnerId: partnerId,
+    }).populate("options.optionId"); // Zorg ervoor dat de opties gepopuleerd worden
+
+    if (!partnerConfigurations || partnerConfigurations.length === 0) {
+      return res.status(400).json({
+        status: "error",
+        message: `No partner configurations found for partner ID ${partnerId}`,
+      });
+    }
+
+    // Stap 2: Loop door alle configuraties en valideer de data
     const configurationDocuments = await Promise.all(
       configurations.map(async (config) => {
-        const configuration = await Configuration.findById(
-          config.configurationId
+        const { configurationId, selectedOption } = config;
+
+        // Zoek de partnerconfiguratie die overeenkomt met configurationId
+        const validPartnerConfig = partnerConfigurations.find(
+          (partnerConfig) =>
+            partnerConfig.configurationId.toString() === configurationId
         );
-        if (!configuration) {
+
+        if (!validPartnerConfig) {
           throw new Error(
-            `Invalid configuration ID: ${config.configurationId}`
+            `No valid partner configuration found for configurationId: ${configurationId}`
           );
         }
 
-        const isValidOption = configuration.options.some(
-          (option) => option.optionId.toString() === config.selectedOption
+        // Zoek de geselecteerde optie binnen de gepopuleerde opties
+        const selectedOptionDetails = validPartnerConfig.options.find(
+          (option) => option.optionId._id.toString() === selectedOption
         );
 
-        if (!isValidOption) {
+        if (!selectedOptionDetails) {
           throw new Error(
-            `Selected option ID ${config.selectedOption} is not valid for configuration ${config.configurationId}.`
+            `Selected option with ID ${selectedOption} does not exist in the partner configuration options.`
           );
         }
 
         return {
-          configurationId: configuration._id,
-          selectedOption: config.selectedOption,
+          configurationId: validPartnerConfig.configurationId,
+          selectedOption: selectedOptionDetails.optionId._id, // Zorg ervoor dat we de juiste optie opslaan
         };
       })
     );
 
+    // Stap 3: Maak het product aan met de bijbehorende partnerconfiguraties
     const newProduct = new Product({
       productCode,
       productName,
@@ -114,7 +135,7 @@ const create = async (req, res) => {
       brand,
       activeInactive: activeInactive, // Opslaan van actieve status
       partnerId,
-      configurations: configurationDocuments,
+      configurations: configurationDocuments, // Voeg de configuraties toe aan het product
     });
 
     await newProduct.save();
