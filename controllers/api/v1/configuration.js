@@ -10,12 +10,16 @@ cloudinary.config({
 });
 
 const uploadImageToCloudinary = async (image, folder) => {
-  return new Promise((resolve, reject) => {
-    cloudinary.uploader.upload(image, { folder: folder }, (error, result) => {
-      if (error) reject(error);
-      else resolve(result.secure_url);
-    });
-  });
+  try {
+    const result = await cloudinary.uploader.upload(image, { folder });
+    return result.secure_url;
+  } catch (error) {
+    throw new Error(`Cloudinary upload failed: ${error.message}`);
+  }
+};
+
+const sanitizeForCloudinary = (input) => {
+  return input.replace(/[^a-zA-Z0-9-_]/g, "_"); // Only letters, numbers, _ and - allowed
 };
 
 // Create Configuration
@@ -24,39 +28,31 @@ const create = async (req, res) => {
     const { fieldName, fieldType, options, isActive, partnerId, isColor } =
       req.body;
 
-    const processedOptions = [];
+    if (!fieldName || !fieldType) {
+      return res.status(400).json({
+        status: "error",
+        message: "fieldName and fieldType are required",
+      });
+    }
 
-    if (options && options.length > 0) {
-      for (let option of options) {
+    const processedOptions = await Promise.all(
+      (options || []).map(async (option) => {
         const { optionId, images } = option;
 
-        // Controleer of optionId is meegegeven
         if (!optionId) {
-          return res.status(400).json({
-            status: "error",
-            message: "Each option must include an optionId",
-          });
+          throw new Error("Each option must include an optionId");
         }
 
-        // Valideer of optionId bestaat in de database
         const existingOption = await Option.findById(optionId);
         if (!existingOption) {
-          return res.status(400).json({
-            status: "error",
-            message: `Option with id ${optionId} does not exist`,
-          });
+          throw new Error(`Option with id ${optionId} does not exist`);
         }
 
-        const sanitizeForCloudinary = (input) => {
-          return input.replace(/[^a-zA-Z0-9-_]/g, "_"); // Alleen letters, cijfers, _ en - toegestaan
-        };
+        const safeFieldName = sanitizeForCloudinary(fieldName);
+        const safeOptionName = sanitizeForCloudinary(existingOption.name);
 
-        // Verwerk de images en upload ze naar Cloudinary
         const processedImages = await Promise.all(
           (images || []).map(async (image) => {
-            const safeFieldName = sanitizeForCloudinary(fieldName);
-            const safeOptionName = sanitizeForCloudinary(existingOption.name);
-
             const imageUrl = await uploadImageToCloudinary(
               image.url,
               `Configurations/${safeFieldName}/${safeOptionName}`
@@ -65,10 +61,9 @@ const create = async (req, res) => {
           })
         );
 
-        // Voeg de optie met optionId en verwerkte images toe
-        processedOptions.push({ optionId, images: processedImages });
-      }
-    }
+        return { optionId, images: processedImages };
+      })
+    );
 
     const newConfiguration = new Configuration({
       fieldName,
@@ -80,13 +75,11 @@ const create = async (req, res) => {
     });
 
     const savedConfig = await newConfiguration.save();
-
     res.status(201).json({ status: "success", data: savedConfig });
   } catch (error) {
     res.status(500).json({
       status: "error",
-      message: "Error creating configuration",
-      error: error.message,
+      message: error.message || "Error creating configuration",
     });
   }
 };
@@ -131,21 +124,24 @@ const update = async (req, res) => {
     const { fieldName, fieldType, options, isActive, partnerId, isColor } =
       req.body;
 
-    const processedOptions = [];
+    const processedOptions = await Promise.all(
+      (options || []).map(async (option) => {
+        const { optionId, images } = option;
 
-    if (options && options.length > 0) {
-      for (let option of options) {
-        const { value, images } = option;
+        if (!optionId) {
+          throw new Error("Each option must include an optionId");
+        }
 
-        const sanitizeForCloudinary = (input) => {
-          return input.replace(/[^a-zA-Z0-9-_]/g, "_"); // Alleen letters, cijfers, _ en - toegestaan
-        };
+        const existingOption = await Option.findById(optionId);
+        if (!existingOption) {
+          throw new Error(`Option with id ${optionId} does not exist`);
+        }
+
+        const safeFieldName = sanitizeForCloudinary(fieldName);
+        const safeOptionName = sanitizeForCloudinary(existingOption.name);
 
         const processedImages = await Promise.all(
           (images || []).map(async (image) => {
-            const safeFieldName = sanitizeForCloudinary(fieldName);
-            const safeOptionName = sanitizeForCloudinary(existingOption.name);
-
             const imageUrl = await uploadImageToCloudinary(
               image.url,
               `Configurations/${safeFieldName}/${safeOptionName}`
@@ -154,9 +150,9 @@ const update = async (req, res) => {
           })
         );
 
-        processedOptions.push({ value, images: processedImages });
-      }
-    }
+        return { optionId, images: processedImages };
+      })
+    );
 
     const updatedConfig = await Configuration.findByIdAndUpdate(
       req.params.id,
@@ -182,8 +178,7 @@ const update = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       status: "error",
-      message: "Error updating configuration",
-      error: error.message,
+      message: error.message || "Error updating configuration",
     });
   }
 };
@@ -205,8 +200,7 @@ const destroy = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       status: "error",
-      message: "Error deleting configuration",
-      error: error.message,
+      message: error.message || "Error deleting configuration",
     });
   }
 };

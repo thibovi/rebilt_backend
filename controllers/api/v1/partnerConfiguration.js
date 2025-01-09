@@ -1,4 +1,3 @@
-const Order = require("../../../models/api/v1/Order");
 const PartnerConfiguration = require("../../../models/api/v1/PartnerConfiguration");
 
 // Create PartnerConfiguration
@@ -6,7 +5,7 @@ const create = async (req, res) => {
   try {
     const { partnerId, configurationId, options } = req.body;
 
-    // Check if partnerId and configurationId are the same
+    // Validatie: Check of partnerId en configurationId gelijk zijn
     if (partnerId.toString() === configurationId.toString()) {
       return res.status(400).json({
         status: "error",
@@ -14,7 +13,7 @@ const create = async (req, res) => {
       });
     }
 
-    // Check if a PartnerConfiguration with the same partnerId and configurationId already exists
+    // Validatie: Check of een PartnerConfiguration al bestaat
     const existingConfig = await PartnerConfiguration.findOne({
       partnerId,
       configurationId,
@@ -28,11 +27,19 @@ const create = async (req, res) => {
       });
     }
 
+    // Validatie: Zorg dat options correct zijn gestructureerd
+    if (!options || !Array.isArray(options) || options.length === 0) {
+      return res.status(400).json({
+        status: "error",
+        message: "Options must be a non-empty array",
+      });
+    }
+
     // Maak een nieuwe partnerconfiguratie aan
     const newPartnerConfiguration = new PartnerConfiguration({
       partnerId,
       configurationId,
-      options, // Zorg ervoor dat je de juiste naam gebruikt
+      options, // `options` bevat nu `optionId` en `images`
     });
 
     // Sla de partnerconfiguratie op
@@ -55,7 +62,11 @@ const create = async (req, res) => {
 // List all Partner Configurations
 const index = async (req, res) => {
   try {
-    const partnerConfigs = await PartnerConfiguration.find();
+    const partnerConfigs = await PartnerConfiguration.find()
+      .populate("partnerId", "name")
+      .populate("configurationId", "name")
+      .populate("options.optionId", "name");
+
     res.status(200).json({
       status: "success",
       data: partnerConfigs,
@@ -72,12 +83,17 @@ const index = async (req, res) => {
 // Show a specific Partner Configuration
 const show = async (req, res) => {
   try {
-    const partnerConfig = await PartnerConfiguration.findById(req.params.id);
+    const partnerConfig = await PartnerConfiguration.findById(req.params.id)
+      .populate("partnerId", "name")
+      .populate("configurationId", "name")
+      .populate("options.optionId", "name");
+
     if (!partnerConfig) {
       return res
         .status(404)
         .json({ status: "error", message: "Partner Configuration not found" });
     }
+
     res.status(200).json({
       status: "success",
       data: partnerConfig,
@@ -94,17 +110,31 @@ const show = async (req, res) => {
 // Update Partner Configuration
 const update = async (req, res) => {
   try {
-    const { partnerId, configurationId } = req.body;
+    const { partnerId, configurationId, options } = req.body;
+
+    // Validatie: Zorg dat options correct zijn gestructureerd
+    if (
+      options &&
+      (!Array.isArray(options) || options.some((opt) => !opt.optionId))
+    ) {
+      return res.status(400).json({
+        status: "error",
+        message: "Invalid options structure",
+      });
+    }
+
     const updatedPartnerConfig = await PartnerConfiguration.findByIdAndUpdate(
       req.params.id,
-      { partnerId, configurationId },
+      { partnerId, configurationId, options },
       { new: true }
     );
+
     if (!updatedPartnerConfig) {
       return res
         .status(404)
         .json({ status: "error", message: "Partner Configuration not found" });
     }
+
     res.status(200).json({
       status: "success",
       data: updatedPartnerConfig,
@@ -119,7 +149,6 @@ const update = async (req, res) => {
 };
 
 // Delete Partner Configuration
-// Delete Partner Configuration
 const destroy = async (req, res) => {
   try {
     const { id } = req.params;
@@ -129,19 +158,18 @@ const destroy = async (req, res) => {
     if (!deletedPartnerConfiguration) {
       return res.status(404).json({
         status: "error",
-        message: "partnerConfiguration not found",
+        message: "Partner Configuration not found",
       });
     }
 
     res.status(200).json({
       status: "success",
-      message: "partnerConfiguration deleted successfully",
+      message: "Partner Configuration deleted successfully",
     });
   } catch (error) {
-    console.error(error);
     res.status(500).json({
       status: "error",
-      message: "Error deleting order",
+      message: "Error deleting partner configuration",
       error: error.message,
     });
   }

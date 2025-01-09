@@ -13,8 +13,17 @@ const PartnerConfigurationSchema = new mongoose.Schema({
   },
   options: [
     {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Option",
+      optionId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Option",
+        required: true,
+      },
+      images: [
+        {
+          url: { type: String, required: true },
+          altText: { type: String, required: false },
+        },
+      ],
     },
   ],
 });
