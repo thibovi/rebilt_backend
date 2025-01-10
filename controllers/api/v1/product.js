@@ -78,28 +78,16 @@ const create = async (req, res) => {
         .json({ message: "Token does not contain valid companyId." });
     }
 
-    // Stap 1: Zoek de partnerconfiguraties voor de juiste partner
-    const partnerConfigurations = await PartnerConfiguration.find({
-      partnerId: partnerId,
-    }).populate("options.optionId"); // Zorg ervoor dat de opties gepopuleerd worden
-
-    if (!partnerConfigurations || partnerConfigurations.length === 0) {
-      return res.status(400).json({
-        status: "error",
-        message: `No partner configurations found for partner ID ${partnerId}`,
-      });
-    }
-
-    // Stap 2: Loop door alle configuraties en valideer de data
-    const configurationDocuments = await Promise.all(
+    // Loop door configuraties en verwerk afbeeldingen per geselecteerde optie
+    const processedConfigurations = await Promise.all(
       configurations.map(async (config) => {
-        const { configurationId, selectedOption } = config;
+        const { configurationId, selectedOptions = [] } = config;
 
         // Zoek de partnerconfiguratie die overeenkomt met configurationId
-        const validPartnerConfig = partnerConfigurations.find(
-          (partnerConfig) =>
-            partnerConfig.configurationId.toString() === configurationId
-        );
+        const validPartnerConfig = await PartnerConfiguration.findOne({
+          partnerId,
+          configurationId,
+        }).populate("options.optionId");
 
         if (!validPartnerConfig) {
           throw new Error(
@@ -107,25 +95,48 @@ const create = async (req, res) => {
           );
         }
 
-        // Zoek de geselecteerde optie binnen de gepopuleerde opties
-        const selectedOptionDetails = validPartnerConfig.options.find(
-          (option) => option.optionId._id.toString() === selectedOption
+        // Verwerk geselecteerde opties en afbeeldingen
+        const processedSelectedOptions = await Promise.all(
+          selectedOptions.map(async (selectedOption) => {
+            const { optionId, images = [] } = selectedOption;
+
+            // Verwerk afbeeldingen
+            const processedImages = await Promise.all(
+              images.map(async (image) => {
+                const imageUrl = await uploadImageToCloudinary(
+                  image,
+                  `Products/${productName}`
+                );
+                return imageUrl; // Of een object met URL en andere metadata, afhankelijk van je vereisten
+              })
+            );
+
+            // Zoek de geselecteerde optie in de partnerconfiguratie
+            const selectedOptionDetails = validPartnerConfig.options.find(
+              (option) => option.optionId._id.toString() === optionId
+            );
+
+            if (!selectedOptionDetails) {
+              throw new Error(
+                `Selected option with ID ${optionId} does not exist.`
+              );
+            }
+
+            return {
+              optionId: selectedOptionDetails.optionId._id,
+              images: processedImages, // Voeg de verwerkte afbeeldingen toe
+            };
+          })
         );
 
-        if (!selectedOptionDetails) {
-          throw new Error(
-            `Selected option with ID ${selectedOption} does not exist in the partner configuration options.`
-          );
-        }
-
         return {
-          configurationId: validPartnerConfig.configurationId,
-          selectedOption: selectedOptionDetails.optionId._id, // Zorg ervoor dat we de juiste optie opslaan
+          configurationId,
+          selectedOptions: processedSelectedOptions, // Voeg de geselecteerde opties met afbeeldingen toe
         };
       })
     );
 
-    // Stap 3: Maak het product aan met de bijbehorende partnerconfiguraties
+    // Maak het product aan met de bijbehorende partnerconfiguraties en afbeeldingen
     const newProduct = new Product({
       productCode,
       productName,
@@ -133,13 +144,17 @@ const create = async (req, res) => {
       productPrice,
       description,
       brand,
-      activeInactive: activeInactive, // Opslaan van actieve status
+      activeInactive,
       partnerId,
-      configurations: configurationDocuments, // Voeg de configuraties toe aan het product
+      configurations: processedConfigurations, // Voeg de configuraties toe aan het product
     });
 
     await newProduct.save();
-    res.status(201).json({ status: "success", data: newProduct });
+
+    res.status(201).json({
+      status: "success",
+      data: newProduct,
+    });
   } catch (error) {
     res.status(500).json({
       message: "An error occurred while creating the product.",
@@ -233,7 +248,6 @@ const update = async (req, res) => {
     description,
     brand,
     activeInactive,
-    images = [],
     configurations = [],
   } = req.body;
 
@@ -250,40 +264,61 @@ const update = async (req, res) => {
   }
 
   try {
-    const cloudinaryFolder = `Products/${productName}`;
-    const processedImages = await Promise.all(
-      images.map(async (image) => {
-        const imageUrl = await uploadImageToCloudinary(
-          image.url,
-          cloudinaryFolder
-        );
-        return {
-          url: imageUrl,
-          colors: image.colors || [],
-        };
-      })
-    );
-
-    const configurationDocuments = await Promise.all(
+    // Loop door configuraties en verwerk afbeeldingen per geselecteerde optie
+    const processedConfigurations = await Promise.all(
       configurations.map(async (config) => {
-        const configuration = await Configuration.findById(
-          config.configurationId
-        );
-        const selectedOption = await Option.findById(config.selectedOption);
+        const { configurationId, selectedOptions = [] } = config;
 
-        if (!configuration || !selectedOption) {
+        const validPartnerConfig = await PartnerConfiguration.findOne({
+          partnerId,
+          configurationId,
+        }).populate("options.optionId");
+
+        if (!validPartnerConfig) {
           throw new Error(
-            `Invalid configuration or selected option: ${config.configurationId} or ${config.selectedOption}`
+            `No valid partner configuration found for configurationId: ${configurationId}`
           );
         }
 
+        const processedSelectedOptions = await Promise.all(
+          selectedOptions.map(async (selectedOption) => {
+            const { optionId, images = [] } = selectedOption;
+
+            const processedImages = await Promise.all(
+              images.map(async (image) => {
+                const imageUrl = await uploadImageToCloudinary(
+                  image,
+                  `Products/${productName}`
+                );
+                return imageUrl;
+              })
+            );
+
+            const selectedOptionDetails = validPartnerConfig.options.find(
+              (option) => option.optionId._id.toString() === optionId
+            );
+
+            if (!selectedOptionDetails) {
+              throw new Error(
+                `Selected option with ID ${optionId} does not exist.`
+              );
+            }
+
+            return {
+              optionId: selectedOptionDetails.optionId._id,
+              images: processedImages,
+            };
+          })
+        );
+
         return {
-          configurationId: configuration._id,
-          selectedOption: selectedOption._id,
+          configurationId,
+          selectedOptions: processedSelectedOptions,
         };
       })
     );
 
+    // Update the product with new data
     const updatedProduct = await Product.findByIdAndUpdate(
       id,
       {
@@ -294,8 +329,7 @@ const update = async (req, res) => {
         description,
         brand,
         activeInactive,
-        images: processedImages,
-        configurations: configurationDocuments,
+        configurations: processedConfigurations, // Update the configurations with images
       },
       { new: true, runValidators: true }
     );
@@ -304,7 +338,7 @@ const update = async (req, res) => {
       return res.status(404).json({ message: "Product not found" });
     }
 
-    res.json({ status: "success", data: { product: updatedProduct } });
+    res.json({ status: "success", data: updatedProduct });
   } catch (err) {
     res.status(500).json({
       status: "error",

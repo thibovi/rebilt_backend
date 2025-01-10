@@ -3,7 +3,7 @@ const PartnerConfiguration = require("../../../models/api/v1/PartnerConfiguratio
 // Create PartnerConfiguration
 const create = async (req, res) => {
   try {
-    const { partnerId, configurationId, options, selectedOptionId } = req.body;
+    const { partnerId, configurationId, options } = req.body;
 
     // Validatie: Check of partnerId en configurationId gelijk zijn
     if (partnerId.toString() === configurationId.toString()) {
@@ -35,23 +35,11 @@ const create = async (req, res) => {
       });
     }
 
-    // Zorg dat de geselecteerde optie bestaat in de lijst van opties
-    const selectedOption = options.find(
-      (option) => option.optionId.toString() === selectedOptionId
-    );
-    if (!selectedOption) {
-      return res.status(400).json({
-        status: "error",
-        message: "Selected option not found in the options list",
-      });
-    }
-
     // Maak een nieuwe partnerconfiguratie aan
     const newPartnerConfiguration = new PartnerConfiguration({
       partnerId,
       configurationId,
       options, // `options` bevat nu `optionId` en `images`
-      selectedOptionId, // Voeg de geselecteerde optie toe
     });
 
     // Sla de partnerconfiguratie op

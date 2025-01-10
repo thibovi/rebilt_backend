@@ -44,11 +44,21 @@ const ProductSchema = new mongoose.Schema({
         ref: "Configuration",
         required: true,
       },
-      selectedOption: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Option",
-        required: true,
-      },
+      selectedOptions: [
+        {
+          optionId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Option",
+            required: true,
+          },
+          images: [
+            {
+              type: String,
+              required: false,
+            },
+          ],
+        },
+      ],
     },
   ],
 });
