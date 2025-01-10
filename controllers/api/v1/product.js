@@ -175,7 +175,7 @@ const index = async (req, res) => {
         "$1 $2"
       );
       const partner = await Partner.findOne({
-        name: { $regex: new RegExp(`^${partnerNameWithSpaces}$`, "i") },
+        name: { $regex: new RegExp(`^${partnerNameWithSpaces}$`, "i") }, // case-insensitive regex search
       });
 
       if (!partner) {
@@ -185,7 +185,7 @@ const index = async (req, res) => {
         });
       }
 
-      filter.partnerId = partner._id;
+      filter.partnerId = partner._id; // Filter based on partner ID
     }
 
     if (productType) filter.productType = productType;
@@ -209,6 +209,7 @@ const show = async (req, res) => {
   try {
     const { id } = req.params;
 
+    // Check if the ID is valid
     if (!id || !mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({
         status: "error",
@@ -216,10 +217,18 @@ const show = async (req, res) => {
       });
     }
 
+    // Find the product and populate necessary fields
     const product = await Product.findById(id)
-      .populate("configurations.configurationId")
-      .populate("configurations.selectedOption");
+      .populate({
+        path: "configurations.configurationId", // Populate the configurationId
+        model: "Configuration",
+      })
+      .populate({
+        path: "configurations.selectedOptions.optionId", // Populate selectedOptions.optionId correctly
+        model: "Option",
+      });
 
+    // If the product doesn't exist
     if (!product) {
       return res.status(404).json({
         status: "error",
@@ -227,6 +236,7 @@ const show = async (req, res) => {
       });
     }
 
+    // Return the product data
     res.json({ status: "success", data: { product } });
   } catch (error) {
     res.status(500).json({
