@@ -188,7 +188,7 @@ const update = async (req, res) => {
 
     // Werk de partnergegevens bij
     partner.name = name;
-    partner.address = address || partner.address;
+    partner.address = address !== undefined ? address : partner.address; // Preserve if not provided
     partner.contact_email = contact_email || partner.contact_email;
     partner.contact_phone = contact_phone || partner.contact_phone;
     partner.package = package;
@@ -199,13 +199,14 @@ const update = async (req, res) => {
     partner.background_color = background_color;
     partner.fontFamilyBodyText = fontFamilyBodyText;
     partner.fontFamilyTitles = fontFamilyTitles;
-    partner.logo_url = logo_url || partner.logo_url;
+    partner.logo_url = logo_url !== undefined ? logo_url : partner.logo_url; // Preserve if not provided
 
     // Sla de bijgewerkte partner op
     await partner.save();
 
     res.json({
       status: "success",
+      message: "Partner updated successfully.",
       data: { partner },
     });
   } catch (err) {
