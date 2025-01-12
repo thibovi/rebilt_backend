@@ -28,10 +28,10 @@ const create = async (req, res) => {
     }
 
     // Validatie: Zorg dat options correct zijn gestructureerd
-    if (!options || !Array.isArray(options) || options.length === 0) {
+    if (!options || !Array.isArray(options)) {
       return res.status(400).json({
         status: "error",
-        message: "Options must be a non-empty array",
+        message: "Options must be a valid array",
       });
     }
 

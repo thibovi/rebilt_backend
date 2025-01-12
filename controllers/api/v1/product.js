@@ -39,7 +39,7 @@ const create = async (req, res) => {
       description,
       brand,
       activeInactive = "active", // Default value for activeInactive
-      configurations = [],
+      configurations = [], // Default value for configurations
     } = req.body;
 
     // Controleer verplichte velden
@@ -84,12 +84,18 @@ const create = async (req, res) => {
         const { configurationId, selectedOptions = [] } = config;
 
         // Zoek de partnerconfiguratie die overeenkomt met configurationId
+        console.log(
+          `Fetching partner configuration for partnerId: ${partnerId}, configurationId: ${configurationId}`
+        );
         const validPartnerConfig = await PartnerConfiguration.findOne({
           partnerId,
           configurationId,
         }).populate("options.optionId");
 
         if (!validPartnerConfig) {
+          console.log(
+            `No valid partner configuration found for configurationId: ${configurationId}`
+          );
           throw new Error(
             `No valid partner configuration found for configurationId: ${configurationId}`
           );
@@ -99,6 +105,9 @@ const create = async (req, res) => {
         const processedSelectedOptions = await Promise.all(
           selectedOptions.map(async (selectedOption) => {
             const { optionId, images = [] } = selectedOption;
+
+            // Log de geselecteerde opties
+            console.log(`Processing selected option with ID: ${optionId}`);
 
             // Verwerk afbeeldingen
             const processedImages = await Promise.all(
@@ -111,19 +120,13 @@ const create = async (req, res) => {
               })
             );
 
-            // Zoek de geselecteerde optie in de partnerconfiguratie
-            const selectedOptionDetails = validPartnerConfig.options.find(
-              (option) => option.optionId._id.toString() === optionId
+            // Deze logica hoeft niet langer de optionId te vergelijken met de partnerconfiguratie
+            console.log(
+              "Adding selected option without validation of existence in partner config"
             );
 
-            if (!selectedOptionDetails) {
-              throw new Error(
-                `Selected option with ID ${optionId} does not exist.`
-              );
-            }
-
             return {
-              optionId: selectedOptionDetails.optionId._id,
+              optionId: optionId, // Gebruik de optieId die door de klant is gekozen
               images: processedImages, // Voeg de verwerkte afbeeldingen toe
             };
           })
@@ -137,6 +140,18 @@ const create = async (req, res) => {
     );
 
     // Maak het product aan met de bijbehorende partnerconfiguraties en afbeeldingen
+    console.log("Creating new product with the following data:", {
+      productCode,
+      productName,
+      productType,
+      productPrice,
+      description,
+      brand,
+      activeInactive,
+      partnerId,
+      configurations: processedConfigurations,
+    });
+
     const newProduct = new Product({
       productCode,
       productName,
@@ -156,6 +171,7 @@ const create = async (req, res) => {
       data: newProduct,
     });
   } catch (error) {
+    console.error("Error occurred while creating product:", error.message);
     res.status(500).json({
       message: "An error occurred while creating the product.",
       error: error.message,

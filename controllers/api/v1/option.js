@@ -67,24 +67,33 @@ const show = async (req, res) => {
 };
 
 // Update Option
+// Update Option
 const update = async (req, res) => {
   try {
-    const { value, label, configurationId } = req.body;
+    // Haal de nieuwe waarden uit de request body
+    const { name, type, price } = req.body;
+
+    // Voer de update uit
     const updatedOption = await Option.findByIdAndUpdate(
-      req.params.id,
-      { value, label, configurationId },
-      { new: true }
+      req.params.id, // Zoek naar de optie op basis van de ID
+      { name, type, price }, // Werk de velden bij
+      { new: true } // Zorg ervoor dat de bijgewerkte versie van de optie wordt geretourneerd
     );
+
+    // Als de optie niet wordt gevonden, geef dan een foutmelding
     if (!updatedOption) {
       return res
         .status(404)
         .json({ status: "error", message: "Option not found" });
     }
+
+    // Stuur de succesvolle respons met de bijgewerkte optie
     res.status(200).json({
       status: "success",
       data: updatedOption,
     });
   } catch (error) {
+    // Foutmelding bij mislukking
     res.status(500).json({
       status: "error",
       message: "Error updating option",
