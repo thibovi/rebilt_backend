@@ -15,9 +15,21 @@ const create = async (req, res) => {
     titles_color,
     text_color,
     background_color,
+    button_color,
     fontFamilyBodyText,
     fontFamilyTitles,
     logo_url,
+    black,
+    white,
+    gray_100,
+    gray_200,
+    gray_300,
+    gray_400,
+    gray_500,
+    gray_600,
+    gray_700,
+    gray_800,
+    gray_900,
   } = req.body;
 
   // Validatie voor verplichte velden
@@ -29,6 +41,7 @@ const create = async (req, res) => {
     !titles_color ||
     !text_color ||
     !background_color ||
+    !button_color ||
     !fontFamilyBodyText ||
     !fontFamilyTitles
   ) {
@@ -39,10 +52,9 @@ const create = async (req, res) => {
   }
 
   try {
-    // Maak een nieuw partner object aan
     const newPartner = new Partner({
       name,
-      address: address || {}, // Als er geen adres is, gebruik een leeg object
+      address: address || {},
       contact_email: contact_email || null,
       contact_phone: contact_phone || null,
       package,
@@ -51,20 +63,27 @@ const create = async (req, res) => {
       titles_color,
       text_color,
       background_color,
+      button_color,
       fontFamilyBodyText,
       fontFamilyTitles,
-      logo_url: logo_url || null, // Logo is optioneel
+      logo_url: logo_url || null,
+      black,
+      white,
+      gray_100,
+      gray_200,
+      gray_300,
+      gray_400,
+      gray_500,
+      gray_600,
+      gray_700,
+      gray_800,
+      gray_900,
     });
 
-    // Sla de nieuwe partner op in de database
     await newPartner.save();
-
-    // Stuur een succesresponse terug
     res.status(201).json({
       status: "success",
-      data: {
-        partner: newPartner,
-      },
+      data: { partner: newPartner },
     });
   } catch (err) {
     console.error("Error creating partner:", err);
@@ -154,12 +173,23 @@ const update = async (req, res) => {
       titles_color,
       text_color,
       background_color,
+      button_color,
       fontFamilyBodyText,
       fontFamilyTitles,
       logo_url,
+      black,
+      white,
+      gray_100,
+      gray_200,
+      gray_300,
+      gray_400,
+      gray_500,
+      gray_600,
+      gray_700,
+      gray_800,
+      gray_900,
     } = req.body;
 
-    // Validatie voor verplichte velden
     if (
       !name ||
       !package ||
@@ -168,6 +198,7 @@ const update = async (req, res) => {
       !titles_color ||
       !text_color ||
       !background_color ||
+      !button_color ||
       !fontFamilyBodyText ||
       !fontFamilyTitles
     ) {
@@ -188,7 +219,7 @@ const update = async (req, res) => {
 
     // Werk de partnergegevens bij
     partner.name = name;
-    partner.address = address !== undefined ? address : partner.address; // Preserve if not provided
+    partner.address = address !== undefined ? address : partner.address;
     partner.contact_email = contact_email || partner.contact_email;
     partner.contact_phone = contact_phone || partner.contact_phone;
     partner.package = package;
@@ -197,13 +228,23 @@ const update = async (req, res) => {
     partner.titles_color = titles_color;
     partner.text_color = text_color;
     partner.background_color = background_color;
+    partner.button_color = button_color;
     partner.fontFamilyBodyText = fontFamilyBodyText;
     partner.fontFamilyTitles = fontFamilyTitles;
-    partner.logo_url = logo_url !== undefined ? logo_url : partner.logo_url; // Preserve if not provided
+    partner.logo_url = logo_url !== undefined ? logo_url : partner.logo_url;
+    partner.black = black || partner.black;
+    partner.white = white || partner.white;
+    partner.gray_100 = gray_100 || partner.gray_100;
+    partner.gray_200 = gray_200 || partner.gray_200;
+    partner.gray_300 = gray_300 || partner.gray_300;
+    partner.gray_400 = gray_400 || partner.gray_400;
+    partner.gray_500 = gray_500 || partner.gray_500;
+    partner.gray_600 = gray_600 || partner.gray_600;
+    partner.gray_700 = gray_700 || partner.gray_700;
+    partner.gray_800 = gray_800 || partner.gray_800;
+    partner.gray_900 = gray_900 || partner.gray_900;
 
-    // Sla de bijgewerkte partner op
     await partner.save();
-
     res.json({
       status: "success",
       message: "Partner updated successfully.",
