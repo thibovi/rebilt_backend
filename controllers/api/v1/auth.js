@@ -409,7 +409,7 @@ const forgotPassword = async (req, res) => {
           </div>
           <p style="color: #000;">Bedankt,<br>Het Support Team</p>
           <footer style="margin-top: 30px; text-align: center; font-size: 12px; color: #888;">
-            &copy; ${new Date().getFullYear()} GLINT. Alle rechten voorbehouden.
+            &copy; ${new Date().getFullYear()} rebilt. Alle rechten voorbehouden.
           </footer>
         </div>
       `,
