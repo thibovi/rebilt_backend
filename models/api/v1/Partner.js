@@ -17,6 +17,7 @@ const partnerSchema = new mongoose.Schema({
   logo_url: { type: String, default: null },
   black: { type: String, default: null }, // Hex or RGB string
   white: { type: String, default: null }, // Hex or RGB string
+  blue_600: { type: String, default: null }, // Hex or RGB string
   gray_100: { type: String, default: null }, // Hex or RGB string
   gray_200: { type: String, default: null }, // Hex or RGB string
   gray_300: { type: String, default: null }, // Hex or RGB string

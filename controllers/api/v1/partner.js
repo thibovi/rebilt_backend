@@ -21,6 +21,7 @@ const create = async (req, res) => {
     logo_url,
     black,
     white,
+    blue_600,
     gray_100,
     gray_200,
     gray_300,
@@ -69,6 +70,7 @@ const create = async (req, res) => {
       logo_url: logo_url || null,
       black,
       white,
+      blue_600,
       gray_100,
       gray_200,
       gray_300,
@@ -179,6 +181,7 @@ const update = async (req, res) => {
       logo_url,
       black,
       white,
+      blue_600,
       gray_100,
       gray_200,
       gray_300,
@@ -234,6 +237,7 @@ const update = async (req, res) => {
     partner.logo_url = logo_url !== undefined ? logo_url : partner.logo_url;
     partner.black = black || partner.black;
     partner.white = white || partner.white;
+    partner.blue_600 = blue_600 || partner.blue_600;
     partner.gray_100 = gray_100 || partner.gray_100;
     partner.gray_200 = gray_200 || partner.gray_200;
     partner.gray_300 = gray_300 || partner.gray_300;
