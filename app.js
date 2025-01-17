@@ -35,6 +35,7 @@ const partnerRouter = require("./routes/api/v1/partners");
 const configurationRouter = require("./routes/api/v1/configurations");
 const partnerConfigurationRouter = require("./routes/api/v1/partnerConfigurations");
 const optionRouter = require("./routes/api/v1/options");
+const checkoutRouter = require("./routes/api/v1/checkouts");
 
 // View engine instellen
 app.set("views", path.join(__dirname, "views"));
@@ -57,6 +58,7 @@ app.use("/api/v1/categories", categoryRouter);
 app.use("/api/v1/configurations", configurationRouter);
 app.use("/api/v1/partnerConfigurations", partnerConfigurationRouter);
 app.use("/api/v1/options", optionRouter);
+app.use("/api/v1/checkouts", checkoutRouter);
 
 app.use(function (req, res, next) {
   next(createError(404));
