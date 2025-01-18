@@ -8,7 +8,10 @@ router.post("/", partnerController.create);
 // Route voor het ophalen van alle partners
 router.get("/", partnerController.index);
 
-// Route voor het ophalen van een specifieke partner op basis van ID
+// Route voor het ophalen van partner op basis van naam
+router.get("/:partnerName", partnerController.findByName);
+
+// Route voor het ophalen van partner op basis van ID
 router.get("/:id", partnerController.show);
 
 // Route voor het bijwerken van een partner

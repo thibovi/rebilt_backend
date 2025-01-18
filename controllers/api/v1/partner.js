@@ -116,6 +116,37 @@ const index = async (req, res) => {
   }
 };
 
+const findByName = async (req, res) => {
+  try {
+    let { partnerName } = req.params;
+
+    // Decode de URL en vervang %20 door een spatie
+    partnerName = decodeURIComponent(partnerName);
+
+    // Zoek partner in de database op basis van de naam
+    const partner = await Partner.findOne({ name: partnerName });
+
+    if (!partner) {
+      return res.status(404).json({
+        success: false,
+        message: `Geen partner gevonden met de naam: ${partnerName}`,
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: partner,
+    });
+  } catch (error) {
+    console.error("Error bij ophalen van partner:", error);
+    res.status(500).json({
+      success: false,
+      message: "Er is een fout opgetreden bij het ophalen van de partner.",
+      error,
+    });
+  }
+};
+
 // Functie om een specifieke partner op te halen via ID
 const show = async (req, res) => {
   try {
@@ -295,6 +326,7 @@ const destroy = async (req, res) => {
 module.exports = {
   create,
   index,
+  findByName,
   show,
   update,
   destroy,
