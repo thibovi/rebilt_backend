@@ -18,15 +18,12 @@ cloudinary.config({
 
 // Function to upload image to Cloudinary
 const uploadImageToCloudinary = async (image, folder) => {
-  return new Promise((resolve, reject) => {
-    cloudinary.uploader.upload(image, { folder: folder }, (error, result) => {
-      if (error) {
-        reject(error);
-      } else {
-        resolve(result.secure_url); // Return the URL of the uploaded image
-      }
-    });
-  });
+  try {
+    const result = await cloudinary.uploader.upload(image, { folder });
+    return result.secure_url; // Return the URL of the uploaded image
+  } catch (error) {
+    throw new Error(`Cloudinary upload failed: ${error.message}`);
+  }
 };
 
 const create = async (req, res) => {
@@ -42,7 +39,7 @@ const create = async (req, res) => {
       configurations = [], // Default value for configurations
     } = req.body;
 
-    // Controleer verplichte velden
+    // Validate required fields
     if (
       !productName ||
       !productType ||
@@ -78,80 +75,53 @@ const create = async (req, res) => {
         .json({ message: "Token does not contain valid companyId." });
     }
 
-    // Loop door configuraties en verwerk afbeeldingen per geselecteerde optie
+    // Process configurations and handle images per selected option
     const processedConfigurations = await Promise.all(
       configurations.map(async (config) => {
         const { configurationId, selectedOptions = [] } = config;
 
-        // Zoek de partnerconfiguratie die overeenkomt met configurationId
-        console.log(
-          `Fetching partner configuration for partnerId: ${partnerId}, configurationId: ${configurationId}`
-        );
+        // Fetch the partner configuration for the provided configurationId
         const validPartnerConfig = await PartnerConfiguration.findOne({
           partnerId,
           configurationId,
         }).populate("options.optionId");
 
         if (!validPartnerConfig) {
-          console.log(
-            `No valid partner configuration found for configurationId: ${configurationId}`
-          );
           throw new Error(
             `No valid partner configuration found for configurationId: ${configurationId}`
           );
         }
 
-        // Verwerk geselecteerde opties en afbeeldingen
+        // Process selected options and images
         const processedSelectedOptions = await Promise.all(
           selectedOptions.map(async (selectedOption) => {
             const { optionId, images = [] } = selectedOption;
 
-            // Log de geselecteerde opties
-            console.log(`Processing selected option with ID: ${optionId}`);
-
-            // Verwerk afbeeldingen
+            // Process images for the selected option
             const processedImages = await Promise.all(
               images.map(async (image) => {
-                const imageUrl = await uploadImageToCloudinary(
+                return await uploadImageToCloudinary(
                   image,
                   `Products/${productName}`
                 );
-                return imageUrl; // Of een object met URL en andere metadata, afhankelijk van je vereisten
               })
             );
 
-            // Deze logica hoeft niet langer de optionId te vergelijken met de partnerconfiguratie
-            console.log(
-              "Adding selected option without validation of existence in partner config"
-            );
-
             return {
-              optionId: optionId, // Gebruik de optieId die door de klant is gekozen
-              images: processedImages, // Voeg de verwerkte afbeeldingen toe
+              optionId,
+              images: processedImages,
             };
           })
         );
 
         return {
           configurationId,
-          selectedOptions: processedSelectedOptions, // Voeg de geselecteerde opties met afbeeldingen toe
+          selectedOptions: processedSelectedOptions,
         };
       })
     );
 
-    // Maak het product aan met de bijbehorende partnerconfiguraties en afbeeldingen
-    console.log("Creating new product with the following data:", {
-      productCode,
-      productName,
-      productType,
-      productPrice,
-      description,
-      brand,
-      activeInactive,
-      partnerId,
-      configurations: processedConfigurations,
-    });
-
+    // Create the new product
     const newProduct = new Product({
       productCode,
       productName,
@@ -161,7 +131,7 @@ const create = async (req, res) => {
       brand,
       activeInactive,
       partnerId,
-      configurations: processedConfigurations, // Voeg de configuraties toe aan het product
+      configurations: processedConfigurations,
     });
 
     await newProduct.save();
@@ -225,7 +195,7 @@ const show = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Check if the ID is valid
+    // Validate ID
     if (!id || !mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({
         status: "error",
@@ -233,18 +203,10 @@ const show = async (req, res) => {
       });
     }
 
-    // Find the product and populate necessary fields
     const product = await Product.findById(id)
-      .populate({
-        path: "configurations.configurationId", // Populate the configurationId
-        model: "Configuration",
-      })
-      .populate({
-        path: "configurations.selectedOptions.optionId", // Populate selectedOptions.optionId correctly
-        model: "Option",
-      });
+      .populate("configurations.configurationId")
+      .populate("configurations.selectedOptions.optionId");
 
-    // If the product doesn't exist
     if (!product) {
       return res.status(404).json({
         status: "error",
@@ -252,7 +214,6 @@ const show = async (req, res) => {
       });
     }
 
-    // Return the product data
     res.json({ status: "success", data: { product } });
   } catch (error) {
     res.status(500).json({
@@ -290,7 +251,6 @@ const update = async (req, res) => {
   }
 
   try {
-    // Loop door configuraties en verwerk afbeeldingen per geselecteerde optie
     const processedConfigurations = await Promise.all(
       configurations.map(async (config) => {
         const { configurationId, selectedOptions = [] } = config;
@@ -312,26 +272,15 @@ const update = async (req, res) => {
 
             const processedImages = await Promise.all(
               images.map(async (image) => {
-                const imageUrl = await uploadImageToCloudinary(
+                return await uploadImageToCloudinary(
                   image,
                   `Products/${productName}`
                 );
-                return imageUrl;
               })
             );
 
-            const selectedOptionDetails = validPartnerConfig.options.find(
-              (option) => option.optionId._id.toString() === optionId
-            );
-
-            if (!selectedOptionDetails) {
-              throw new Error(
-                `Selected option with ID ${optionId} does not exist.`
-              );
-            }
-
             return {
-              optionId: selectedOptionDetails.optionId._id,
+              optionId,
               images: processedImages,
             };
           })
@@ -344,7 +293,6 @@ const update = async (req, res) => {
       })
     );
 
-    // Update the product with new data
     const updatedProduct = await Product.findByIdAndUpdate(
       id,
       {
@@ -355,7 +303,7 @@ const update = async (req, res) => {
         description,
         brand,
         activeInactive,
-        configurations: processedConfigurations, // Update the configurations with images
+        configurations: processedConfigurations,
       },
       { new: true, runValidators: true }
     );
