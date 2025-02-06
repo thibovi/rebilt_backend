@@ -17,10 +17,20 @@ cloudinary.config({
 });
 
 // Function to upload image to Cloudinary
-const uploadImageToCloudinary = async (image, folder) => {
+const uploadFileToCloudinary = async (file, folder, is3DModel = false) => {
   try {
-    const result = await cloudinary.uploader.upload(image, { folder });
-    return result.secure_url; // Return the URL of the uploaded image
+    const options = { folder };
+
+    // Als het een .obj of een ander 3D-bestand is, upload het als 'raw'
+    if (is3DModel) {
+      options.resource_type = "raw";
+    }
+
+    const result = await cloudinary.uploader.upload(file, {
+      folder,
+      resource_type: "raw", // Dit laat Cloudinary elk bestandstype verwerken
+    });
+    return result.secure_url; // Geeft de URL van het geüploade bestand terug
   } catch (error) {
     throw new Error(`Cloudinary upload failed: ${error.message}`);
   }
@@ -100,7 +110,7 @@ const create = async (req, res) => {
             // Process images for the selected option
             const processedImages = await Promise.all(
               images.map(async (image) => {
-                return await uploadImageToCloudinary(
+                return await uploadFileToCloudinary(
                   image,
                   `Products/${productName}`
                 );
@@ -141,7 +151,7 @@ const create = async (req, res) => {
       data: newProduct,
     });
   } catch (error) {
-    console.error("Error occurred while creating product:", error.message);
+    console.error("Error occurred while creating product:", error);
     res.status(500).json({
       message: "An error occurred while creating the product.",
       error: error.message,
@@ -270,9 +280,13 @@ const update = async (req, res) => {
           selectedOptions.map(async (selectedOption) => {
             const { optionId, images = [] } = selectedOption;
 
-            const processedImages = await Promise.all(
-              images.map(async (image) => {
-                return await uploadImageToCloudinary(
+            const processedFiles = await Promise.all(
+              images.map(async (file) => {
+                // Controleer of het bestand een .obj of .glb is
+                const is3DModel =
+                  file.endsWith(".obj") || file.endsWith(".glb");
+
+                return await uploadFileToCloudinary(
                   image,
                   `Products/${productName}`
                 );
@@ -281,7 +295,7 @@ const update = async (req, res) => {
 
             return {
               optionId,
-              images: processedImages,
+              images: processedFiles,
             };
           })
         );
