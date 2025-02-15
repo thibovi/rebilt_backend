@@ -42,7 +42,18 @@ app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "jade");
 
 // Middleware
-app.use(cors());
+const corsOptions = {
+  origin: [
+    "http://localhost:5173",
+    "http://192.168.0.130:5173",
+    "http://172.20.144.1:5173/",
+  ], // Voeg je mobiele IP toe
+  methods: ["GET", "POST"], // Specificeer de methoden die je wilt toestaan (optioneel)
+  allowedHeaders: ["Content-Type", "Authorization"], // Specificeer de headers die je wilt toestaan (optioneel)
+};
+
+// Gebruik de CORS-configuratie
+app.use(cors(corsOptions));
 app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -71,7 +82,8 @@ app.use(function (err, req, res, next) {
   res.render("error");
 });
 
-app.listen(PORT, () => {
+// Luister op '0.0.0.0' om verbindingen van andere apparaten op je netwerk toe te staan
+app.listen(PORT, "0.0.0.0", () => {
   console.log(`Server is running on port ${PORT}`);
 });
 

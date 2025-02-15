@@ -5,14 +5,6 @@ const create = async (req, res) => {
   try {
     const { partnerId, configurationId, options } = req.body;
 
-    // Validatie: Check of partnerId en configurationId gelijk zijn
-    if (partnerId.toString() === configurationId.toString()) {
-      return res.status(400).json({
-        status: "error",
-        message: "partnerId and configurationId cannot be the same",
-      });
-    }
-
     // Validatie: Check of een PartnerConfiguration al bestaat
     const existingConfig = await PartnerConfiguration.findOne({
       partnerId,
