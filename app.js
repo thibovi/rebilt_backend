@@ -41,20 +41,24 @@ const checkoutRouter = require("./routes/api/v1/checkouts");
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "jade");
 
-// Middleware
+// CORS middleware
 const corsOptions = {
   origin: [
     "http://localhost:5173",
     "http://192.168.0.130:5173",
     "http://172.20.144.1:5173/",
-    "https://platform.rebilt.be",
-  ], // Voeg je mobiele IP toe
-  methods: ["GET", "POST"], // Specificeer de methoden die je wilt toestaan (optioneel)
-  allowedHeaders: ["Content-Type", "Authorization"], // Specificeer de headers die je wilt toestaan (optioneel)
+    "https://platform.rebilt.be", // Ensure this is added
+  ],
+  methods: ["GET", "POST"],
+  allowedHeaders: ["Content-Type", "Authorization"],
 };
 
-// Gebruik de CORS-configuratie
+// Use CORS middleware before routes
 app.use(cors(corsOptions));
+
+// Ensure OPTIONS requests are handled
+app.options("*", cors(corsOptions)); // Handle preflight requests
+
 app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
