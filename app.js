@@ -47,6 +47,7 @@ const corsOptions = {
     "http://localhost:5173",
     "http://192.168.0.130:5173",
     "http://172.20.144.1:5173/",
+    "https://platform.rebilt.be",
   ], // Voeg je mobiele IP toe
   methods: ["GET", "POST"], // Specificeer de methoden die je wilt toestaan (optioneel)
   allowedHeaders: ["Content-Type", "Authorization"], // Specificeer de headers die je wilt toestaan (optioneel)
