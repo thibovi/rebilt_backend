@@ -49,7 +49,7 @@ const corsOptions = {
     "http://172.20.144.1:5173/",
     "https://platform.rebilt.be", // Ensure this is added
   ],
-  methods: ["GET", "POST"],
+  methods: ["GET", "POST", "PUT", "DELETE"], // Allow specific HTTP methods
   allowedHeaders: ["Content-Type", "Authorization"],
 };
 
