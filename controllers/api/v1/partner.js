@@ -10,6 +10,7 @@ const create = async (req, res) => {
     contact_email,
     contact_phone,
     package,
+    domain,
     primary_color,
     secondary_color,
     titles_color,
@@ -37,6 +38,7 @@ const create = async (req, res) => {
   if (
     !name ||
     !package ||
+    !domain ||
     !primary_color ||
     !secondary_color ||
     !titles_color ||
@@ -48,7 +50,7 @@ const create = async (req, res) => {
   ) {
     return res.status(400).json({
       status: "error",
-      message: "Name, package, colors, and fonts are required.",
+      message: "Name, package, domain, colors, and fonts are required.",
     });
   }
 
@@ -59,6 +61,7 @@ const create = async (req, res) => {
       contact_email: contact_email || null,
       contact_phone: contact_phone || null,
       package,
+      domain,
       primary_color,
       secondary_color,
       titles_color,
@@ -201,6 +204,7 @@ const update = async (req, res) => {
       contact_email,
       contact_phone,
       package,
+      domain,
       primary_color,
       secondary_color,
       titles_color,
@@ -227,6 +231,7 @@ const update = async (req, res) => {
     if (
       !name ||
       !package ||
+      !domain ||
       !primary_color ||
       !secondary_color ||
       !titles_color ||
@@ -238,7 +243,7 @@ const update = async (req, res) => {
     ) {
       return res.status(400).json({
         status: "error",
-        message: "Name, package, colors, and fonts are required.",
+        message: "Name, package, domain, colors, and fonts are required.",
       });
     }
 
@@ -257,6 +262,7 @@ const update = async (req, res) => {
     partner.contact_email = contact_email || partner.contact_email;
     partner.contact_phone = contact_phone || partner.contact_phone;
     partner.package = package;
+    partner.domain = domain;
     partner.primary_color = primary_color;
     partner.secondary_color = secondary_color;
     partner.titles_color = titles_color;
