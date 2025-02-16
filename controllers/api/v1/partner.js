@@ -228,22 +228,11 @@ const update = async (req, res) => {
       gray_900,
     } = req.body;
 
-    if (
-      !name ||
-      !package ||
-      !domain ||
-      !primary_color ||
-      !secondary_color ||
-      !titles_color ||
-      !text_color ||
-      !background_color ||
-      !button_color ||
-      !fontFamilyBodyText ||
-      !fontFamilyTitles
-    ) {
+    // Alleen de verplichte velden controleren
+    if (!name || !package || !domain) {
       return res.status(400).json({
         status: "error",
-        message: "Name, package, domain, colors, and fonts are required.",
+        message: "Name, package, and domain are required.",
       });
     }
 
@@ -263,14 +252,28 @@ const update = async (req, res) => {
     partner.contact_phone = contact_phone || partner.contact_phone;
     partner.package = package;
     partner.domain = domain;
-    partner.primary_color = primary_color;
-    partner.secondary_color = secondary_color;
-    partner.titles_color = titles_color;
-    partner.text_color = text_color;
-    partner.background_color = background_color;
-    partner.button_color = button_color;
-    partner.fontFamilyBodyText = fontFamilyBodyText;
-    partner.fontFamilyTitles = fontFamilyTitles;
+    partner.primary_color =
+      primary_color !== undefined ? primary_color : partner.primary_color;
+    partner.secondary_color =
+      secondary_color !== undefined ? secondary_color : partner.secondary_color;
+    partner.titles_color =
+      titles_color !== undefined ? titles_color : partner.titles_color;
+    partner.text_color =
+      text_color !== undefined ? text_color : partner.text_color;
+    partner.background_color =
+      background_color !== undefined
+        ? background_color
+        : partner.background_color;
+    partner.button_color =
+      button_color !== undefined ? button_color : partner.button_color;
+    partner.fontFamilyBodyText =
+      fontFamilyBodyText !== undefined
+        ? fontFamilyBodyText
+        : partner.fontFamilyBodyText;
+    partner.fontFamilyTitles =
+      fontFamilyTitles !== undefined
+        ? fontFamilyTitles
+        : partner.fontFamilyTitles;
     partner.logo_url = logo_url !== undefined ? logo_url : partner.logo_url;
     partner.black = black || partner.black;
     partner.white = white || partner.white;
