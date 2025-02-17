@@ -87,6 +87,30 @@ app.use(function (err, req, res, next) {
   res.render("error");
 });
 
+app.use(async (req, res, next) => {
+  const host = req.headers.host; // bv. "odettelunettes.rebilt.be"
+  const subdomain = host.split(".")[0]; // "odettelunettes"
+
+  // Controleer of het een geldig subdomein is (uitsluiten van 'www' en hoofddomein)
+  if (subdomain !== "rebilt" && subdomain !== "www") {
+    const Partner = require("./models/api/v1/Partner"); // Zorg dat je Partner model bestaat
+
+    try {
+      const partner = await Partner.findOne({ subdomain });
+      if (!partner) {
+        return res.status(404).send("Subdomein niet gevonden");
+      }
+
+      req.partner = partner; // Opslaan van partnergegevens voor later gebruik
+    } catch (error) {
+      console.error("Fout bij ophalen partner:", error);
+      return res.status(500).send("Interne serverfout");
+    }
+  }
+
+  next();
+});
+
 // Luister op '0.0.0.0' om verbindingen van andere apparaten op je netwerk toe te staan
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`Server is running on port ${PORT}`);
