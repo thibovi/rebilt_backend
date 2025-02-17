@@ -91,18 +91,21 @@ app.use(function (err, req, res, next) {
 app.use(async (req, res, next) => {
   const host = req.headers.host; // bv. "odettelunettes.rebilt.be"
   const subdomain = host.split(".")[0]; // "odettelunettes"
+  console.log("Subdomein herkend:", subdomain); // Dit geeft aan welk subdomein wordt gedetecteerd
 
-  // Controleer of het een geldig subdomein is (uitsluiten van 'www' en hoofddomein)
+  // Controleer of het een geldig subdomein is
   if (subdomain !== "rebilt" && subdomain !== "www") {
-    const Partner = require("./models/api/v1/Partner"); // Zorg dat je Partner model bestaat
+    const Partner = require("./models/api/v1/Partner");
 
     try {
       const partner = await Partner.findOne({ subdomain });
       if (!partner) {
+        console.log("Partner niet gevonden voor subdomein:", subdomain);
         return res.status(404).send("Subdomein niet gevonden");
       }
 
       req.partner = partner; // Opslaan van partnergegevens voor later gebruik
+      console.log("Partnergegevens geladen:", partner); // Toon de partnergegevens
     } catch (error) {
       console.error("Fout bij ophalen partner:", error);
       return res.status(500).send("Interne serverfout");
