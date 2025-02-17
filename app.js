@@ -36,6 +36,7 @@ const configurationRouter = require("./routes/api/v1/configurations");
 const partnerConfigurationRouter = require("./routes/api/v1/partnerConfigurations");
 const optionRouter = require("./routes/api/v1/options");
 const checkoutRouter = require("./routes/api/v1/checkouts");
+const subdomainRouter = require("./routes/api/v1/subdomains");
 
 // View engine instellen
 app.set("views", path.join(__dirname, "views"));
@@ -110,6 +111,8 @@ app.use(async (req, res, next) => {
 
   next();
 });
+
+app.use(subdomainRouter);
 
 // Luister op '0.0.0.0' om verbindingen van andere apparaten op je netwerk toe te staan
 app.listen(PORT, "0.0.0.0", () => {
