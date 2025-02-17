@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const PartnerModel = require("../../models/Partner"); // Zorg ervoor dat het model correct is geïmporteerd
+const PartnerModel = require("../../../models/api/v1/Partner"); // Zorg ervoor dat het model correct is geïmporteerd
 
 // Route om partnergegevens op basis van subdomein op te halen
 router.get("/", async (req, res) => {
