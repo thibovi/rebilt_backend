@@ -116,6 +116,10 @@ app.use((err, req, res, next) => {
   res.render("error");
 });
 
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "dist", "index.html"));
+});
+
 // Start de server
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`Server draait op poort ${PORT}`);
