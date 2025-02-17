@@ -1,4 +1,5 @@
 const express = require("express");
+const PartnerModel = require("./models/api/v1/Partner");
 const path = require("path");
 const cookieParser = require("cookie-parser");
 const logger = require("morgan");
