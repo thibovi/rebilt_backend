@@ -91,7 +91,8 @@ app.use(function (err, req, res, next) {
 app.use(async (req, res, next) => {
   const host = req.headers.host; // bv. "odettelunettes.rebilt.be"
   const subdomain = host.split(".")[0]; // "odettelunettes"
-  console.log("Subdomein herkend:", subdomain); // Dit geeft aan welk subdomein wordt gedetecteerd
+  console.log("Herken subdomein:", subdomain); // Dit zou 'odettelunettes' moeten loggen
+  next();
 });
 
 app.use(subdomainRouter);
