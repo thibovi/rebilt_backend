@@ -1,39 +1,39 @@
 const express = require("express");
 const router = express.Router();
+const PartnerModel = require("../../models/Partner"); // Zorg ervoor dat het model correct is geïmporteerd
 
-// Subdomein specifieke route
-router.get("/", (req, res) => {
-  if (!req.partner) {
-    return res.status(404).send("Subdomein niet gevonden");
+// Route om partnergegevens op basis van subdomein op te halen
+router.get("/", async (req, res) => {
+  try {
+    // Verkrijg het subdomein van de host
+    const host = req.headers.host;
+    const subdomain = host.split(".")[0]; // Het subdomein zonder .reblit.be
+
+    console.log("Subdomein gedetecteerd:", subdomain);
+
+    // Zoek de partner in de database op basis van het domein
+    const partner = await PartnerModel.findOne({ domain: `${subdomain}.be` });
+
+    if (partner) {
+      // Stuur de partner gegevens terug als JSON
+      return res.json({
+        status: "success",
+        message: "Partner gevonden",
+        data: {
+          partner: partner,
+        },
+      });
+    } else {
+      return res
+        .status(404)
+        .json({ status: "error", message: "Partner niet gevonden" });
+    }
+  } catch (error) {
+    console.error("Fout bij het ophalen van partner:", error);
+    return res
+      .status(500)
+      .json({ status: "error", message: "Interne serverfout" });
   }
-
-  // Render een dynamische HTML-pagina met partnergegevens
-  res.send(`
-    <html>
-      <head>
-        <title>${req.partner.name}</title>
-        <style>
-          body {
-            background-color: ${req.partner.background_color};
-            color: ${req.partner.text_color};
-            font-family: ${req.partner.fontFamilyBodyText};
-          }
-          h1 {
-            color: ${req.partner.titles_color};
-          }
-          .logo {
-            width: 100px;
-          }
-        </style>
-      </head>
-      <body>
-        <img class="logo" src="${req.partner.logo_url}" alt="${req.partner.name} Logo" />
-        <h1>Welkom bij ${req.partner.name}</h1>
-        <p>Adres: ${req.partner.address.street}, ${req.partner.address.city}</p>
-        <p>Contact: ${req.partner.contact_email} | ${req.partner.contact_phone}</p>
-      </body>
-    </html>
-  `);
 });
 
 module.exports = router;

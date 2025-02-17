@@ -1,30 +1,30 @@
-const createError = require("http-errors");
 const express = require("express");
 const path = require("path");
 const cookieParser = require("cookie-parser");
 const logger = require("morgan");
+const mongoose = require("mongoose");
+const createError = require("http-errors");
 const config = require("config");
 const cors = require("cors");
-const mongoose = require("mongoose");
 
 const app = express();
 
 // Poort instellen
 const PORT = process.env.PORT || 3000;
 
-// Configuratie op basis van de poort
+// MongoDB configuratie
 let connection;
 if (PORT == 3000) {
-  connection = config.get("mongodb"); // default.json voor lokale ontwikkeling
+  connection = config.get("mongodb"); // Standaard config voor lokale ontwikkeling
 } else {
-  connection = config.get("mongodb"); // production.json voor productie
+  connection = config.get("mongodb"); // Config voor productie
 }
 
 // Verbinden met MongoDB
 mongoose
   .connect(connection)
-  .then(() => console.log("MongoDB connected"))
-  .catch((err) => console.error("MongoDB connection error:", err));
+  .then(() => console.log("MongoDB verbonden"))
+  .catch((err) => console.error("MongoDB verbindingsfout:", err));
 
 // Routers
 const userRouter = require("./routes/api/v1/users");
@@ -36,7 +36,7 @@ const configurationRouter = require("./routes/api/v1/configurations");
 const partnerConfigurationRouter = require("./routes/api/v1/partnerConfigurations");
 const optionRouter = require("./routes/api/v1/options");
 const checkoutRouter = require("./routes/api/v1/checkouts");
-const subdomainRouter = require("./routes/api/v1/subdomains");
+const subdomainRouter = require("./routes/api/v1/subdomains"); // Voeg de subdomain router toe
 
 // View engine instellen
 app.set("views", path.join(__dirname, "views"));
@@ -45,28 +45,53 @@ app.set("view engine", "jade");
 // CORS middleware
 const corsOptions = {
   origin: [
-    "http://localhost:5173",
-    "http://192.168.0.130:5173",
-    "http://172.20.144.1:5173/",
-    "https://platform.rebilt.be", // Ensure this is added
+    "http://localhost:5173", // Lokale frontend
+    "https://platform.rebilt.be",
+    "http://odettelunettes.rebilt.be", // Voeg dit toe voor lokale tests
   ],
-  methods: ["GET", "POST", "PUT", "DELETE"], // Allow specific HTTP methods
+  methods: ["GET", "POST", "PUT", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"],
 };
 
-// Use CORS middleware before routes
+// Gebruik CORS middleware voor routes
 app.use(cors(corsOptions));
 
-// Ensure OPTIONS requests are handled
-app.options("*", cors(corsOptions)); // Handle preflight requests
+// Zorg ervoor dat je preflight requests (OPTIONS) goed behandelt
+app.options("*", cors(corsOptions));
 
+// Standaard middleware
 app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, "public"))); // Zorg ervoor dat je statische bestanden goed zijn geconfigureerd
+app.use(express.static(path.join(__dirname, "public")));
 
-// Definieer de routes
+// Subdomein middleware voor partner ophalen
+app.use(async (req, res, next) => {
+  try {
+    // Verkrijg het subdomein van de host
+    const host = req.headers.host;
+    const subdomain = host.split(".")[0]; // Verkrijg het subdomein (bijvoorbeeld 'odettelunettes')
+
+    console.log("Subdomein gedetecteerd:", subdomain);
+
+    // Zoek de partner in de database op basis van het domein
+    const partner = await PartnerModel.findOne({ domain: `${subdomain}.be` });
+
+    if (partner) {
+      // Voeg de partner gegevens toe aan de request
+      req.partner = partner;
+      return next(); // Verwerk verder naar de route
+    } else {
+      return res.status(404).send("Partner niet gevonden");
+    }
+  } catch (error) {
+    console.error("Fout bij het ophalen van partner:", error);
+    return res.status(500).send("Interne serverfout");
+  }
+});
+
+// Gebruik de routers
 app.use("/api/v1/partners", partnerRouter);
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/products", productRouter);
@@ -76,43 +101,23 @@ app.use("/api/v1/configurations", configurationRouter);
 app.use("/api/v1/partnerConfigurations", partnerConfigurationRouter);
 app.use("/api/v1/options", optionRouter);
 app.use("/api/v1/checkouts", checkoutRouter);
+app.use("/api/v1/subdomains", subdomainRouter); // Voeg de subdomain router toe
 
-app.use(function (req, res, next) {
+// Error handling
+app.use((req, res, next) => {
   next(createError(404));
 });
 
-app.use(function (err, req, res, next) {
+app.use((err, req, res, next) => {
   res.locals.message = err.message;
   res.locals.error = req.app.get("env") === "development" ? err : {};
   res.status(err.status || 500);
   res.render("error");
 });
 
-app.use(async (req, res, next) => {
-  try {
-    const host = req.headers.host;
-    const subdomain = host.split(".")[0];
-    console.log("Subdomein gedetecteerd:", subdomain);
-
-    const partner = await PartnerModel.findOne({ subdomain: subdomain });
-
-    if (partner) {
-      req.partner = partner;
-      return next();
-    }
-
-    return res.status(404).send("Subdomein niet gevonden");
-  } catch (error) {
-    console.error("Fout bij het ophalen van partner:", error);
-    return res.status(500).send("Interne serverfout");
-  }
-});
-
-app.use(subdomainRouter);
-
-// Luister op '0.0.0.0' om verbindingen van andere apparaten op je netwerk toe te staan
+// Start de server
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(`Server is running on port ${PORT}`);
+  console.log(`Server draait op poort ${PORT}`);
 });
 
 module.exports = app;
