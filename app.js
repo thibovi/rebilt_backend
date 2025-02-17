@@ -89,10 +89,23 @@ app.use(function (err, req, res, next) {
 });
 
 app.use(async (req, res, next) => {
-  const host = req.headers.host; // bv. "odettelunettes.rebilt.be"
-  const subdomain = host.split(".")[0]; // "odettelunettes"
-  console.log("Herken subdomein:", subdomain); // Dit zou 'odettelunettes' moeten loggen
-  next();
+  try {
+    const host = req.headers.host;
+    const subdomain = host.split(".")[0];
+    console.log("Subdomein gedetecteerd:", subdomain);
+
+    const partner = await PartnerModel.findOne({ subdomain: subdomain });
+
+    if (partner) {
+      req.partner = partner;
+      return next();
+    }
+
+    return res.status(404).send("Subdomein niet gevonden");
+  } catch (error) {
+    console.error("Fout bij het ophalen van partner:", error);
+    return res.status(500).send("Interne serverfout");
+  }
 });
 
 app.use(subdomainRouter);
