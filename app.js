@@ -94,7 +94,7 @@ app.use(async (req, res, next) => {
   console.log("Subdomein herkend:", subdomain); // Dit geeft aan welk subdomein wordt gedetecteerd
 
   // Controleer of het een geldig subdomein is
-  if (subdomain !== "rebilt" && subdomain !== "www") {
+  if (subdomain !== "www") {
     const Partner = require("./models/api/v1/Partner");
 
     try {
