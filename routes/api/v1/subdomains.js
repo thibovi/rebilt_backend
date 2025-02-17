@@ -1,17 +1,39 @@
 const express = require("express");
-const subdomainRouter = express.Router();
+const router = express.Router();
 
-subdomainRouter.use("/:subdomain", (req, res, next) => {
-  const subdomain = req.params.subdomain;
-  console.log(`Subdomein gebruikt: ${subdomain}`);
-
-  // Voeg hier de logica toe om het subdomein te verwerken
-  if (subdomain === "odettelunettes") {
-    return res.send("Subdomein 'odettelunettes' is actief");
+// Subdomein specifieke route
+router.get("/", (req, res) => {
+  if (!req.partner) {
+    return res.status(404).send("Subdomein niet gevonden");
   }
 
-  // Verwerk andere subdomeinen, bijvoorbeeld:
-  res.send(`Subdomein ${subdomain} is actief`);
+  // Render een dynamische HTML-pagina met partnergegevens
+  res.send(`
+    <html>
+      <head>
+        <title>${req.partner.name}</title>
+        <style>
+          body {
+            background-color: ${req.partner.background_color};
+            color: ${req.partner.text_color};
+            font-family: ${req.partner.fontFamilyBodyText};
+          }
+          h1 {
+            color: ${req.partner.titles_color};
+          }
+          .logo {
+            width: 100px;
+          }
+        </style>
+      </head>
+      <body>
+        <img class="logo" src="${req.partner.logo_url}" alt="${req.partner.name} Logo" />
+        <h1>Welkom bij ${req.partner.name}</h1>
+        <p>Adres: ${req.partner.address.street}, ${req.partner.address.city}</p>
+        <p>Contact: ${req.partner.contact_email} | ${req.partner.contact_phone}</p>
+      </body>
+    </html>
+  `);
 });
 
-app.use(subdomainRouter);
+module.exports = router;
