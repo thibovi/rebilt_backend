@@ -47,7 +47,8 @@ const corsOptions = {
   origin: [
     "http://localhost:5173", // Lokale frontend
     "https://platform.rebilt.be",
-    "http://odettelunettes.rebilt.be", // Voeg dit toe voor lokale tests
+    "https://odettelunettes.rebilt.be",
+    "http://odettelunettes.rebilt.be",
   ],
   methods: ["GET", "POST", "PUT", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"],
