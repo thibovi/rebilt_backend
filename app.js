@@ -91,7 +91,14 @@ app.use(function (err, req, res, next) {
 app.use(async (req, res, next) => {
   const host = req.headers.host; // bv. "odettelunettes.rebilt.be"
   const subdomain = host.split(".")[0]; // "odettelunettes"
-  console.log("Herken subdomein:", subdomain); // Dit zou 'odettelunettes' moeten loggen
+  console.log("Herken subdomein:", subdomain); // Log het subdomein
+
+  if (subdomain === "odettelunettes") {
+    // Specifieke route voor dit subdomein
+    return res.send("Subdomein 'odettelunettes' is actief");
+  }
+
+  // Voer de reguliere logica uit voor andere subdomeinen
   next();
 });
 
