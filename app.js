@@ -73,6 +73,7 @@ app.use(async (req, res, next) => {
   try {
     // Verkrijg het subdomein van de host
     const host = req.headers.host;
+    console.log(host);
     const subdomain = host.split(".")[0]; // Verkrijg het subdomein (bijvoorbeeld 'odettelunettes')
 
     console.log("Subdomein gedetecteerd:", subdomain);
