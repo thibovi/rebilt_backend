@@ -24,22 +24,23 @@ mongoose
 
 // Middleware om subdomeinen te detecteren
 app.use((req, res, next) => {
-  const host = req.headers.host; // Bijvoorbeeld: odettelunettes.rebilt.be
-  const subdomain = host.split(".")[0]; // "odettelunettes"
+  // Stel de hostnaam handmatig in voor testdoeleinden
+  const host = "odettelunettes.rebilt.be"; // Voor test doeleinden
+  console.log("Handmatig ingestelde host:", host);
+
+  const subdomain = host.split(".")[0]; // Verkrijg het subdomein
 
   // Check of het subdomein een partner is
   PartnerModel.findOne({ domain: subdomain })
     .then((partner) => {
       if (partner) {
-        req.partner = partner;
-      } else {
-        console.warn(`Geen partner gevonden voor subdomein: ${subdomain}`);
+        req.partner = partner; // Bewaar partnerinfo in request
       }
       next();
     })
     .catch((err) => {
       console.error("Fout bij ophalen van partner:", err);
-      next(createError(500, "Fout bij ophalen van partner")); // Voeg een fout door aan de volgende middleware
+      next();
     });
 });
 
