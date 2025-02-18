@@ -24,27 +24,31 @@ mongoose
 
 // Middleware om subdomeinen te detecteren
 app.use((req, res, next) => {
+  // Verkrijg de juiste host, neem x-forwarded-host als we achter een proxy draaien
   const host = req.headers["x-forwarded-host"] || req.headers.host;
-  console.log("Full request headers:", req.headers); // Log volledige headers voor debugging
-  console.log("Host header:", host); // Log de host header
-  const subdomain = host.split(".")[0]; // Verkrijg het subdomein uit de hostnaam
+  const subdomain = host.split(".")[0]; // Dit haalt het subdomein uit de hostnaam, bijvoorbeeld "odettelunettes"
 
-  console.log("Subdomein:", subdomain); // Log het subdomein voor debugging
+  // Log het subdomein elke keer dat er een verzoek komt
+  console.log(`Er wordt geprobeerd te surfen naar subdomein: ${subdomain}`);
 
-  // Check of het subdomein een partner is
+  // Zoeken naar het partnerdomein in de database
   PartnerModel.findOne({ domain: subdomain })
     .then((partner) => {
       if (partner) {
-        req.partner = partner; // Bewaar partnerinfo in request
-        console.log(`Partner gevonden: ${partner.domain}`);
+        // Als we een partner vinden, log dan dat we deze partner hebben gevonden
+        console.log(
+          `Partner gevonden voor subdomein ${subdomain}: ${partner.domain}`
+        );
+        req.partner = partner; // Bewaar partnerinformatie in de request
       } else {
+        // Als geen partner wordt gevonden, log dit ook
         console.log(`Geen partner gevonden voor subdomein: ${subdomain}`);
       }
-      next();
+      next(); // Ga door naar de volgende middleware
     })
     .catch((err) => {
       console.error("Fout bij ophalen van partner:", err);
-      next();
+      next(); // Ga verder met de request, ook al is er een fout
     });
 });
 
@@ -55,6 +59,8 @@ const corsOptions = {
     "http://192.168.0.130:5173",
     "http://172.20.144.1:5173",
     "https://platform.rebilt.be",
+    "http://odettelunettes.rebilt.be/",
+    "https://odettelunettes.rebilt.be/",
   ],
   methods: ["GET", "POST", "PUT", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"],
