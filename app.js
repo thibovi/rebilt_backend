@@ -31,13 +31,15 @@ app.use((req, res, next) => {
   PartnerModel.findOne({ domain: subdomain })
     .then((partner) => {
       if (partner) {
-        req.partner = partner; // Bewaar partnerinfo in request
+        req.partner = partner;
+      } else {
+        console.warn(`Geen partner gevonden voor subdomein: ${subdomain}`);
       }
       next();
     })
     .catch((err) => {
       console.error("Fout bij ophalen van partner:", err);
-      next();
+      next(createError(500, "Fout bij ophalen van partner")); // Voeg een fout door aan de volgende middleware
     });
 });
 
