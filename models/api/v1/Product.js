@@ -61,6 +61,14 @@ const ProductSchema = new mongoose.Schema({
       ],
     },
   ],
+  modelFile: {
+    type: String,
+    required: false, // 3D model file URL (if applicable)
+  },
+  thumbnail: {
+    type: String,
+    required: false, // Thumbnail image URL
+  },
 });
 
 const Product = mongoose.model("Product", ProductSchema);

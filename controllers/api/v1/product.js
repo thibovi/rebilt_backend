@@ -16,21 +16,17 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// Function to upload image to Cloudinary
+// Function to upload image or model to Cloudinary
 const uploadFileToCloudinary = async (file, folder, is3DModel = false) => {
   try {
     const options = { folder };
 
-    // Als het een .obj of een ander 3D-bestand is, upload het als 'raw'
     if (is3DModel) {
-      options.resource_type = "raw";
+      options.resource_type = "raw"; // For 3D models like .obj or .glb
     }
 
-    const result = await cloudinary.uploader.upload(file, {
-      folder,
-      resource_type: "raw", // Dit laat Cloudinary elk bestandstype verwerken
-    });
-    return result.secure_url; // Geeft de URL van het geüploade bestand terug
+    const result = await cloudinary.uploader.upload(file, options);
+    return result.secure_url; // Return the URL of the uploaded file
   } catch (error) {
     throw new Error(`Cloudinary upload failed: ${error.message}`);
   }
@@ -47,7 +43,12 @@ const create = async (req, res) => {
       brand,
       activeInactive = "active", // Default value for activeInactive
       configurations = [], // Default value for configurations
+      modelFile, // The 3D model file (if applicable)
+      thumbnail, // The thumbnail image (if applicable)
     } = req.body;
+
+    // Log the incoming files to debug
+    console.log("Incoming files:", modelFile, thumbnail);
 
     // Validate required fields
     if (
@@ -70,7 +71,6 @@ const create = async (req, res) => {
     }
 
     const token = req.headers.authorization?.split(" ")[1];
-    console.log(token);
     if (!token) {
       return res
         .status(401)
@@ -86,7 +86,27 @@ const create = async (req, res) => {
         .json({ message: "Token does not contain valid companyId." });
     }
 
-    // Process configurations and handle images per selected option
+    // Handle uploading modelFile (3D Model)
+    let modelFileUrl = null;
+    if (modelFile) {
+      modelFileUrl = await uploadFileToCloudinary(
+        modelFile,
+        `Products/${productName}`,
+        true
+      );
+      console.log("Model file uploaded successfully:", modelFileUrl); // Log the model file URL
+    }
+
+    // Handle uploading thumbnail
+    let thumbnailUrl = null;
+    if (thumbnail) {
+      thumbnailUrl = await uploadFileToCloudinary(
+        thumbnail,
+        `Products/${productName}`
+      );
+      console.log("Thumbnail uploaded successfully:", thumbnailUrl); // Log uploaded thumbnail URL
+    }
+
     const processedConfigurations = await Promise.all(
       configurations.map(async (config) => {
         const { configurationId, selectedOptions = [] } = config;
@@ -132,7 +152,7 @@ const create = async (req, res) => {
       })
     );
 
-    // Create the new product
+    // Create the new product with modelFile and thumbnail
     const newProduct = new Product({
       productCode,
       productName,
@@ -143,6 +163,8 @@ const create = async (req, res) => {
       activeInactive,
       partnerId,
       configurations: processedConfigurations,
+      modelFile: modelFileUrl || null, // Ensure null if no file uploaded
+      thumbnail: thumbnailUrl || null, // Ensure null if no thumbnail uploaded
     });
 
     await newProduct.save();
@@ -160,19 +182,142 @@ const create = async (req, res) => {
   }
 };
 
+const update = async (req, res) => {
+  const { id } = req.params;
+  const {
+    productCode,
+    productName,
+    productType,
+    productPrice,
+    description,
+    brand,
+    activeInactive,
+    configurations = [],
+    modelFile, // The 3D model file (if applicable)
+    thumbnail, // The thumbnail image (if applicable)
+  } = req.body;
+
+  if (!productName || !productType || !productPrice || !description) {
+    return res
+      .status(400)
+      .json({ message: "Product is missing required fields." });
+  }
+
+  if (productPrice <= 0) {
+    return res
+      .status(400)
+      .json({ message: "productPrice must be greater than zero" });
+  }
+
+  try {
+    // Handle uploading modelFile (3D Model)
+    let modelFileUrl = null;
+    if (modelFile) {
+      modelFileUrl = await uploadFileToCloudinary(
+        modelFile,
+        `Products/${productName}`,
+        true
+      );
+    }
+
+    // Handle uploading thumbnail
+    let thumbnailUrl = null;
+    if (thumbnail) {
+      thumbnailUrl = await uploadFileToCloudinary(
+        thumbnail,
+        `Products/${productName}`
+      );
+    }
+
+    const processedConfigurations = await Promise.all(
+      configurations.map(async (config) => {
+        const { configurationId, selectedOptions = [] } = config;
+
+        const validPartnerConfig = await PartnerConfiguration.findOne({
+          partnerId,
+          configurationId,
+        }).populate("options.optionId");
+
+        if (!validPartnerConfig) {
+          throw new Error(
+            `No valid partner configuration found for configurationId: ${configurationId}`
+          );
+        }
+
+        const processedSelectedOptions = await Promise.all(
+          selectedOptions.map(async (selectedOption) => {
+            const { optionId, images = [] } = selectedOption;
+
+            const processedFiles = await Promise.all(
+              images.map(async (file) => {
+                return await uploadFileToCloudinary(
+                  file,
+                  `Products/${productName}`
+                );
+              })
+            );
+
+            return {
+              optionId,
+              images: processedFiles,
+            };
+          })
+        );
+
+        return {
+          configurationId,
+          selectedOptions: processedSelectedOptions,
+        };
+      })
+    );
+
+    const updatedProduct = await Product.findByIdAndUpdate(
+      id,
+      {
+        productCode,
+        productName,
+        productType,
+        productPrice,
+        description,
+        brand,
+        activeInactive,
+        configurations: processedConfigurations,
+        modelFile: modelFileUrl, // Update modelFile URL if provided
+        thumbnail: thumbnailUrl, // Update thumbnail URL if provided
+      },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedProduct) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    res.status(200).json({
+      status: "success",
+      data: updatedProduct,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error updating product",
+      error: error.message,
+    });
+  }
+};
+
 // Get Products with Filters
 const index = async (req, res) => {
   try {
     const { partnerName, productType, brand, activeInactive } = req.query;
     const filter = {};
 
+    // PartnerName filteren
     if (partnerName) {
       const partnerNameWithSpaces = partnerName.replace(
         /([a-z])([A-Z])/g,
         "$1 $2"
       );
       const partner = await Partner.findOne({
-        name: { $regex: new RegExp(`^${partnerNameWithSpaces}$`, "i") }, // case-insensitive regex search
+        name: { $regex: new RegExp(`^${partnerNameWithSpaces}$`, "i") }, // case-insensitive search
       });
 
       if (!partner) {
@@ -182,16 +327,36 @@ const index = async (req, res) => {
         });
       }
 
-      filter.partnerId = partner._id; // Filter based on partner ID
+      filter.partnerId = partner._id; // Filteren op partnerId
     }
 
+    // Filteren op productType, brand en activeInactive
     if (productType) filter.productType = productType;
     if (brand) filter.brand = brand;
     if (activeInactive) filter.activeInactive = activeInactive;
 
+    // Haal de producten op met de filters
     const products = await Product.find(filter);
 
-    res.json({ status: "success", data: { products } });
+    // Zorg ervoor dat modelFile en thumbnail aanwezig zijn in de response
+    const formattedProducts = products.map((product) => {
+      // Zorg ervoor dat modelFile en thumbnail als string worden weergegeven
+      const productObj = product.toObject();
+
+      // Log om te controleren of modelFile en thumbnail aanwezig zijn
+      console.log("Product with thumbnail:", productObj);
+
+      return {
+        ...productObj,
+      };
+    });
+
+    console.log("Formatted Products:", formattedProducts); // Log voor debug
+
+    res.json({
+      status: "success",
+      data: { products: formattedProducts },
+    });
   } catch (error) {
     res.status(500).json({
       status: "error",
@@ -225,114 +390,25 @@ const show = async (req, res) => {
       });
     }
 
-    res.json({ status: "success", data: { product } });
+    // Log the product to check if the modelFile and thumbnail are included
+    console.log("Product found:", product);
+
+    // Ensure modelFile and thumbnail are included in the response
+    res.json({
+      status: "success",
+      data: {
+        product: {
+          ...product.toObject(),
+          modelFile: product.modelFile || null, // Ensure modelFile is included
+          thumbnail: product.thumbnail || null, // Ensure thumbnail is included
+        },
+      },
+    });
   } catch (error) {
     res.status(500).json({
       status: "error",
       message: "Could not retrieve product",
       error: error.message,
-    });
-  }
-};
-
-// Update Product
-const update = async (req, res) => {
-  const { id } = req.params;
-  const {
-    productCode,
-    productName,
-    productType,
-    productPrice,
-    description,
-    brand,
-    activeInactive,
-    configurations = [],
-  } = req.body;
-
-  if (!productName || !productType || !productPrice || !description) {
-    return res
-      .status(400)
-      .json({ message: "Product is missing required fields." });
-  }
-
-  if (productPrice <= 0) {
-    return res
-      .status(400)
-      .json({ message: "productPrice must be greater than zero" });
-  }
-
-  try {
-    const processedConfigurations = await Promise.all(
-      configurations.map(async (config) => {
-        const { configurationId, selectedOptions = [] } = config;
-
-        const validPartnerConfig = await PartnerConfiguration.findOne({
-          partnerId,
-          configurationId,
-        }).populate("options.optionId");
-
-        if (!validPartnerConfig) {
-          throw new Error(
-            `No valid partner configuration found for configurationId: ${configurationId}`
-          );
-        }
-
-        const processedSelectedOptions = await Promise.all(
-          selectedOptions.map(async (selectedOption) => {
-            const { optionId, images = [] } = selectedOption;
-
-            const processedFiles = await Promise.all(
-              images.map(async (file) => {
-                // Controleer of het bestand een .obj of .glb is
-                const is3DModel =
-                  file.endsWith(".obj") || file.endsWith(".glb");
-
-                return await uploadFileToCloudinary(
-                  image,
-                  `Products/${productName}`
-                );
-              })
-            );
-
-            return {
-              optionId,
-              images: processedFiles,
-            };
-          })
-        );
-
-        return {
-          configurationId,
-          selectedOptions: processedSelectedOptions,
-        };
-      })
-    );
-
-    const updatedProduct = await Product.findByIdAndUpdate(
-      id,
-      {
-        productCode,
-        productName,
-        productType,
-        productPrice,
-        description,
-        brand,
-        activeInactive,
-        configurations: processedConfigurations,
-      },
-      { new: true, runValidators: true }
-    );
-
-    if (!updatedProduct) {
-      return res.status(404).json({ message: "Product not found" });
-    }
-
-    res.json({ status: "success", data: updatedProduct });
-  } catch (err) {
-    res.status(500).json({
-      status: "error",
-      message: "Product could not be updated",
-      error: err.message || err,
     });
   }
 };
@@ -345,6 +421,17 @@ const destroy = async (req, res) => {
 
     if (!deletedProduct) {
       return res.status(404).json({ message: "Product not found" });
+    }
+
+    // Optionally, you could delete the associated files from Cloudinary (modelFile and thumbnail) here
+    if (deletedProduct.modelFile) {
+      // Delete the model file from Cloudinary
+      await cloudinary.uploader.destroy(deletedProduct.modelFile.public_id);
+    }
+
+    if (deletedProduct.thumbnail) {
+      // Delete the thumbnail file from Cloudinary
+      await cloudinary.uploader.destroy(deletedProduct.thumbnail.public_id);
     }
 
     res.status(200).json({ message: "Product deleted successfully" });
