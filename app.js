@@ -22,36 +22,6 @@ mongoose
   .then(() => console.log("MongoDB verbonden"))
   .catch((err) => console.error("MongoDB verbindingsfout:", err));
 
-// Middleware om subdomeinen te detecteren
-app.use((req, res, next) => {
-  // Verkrijg de juiste host, neem x-forwarded-host als we achter een proxy draaien
-  const host = req.headers["x-forwarded-host"] || req.headers.host;
-  const subdomain = host.split(".")[0]; // Dit haalt het subdomein uit de hostnaam, bijvoorbeeld "odettelunettes"
-
-  // Log het subdomein elke keer dat er een verzoek komt
-  console.log(`Er wordt geprobeerd te surfen naar subdomein: ${subdomain}`);
-
-  // Zoeken naar het partnerdomein in de database
-  PartnerModel.findOne({ domain: subdomain })
-    .then((partner) => {
-      if (partner) {
-        // Als we een partner vinden, log dan dat we deze partner hebben gevonden
-        console.log(
-          `Partner gevonden voor subdomein ${subdomain}: ${partner.domain}`
-        );
-        req.partner = partner; // Bewaar partnerinformatie in de request
-      } else {
-        // Als geen partner wordt gevonden, log dit ook
-        console.log(`Geen partner gevonden voor subdomein: ${subdomain}`);
-      }
-      next(); // Ga door naar de volgende middleware
-    })
-    .catch((err) => {
-      console.error("Fout bij ophalen van partner:", err);
-      next(); // Ga verder met de request, ook al is er een fout
-    });
-});
-
 // CORS middleware
 const corsOptions = {
   origin: [
@@ -75,6 +45,33 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "dist")));
+
+// Middleware om subdomeinen te detecteren
+app.use((req, res, next) => {
+  const host = req.headers["x-forwarded-host"] || req.headers.host;
+  const subdomain = host.split(".")[0]; // Dit haalt het subdomein uit de hostnaam
+
+  // Log het subdomein elke keer dat er een verzoek komt
+  console.log(`Er wordt geprobeerd te surfen naar subdomein: ${subdomain}`);
+
+  // Zoeken naar het partnerdomein in de database
+  PartnerModel.findOne({ domain: subdomain })
+    .then((partner) => {
+      if (partner) {
+        console.log(
+          `Partner gevonden voor subdomein ${subdomain}: ${partner.domain}`
+        );
+        req.partner = partner; // Bewaar partnerinformatie in de request
+      } else {
+        console.log(`Geen partner gevonden voor subdomein: ${subdomain}`);
+      }
+      next(); // Ga door naar de volgende middleware
+    })
+    .catch((err) => {
+      console.error("Fout bij ophalen van partner:", err);
+      next(); // Ga verder met de request, ook al is er een fout
+    });
+});
 
 // Routers
 const userRouter = require("./routes/api/v1/users");
