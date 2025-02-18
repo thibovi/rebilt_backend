@@ -37,7 +37,6 @@ const configurationRouter = require("./routes/api/v1/configurations");
 const partnerConfigurationRouter = require("./routes/api/v1/partnerConfigurations");
 const optionRouter = require("./routes/api/v1/options");
 const checkoutRouter = require("./routes/api/v1/checkouts");
-const subdomainRouter = require("./routes/api/v1/subdomains"); // Voeg de subdomain router toe
 
 // View engine instellen
 app.set("views", path.join(__dirname, "views"));
@@ -46,10 +45,10 @@ app.set("view engine", "jade");
 // CORS middleware
 const corsOptions = {
   origin: [
-    "http://localhost:5173", // Lokale frontend
-    "https://platform.rebilt.be",
-    "https://odettelunettes.rebilt.be",
-    "http://odettelunettes.rebilt.be",
+    "http://localhost:5173",
+    "http://192.168.0.130:5173",
+    "http://172.20.144.1:5173/",
+    "https://platform.rebilt.be", // Ensure this is added
   ],
   methods: ["GET", "POST", "PUT", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"],
@@ -68,32 +67,6 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "dist")));
 
-// Subdomein middleware voor partner ophalen
-app.use(async (req, res, next) => {
-  try {
-    // Verkrijg het subdomein van de host
-    const host = req.headers.host;
-    console.log(host);
-    const subdomain = host.split(".")[0]; // Verkrijg het subdomein (bijvoorbeeld 'odettelunettes')
-
-    console.log("Subdomein gedetecteerd:", subdomain);
-
-    // Zoek de partner in de database op basis van het domein
-    const partner = await PartnerModel.findOne({ domain: `${subdomain}.be` });
-
-    if (partner) {
-      // Voeg de partner gegevens toe aan de request
-      req.partner = partner;
-      return next(); // Verwerk verder naar de route
-    } else {
-      return res.status(404).send("Partner niet gevonden");
-    }
-  } catch (error) {
-    console.error("Fout bij het ophalen van partner:", error);
-    return res.status(500).send("Interne serverfout");
-  }
-});
-
 // Gebruik de routers
 app.use("/api/v1/partners", partnerRouter);
 app.use("/api/v1/users", userRouter);
@@ -104,7 +77,6 @@ app.use("/api/v1/configurations", configurationRouter);
 app.use("/api/v1/partnerConfigurations", partnerConfigurationRouter);
 app.use("/api/v1/options", optionRouter);
 app.use("/api/v1/checkouts", checkoutRouter);
-app.use("/api/v1/subdomains", subdomainRouter); // Voeg de subdomain router toe
 
 // Error handling
 app.use((req, res, next) => {
