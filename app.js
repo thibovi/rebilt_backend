@@ -14,18 +14,54 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // MongoDB configuratie
-let connection;
-if (PORT == 3000) {
-  connection = config.get("mongodb"); // Standaard config voor lokale ontwikkeling
-} else {
-  connection = config.get("mongodb"); // Config voor productie
-}
+const connection = config.get("mongodb");
 
 // Verbinden met MongoDB
 mongoose
   .connect(connection)
   .then(() => console.log("MongoDB verbonden"))
   .catch((err) => console.error("MongoDB verbindingsfout:", err));
+
+// Middleware om subdomeinen te detecteren
+app.use((req, res, next) => {
+  const host = req.headers.host; // Bijvoorbeeld: odettelunettes.rebilt.be
+  const subdomain = host.split(".")[0]; // "odettelunettes"
+
+  // Check of het subdomein een partner is
+  PartnerModel.findOne({ domain: subdomain })
+    .then((partner) => {
+      if (partner) {
+        req.partner = partner; // Bewaar partnerinfo in request
+      }
+      next();
+    })
+    .catch((err) => {
+      console.error("Fout bij ophalen van partner:", err);
+      next();
+    });
+});
+
+// CORS middleware
+const corsOptions = {
+  origin: [
+    "http://localhost:5173",
+    "http://192.168.0.130:5173",
+    "http://172.20.144.1:5173",
+    "https://platform.rebilt.be",
+  ],
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
+
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
+
+// Standaard middleware
+app.use(logger("dev"));
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+app.use(cookieParser());
+app.use(express.static(path.join(__dirname, "dist")));
 
 // Routers
 const userRouter = require("./routes/api/v1/users");
@@ -38,36 +74,6 @@ const partnerConfigurationRouter = require("./routes/api/v1/partnerConfiguration
 const optionRouter = require("./routes/api/v1/options");
 const checkoutRouter = require("./routes/api/v1/checkouts");
 
-// View engine instellen
-app.set("views", path.join(__dirname, "views"));
-app.set("view engine", "jade");
-
-// CORS middleware
-const corsOptions = {
-  origin: [
-    "http://localhost:5173",
-    "http://192.168.0.130:5173",
-    "http://172.20.144.1:5173/",
-    "https://platform.rebilt.be", // Ensure this is added
-  ],
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-};
-
-// Gebruik CORS middleware voor routes
-app.use(cors(corsOptions));
-
-// Zorg ervoor dat je preflight requests (OPTIONS) goed behandelt
-app.options("*", cors(corsOptions));
-
-// Standaard middleware
-app.use(logger("dev"));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
-app.use(express.static(path.join(__dirname, "dist")));
-
-// Gebruik de routers
 app.use("/api/v1/partners", partnerRouter);
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/products", productRouter);
@@ -78,7 +84,12 @@ app.use("/api/v1/partnerConfigurations", partnerConfigurationRouter);
 app.use("/api/v1/options", optionRouter);
 app.use("/api/v1/checkouts", checkoutRouter);
 
-// Error handling
+// Vue frontend laten werken met history mode
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "dist", "index.html"));
+});
+
+// Error handling (404 na Vue-frontend)
 app.use((req, res, next) => {
   next(createError(404));
 });
@@ -87,11 +98,7 @@ app.use((err, req, res, next) => {
   res.locals.message = err.message;
   res.locals.error = req.app.get("env") === "development" ? err : {};
   res.status(err.status || 500);
-  res.render("error");
-});
-
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "dist", "index.html"));
+  res.json({ error: err.message });
 });
 
 // Start de server
