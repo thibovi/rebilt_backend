@@ -343,9 +343,6 @@ const index = async (req, res) => {
       // Zorg ervoor dat modelFile en thumbnail als string worden weergegeven
       const productObj = product.toObject();
 
-      // Log om te controleren of modelFile en thumbnail aanwezig zijn
-      console.log("Product with thumbnail:", productObj);
-
       return {
         ...productObj,
       };
