@@ -157,7 +157,7 @@ const login = async (req, res) => {
     }
 
     // Generate JWT token
-    const expiresIn = 3600; // 1 uur (in seconden)
+    const expiresIn = 3600; // 1 hour (in seconds)
     const expirationTime = Math.floor(Date.now() / 1000) + expiresIn;
 
     const token = jwt.sign(
@@ -166,8 +166,8 @@ const login = async (req, res) => {
         firstname: user.firstname,
         lastname: user.lastname,
         role: user.role,
-        companyId: partnerId, // Partner ID toevoegen aan token (kan null zijn)
-        exp: expirationTime, // Expliciete vervaltijd
+        companyId: companyId, // Use companyId here instead of partnerId
+        exp: expirationTime, // Explicit expiration time
       },
       "MyVerySecretWord"
     );

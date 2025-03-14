@@ -41,118 +41,67 @@ const create = async (req, res) => {
       productPrice,
       description,
       brand,
-      activeInactive = "active", // Default value for activeInactive
-      configurations = [], // Default value for configurations
-      modelFile, // The 3D model file (if applicable)
-      thumbnail, // The thumbnail image (if applicable)
+      activeInactive,
+      configurations,
     } = req.body;
 
-    // Log the incoming files to debug
-    console.log("Incoming files:", modelFile, thumbnail);
-
-    // Validate required fields
-    if (
-      !productName ||
-      !productType ||
-      !productPrice ||
-      !description ||
-      !brand
-    ) {
+    if (!productName || !productType) {
       return res.status(400).json({
-        message:
-          "Missing required fields: productName, productType, productPrice, description, brand",
+        status: "error",
+        message: "Productnaam en producttype zijn verplicht.",
       });
-    }
-
-    if (isNaN(productPrice) || productPrice <= 0) {
-      return res.status(400).json({
-        message: "Invalid productPrice. It must be a positive number.",
-      });
-    }
-
-    const token = req.headers.authorization?.split(" ")[1];
-    if (!token) {
-      return res
-        .status(401)
-        .json({ message: "No token provided, authorization required." });
-    }
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const partnerId = decoded.companyId;
-
-    if (!partnerId) {
-      return res
-        .status(401)
-        .json({ message: "Token does not contain valid companyId." });
-    }
-
-    // Handle uploading modelFile (3D Model)
-    let modelFileUrl = null;
-    if (modelFile) {
-      modelFileUrl = await uploadFileToCloudinary(
-        modelFile,
-        `Products/${productName}`,
-        true
-      );
-      console.log("Model file uploaded successfully:", modelFileUrl); // Log the model file URL
-    }
-
-    // Handle uploading thumbnail
-    let thumbnailUrl = null;
-    if (thumbnail) {
-      thumbnailUrl = await uploadFileToCloudinary(
-        thumbnail,
-        `Products/${productName}`
-      );
-      console.log("Thumbnail uploaded successfully:", thumbnailUrl); // Log uploaded thumbnail URL
     }
 
     const processedConfigurations = await Promise.all(
       configurations.map(async (config) => {
-        const { configurationId, selectedOptions = [] } = config;
+        const { configurationId, selectedOptions } = config;
 
-        // Fetch the partner configuration for the provided configurationId
         const validPartnerConfig = await PartnerConfiguration.findOne({
-          partnerId,
           configurationId,
-        }).populate("options.optionId");
-
+        });
         if (!validPartnerConfig) {
+          console.error(
+            `⚠️ Geen geldige configuratie gevonden voor ID: ${configurationId}`
+          );
           throw new Error(
-            `No valid partner configuration found for configurationId: ${configurationId}`
+            `Geen geldige configuratie gevonden voor ID: ${configurationId}`
           );
         }
 
-        // Process selected options and images
         const processedSelectedOptions = await Promise.all(
-          selectedOptions.map(async (selectedOption) => {
-            const { optionId, images = [] } = selectedOption;
+          selectedOptions.map(async (option) => {
+            const { optionId, images = [] } = option;
 
-            // Process images for the selected option
+            if (!optionId) {
+              console.error(
+                "⚠️ optionId is null. Controleer de frontend of database."
+              );
+              throw new Error("Invalid optionId: null value detected.");
+            }
+
+            const optionExists = await Option.findById(optionId);
+            if (!optionExists) {
+              console.error(
+                `⚠️ optionId ${optionId} niet gevonden in de database.`
+              );
+              throw new Error(`Option met ID ${optionId} bestaat niet.`);
+            }
+
             const processedImages = await Promise.all(
-              images.map(async (image) => {
-                return await uploadFileToCloudinary(
-                  image,
-                  `Products/${productName}`
-                );
-              })
+              images.map(
+                async (image) =>
+                  await uploadFileToCloudinary(image, `Products/${productName}`)
+              )
             );
 
-            return {
-              optionId,
-              images: processedImages,
-            };
+            return { optionId, images: processedImages };
           })
         );
 
-        return {
-          configurationId,
-          selectedOptions: processedSelectedOptions,
-        };
+        return { configurationId, selectedOptions: processedSelectedOptions };
       })
     );
 
-    // Create the new product with modelFile and thumbnail
     const newProduct = new Product({
       productCode,
       productName,
@@ -161,24 +110,15 @@ const create = async (req, res) => {
       description,
       brand,
       activeInactive,
-      partnerId,
       configurations: processedConfigurations,
-      modelFile: modelFileUrl || null, // Ensure null if no file uploaded
-      thumbnail: thumbnailUrl || null, // Ensure null if no thumbnail uploaded
     });
 
     await newProduct.save();
 
-    res.status(201).json({
-      status: "success",
-      data: newProduct,
-    });
+    res.status(201).json({ status: "success", data: newProduct });
   } catch (error) {
-    console.error("Error occurred while creating product:", error);
-    res.status(500).json({
-      message: "An error occurred while creating the product.",
-      error: error.message,
-    });
+    console.error("❌ Fout bij het aanmaken van product:", error.message);
+    res.status(500).json({ status: "error", message: error.message });
   }
 };
 
@@ -241,172 +181,118 @@ const index = async (req, res) => {
   }
 };
 
-// Get Single Product by ID
 const show = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { productId } = req.params;
 
-    // Validate ID
-    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({
-        status: "error",
-        message: "Invalid or missing product id",
-      });
-    }
-
-    const product = await Product.findById(id)
+    const product = await Product.findById(productId)
       .populate("configurations.configurationId")
-      .populate("configurations.selectedOptions.optionId");
+      .populate({
+        path: "configurations.selectedOptions.optionId",
+        match: { _id: { $ne: null } }, // Voorkomt null optionId
+      });
 
     if (!product) {
       return res.status(404).json({
         status: "error",
-        message: `Product with id ${id} not found`,
+        message: `Product met ID ${productId} niet gevonden.`,
       });
     }
 
-    // Log the product to check if the modelFile and thumbnail are included
-    console.log("Product found:", product);
-
-    // Ensure modelFile and thumbnail are included in the response
-    res.json({
-      status: "success",
-      data: {
-        product: {
-          ...product.toObject(),
-          modelFile: product.modelFile || null, // Ensure modelFile is included
-          thumbnail: product.thumbnail || null, // Ensure thumbnail is included
-        },
-      },
-    });
+    res.status(200).json({ status: "success", data: product });
   } catch (error) {
-    res.status(500).json({
-      status: "error",
-      message: "Could not retrieve product",
-      error: error.message,
-    });
+    console.error("❌ Fout bij ophalen van product:", error.message);
+    res.status(500).json({ status: "error", message: error.message });
   }
 };
 
 const update = async (req, res) => {
-  const { id } = req.params;
-  const {
-    productCode,
-    productName,
-    productType,
-    productPrice,
-    description,
-    brand,
-    activeInactive,
-    configurations = [],
-    modelFile, // The 3D model file (if applicable)
-    thumbnail, // The thumbnail image (if applicable)
-  } = req.body;
-
-  if (!productName || !productType || !productPrice || !description) {
-    return res
-      .status(400)
-      .json({ message: "Product is missing required fields." });
-  }
-
-  if (productPrice <= 0) {
-    return res
-      .status(400)
-      .json({ message: "productPrice must be greater than zero" });
-  }
-
   try {
-    // Handle uploading modelFile (3D Model)
-    let modelFileUrl = null;
-    if (modelFile) {
-      modelFileUrl = await uploadFileToCloudinary(
-        modelFile,
-        `Products/${productName}`,
-        true
-      );
-    }
+    const { productId } = req.params;
+    const {
+      productCode,
+      productName,
+      productType,
+      productPrice,
+      description,
+      brand,
+      activeInactive,
+      configurations,
+    } = req.body;
 
-    // Handle uploading thumbnail
-    let thumbnailUrl = null;
-    if (thumbnail) {
-      thumbnailUrl = await uploadFileToCloudinary(
-        thumbnail,
-        `Products/${productName}`
-      );
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({
+        status: "error",
+        message: `Product met ID ${productId} niet gevonden.`,
+      });
     }
 
     const processedConfigurations = await Promise.all(
       configurations.map(async (config) => {
-        const { configurationId, selectedOptions = [] } = config;
+        const { configurationId, selectedOptions } = config;
 
         const validPartnerConfig = await PartnerConfiguration.findOne({
-          partnerId,
           configurationId,
-        }).populate("options.optionId");
-
+        });
         if (!validPartnerConfig) {
+          console.error(
+            `⚠️ Geen geldige configuratie gevonden voor ID: ${configurationId}`
+          );
           throw new Error(
-            `No valid partner configuration found for configurationId: ${configurationId}`
+            `Geen geldige configuratie gevonden voor ID: ${configurationId}`
           );
         }
 
         const processedSelectedOptions = await Promise.all(
-          selectedOptions.map(async (selectedOption) => {
-            const { optionId, images = [] } = selectedOption;
+          selectedOptions.map(async (option) => {
+            const { optionId, images = [] } = option;
 
-            const processedFiles = await Promise.all(
-              images.map(async (file) => {
-                return await uploadFileToCloudinary(
-                  file,
-                  `Products/${productName}`
-                );
-              })
+            if (!optionId) {
+              console.error(
+                "⚠️ optionId is null. Controleer de frontend of database."
+              );
+              throw new Error("Invalid optionId: null value detected.");
+            }
+
+            const optionExists = await Option.findById(optionId);
+            if (!optionExists) {
+              console.error(
+                `⚠️ optionId ${optionId} niet gevonden in de database.`
+              );
+              throw new Error(`Option met ID ${optionId} bestaat niet.`);
+            }
+
+            const processedImages = await Promise.all(
+              images.map(
+                async (image) =>
+                  await uploadFileToCloudinary(image, `Products/${productName}`)
+              )
             );
 
-            return {
-              optionId,
-              images: processedFiles,
-            };
+            return { optionId, images: processedImages };
           })
         );
 
-        return {
-          configurationId,
-          selectedOptions: processedSelectedOptions,
-        };
+        return { configurationId, selectedOptions: processedSelectedOptions };
       })
     );
 
-    const updatedProduct = await Product.findByIdAndUpdate(
-      id,
-      {
-        productCode,
-        productName,
-        productType,
-        productPrice,
-        description,
-        brand,
-        activeInactive,
-        configurations: processedConfigurations,
-        modelFile: modelFileUrl, // Update modelFile URL if provided
-        thumbnail: thumbnailUrl, // Update thumbnail URL if provided
-      },
-      { new: true, runValidators: true }
-    );
+    product.productCode = productCode;
+    product.productName = productName;
+    product.productType = productType;
+    product.productPrice = productPrice;
+    product.description = description;
+    product.brand = brand;
+    product.activeInactive = activeInactive;
+    product.configurations = processedConfigurations;
 
-    if (!updatedProduct) {
-      return res.status(404).json({ message: "Product not found" });
-    }
+    await product.save();
 
-    res.status(200).json({
-      status: "success",
-      data: updatedProduct,
-    });
+    res.status(200).json({ status: "success", data: product });
   } catch (error) {
-    res.status(500).json({
-      message: "Error updating product",
-      error: error.message,
-    });
+    console.error("❌ Fout bij het bijwerken van product:", error.message);
+    res.status(500).json({ status: "error", message: error.message });
   }
 };
 
