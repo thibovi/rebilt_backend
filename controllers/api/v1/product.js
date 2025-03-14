@@ -182,6 +182,112 @@ const create = async (req, res) => {
   }
 };
 
+// Get Products with Filters
+const index = async (req, res) => {
+  try {
+    const { partnerName, productType, brand, activeInactive } = req.query;
+    const filter = {};
+
+    // PartnerName filteren
+    if (partnerName) {
+      const partnerNameWithSpaces = partnerName.replace(
+        /([a-z])([A-Z])/g,
+        "$1 $2"
+      );
+      const partner = await Partner.findOne({
+        name: { $regex: new RegExp(`^${partnerNameWithSpaces}$`, "i") }, // case-insensitive search
+      });
+
+      if (!partner) {
+        return res.status(404).json({
+          status: "error",
+          message: `No partner found with name ${partnerName}`,
+        });
+      }
+
+      filter.partnerId = partner._id; // Filteren op partnerId
+    }
+
+    // Filteren op productType, brand en activeInactive
+    if (productType) filter.productType = productType;
+    if (brand) filter.brand = brand;
+    if (activeInactive) filter.activeInactive = activeInactive;
+
+    // Haal de producten op met de filters
+    const products = await Product.find(filter);
+
+    // Zorg ervoor dat modelFile en thumbnail aanwezig zijn in de response
+    const formattedProducts = products.map((product) => {
+      // Zorg ervoor dat modelFile en thumbnail als string worden weergegeven
+      const productObj = product.toObject();
+
+      return {
+        ...productObj,
+      };
+    });
+
+    console.log("Formatted Products:", formattedProducts); // Log voor debug
+
+    res.json({
+      status: "success",
+      data: { products: formattedProducts },
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: "error",
+      message: "An error occurred while retrieving products",
+      error: error.message,
+    });
+  }
+};
+
+// Get Single Product by ID
+const show = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Validate ID
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        status: "error",
+        message: "Invalid or missing product id",
+      });
+    }
+
+    const product = await Product.findById(id)
+      .populate("configurations.configurationId")
+      .populate("configurations.selectedOptions.optionId");
+
+    if (!product) {
+      return res.status(404).json({
+        status: "error",
+        message: `Product with id ${id} not found`,
+      });
+    }
+
+    // Log the product to check if the modelFile and thumbnail are included
+    console.log("Product found:", product);
+
+    // Ensure modelFile and thumbnail are included in the response
+    res.json({
+      status: "success",
+      data: {
+        product: {
+          ...product.toObject(),
+          modelFile: product.modelFile || null, // Ensure modelFile is included
+          thumbnail: product.thumbnail || null, // Ensure thumbnail is included
+        },
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: "error",
+      message: "Could not retrieve product",
+      error: error.message,
+    });
+  }
+};
+
 const update = async (req, res) => {
   const { id } = req.params;
   const {
@@ -299,112 +405,6 @@ const update = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       message: "Error updating product",
-      error: error.message,
-    });
-  }
-};
-
-// Get Products with Filters
-const index = async (req, res) => {
-  try {
-    const { partnerName, productType, brand, activeInactive } = req.query;
-    const filter = {};
-
-    // PartnerName filteren
-    if (partnerName) {
-      const partnerNameWithSpaces = partnerName.replace(
-        /([a-z])([A-Z])/g,
-        "$1 $2"
-      );
-      const partner = await Partner.findOne({
-        name: { $regex: new RegExp(`^${partnerNameWithSpaces}$`, "i") }, // case-insensitive search
-      });
-
-      if (!partner) {
-        return res.status(404).json({
-          status: "error",
-          message: `No partner found with name ${partnerName}`,
-        });
-      }
-
-      filter.partnerId = partner._id; // Filteren op partnerId
-    }
-
-    // Filteren op productType, brand en activeInactive
-    if (productType) filter.productType = productType;
-    if (brand) filter.brand = brand;
-    if (activeInactive) filter.activeInactive = activeInactive;
-
-    // Haal de producten op met de filters
-    const products = await Product.find(filter);
-
-    // Zorg ervoor dat modelFile en thumbnail aanwezig zijn in de response
-    const formattedProducts = products.map((product) => {
-      // Zorg ervoor dat modelFile en thumbnail als string worden weergegeven
-      const productObj = product.toObject();
-
-      return {
-        ...productObj,
-      };
-    });
-
-    console.log("Formatted Products:", formattedProducts); // Log voor debug
-
-    res.json({
-      status: "success",
-      data: { products: formattedProducts },
-    });
-  } catch (error) {
-    res.status(500).json({
-      status: "error",
-      message: "An error occurred while retrieving products",
-      error: error.message,
-    });
-  }
-};
-
-// Get Single Product by ID
-const show = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    // Validate ID
-    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({
-        status: "error",
-        message: "Invalid or missing product id",
-      });
-    }
-
-    const product = await Product.findById(id)
-      .populate("configurations.configurationId")
-      .populate("configurations.selectedOptions.optionId");
-
-    if (!product) {
-      return res.status(404).json({
-        status: "error",
-        message: `Product with id ${id} not found`,
-      });
-    }
-
-    // Log the product to check if the modelFile and thumbnail are included
-    console.log("Product found:", product);
-
-    // Ensure modelFile and thumbnail are included in the response
-    res.json({
-      status: "success",
-      data: {
-        product: {
-          ...product.toObject(),
-          modelFile: product.modelFile || null, // Ensure modelFile is included
-          thumbnail: product.thumbnail || null, // Ensure thumbnail is included
-        },
-      },
-    });
-  } catch (error) {
-    res.status(500).json({
-      status: "error",
-      message: "Could not retrieve product",
       error: error.message,
     });
   }

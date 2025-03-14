@@ -74,6 +74,9 @@ const signup = async (req, res) => {
     await User.register(user, password);
 
     // Genereer een JWT-token inclusief partnerId als het aanwezig is
+    const expiresIn = 3600; // 1 uur (in seconden)
+    const expirationTime = Math.floor(Date.now() / 1000) + expiresIn;
+
     const token = jwt.sign(
       {
         userId: user._id,
@@ -81,9 +84,9 @@ const signup = async (req, res) => {
         lastname: user.lastname,
         role: user.role,
         companyId: partnerId, // Partner ID toevoegen aan token (kan null zijn)
+        exp: expirationTime, // Expliciete vervaltijd
       },
-      "MyVerySecretWord",
-      { expiresIn: "1h" }
+      "MyVerySecretWord"
     );
 
     // Response met gebruikersinformatie en token
@@ -154,16 +157,19 @@ const login = async (req, res) => {
     }
 
     // Generate JWT token
+    const expiresIn = 3600; // 1 uur (in seconden)
+    const expirationTime = Math.floor(Date.now() / 1000) + expiresIn;
+
     const token = jwt.sign(
       {
         userId: user._id,
         firstname: user.firstname,
         lastname: user.lastname,
         role: user.role,
-        companyId: companyId, // Can be null
+        companyId: partnerId, // Partner ID toevoegen aan token (kan null zijn)
+        exp: expirationTime, // Expliciete vervaltijd
       },
-      "MyVerySecretWord",
-      { expiresIn: "1h" }
+      "MyVerySecretWord"
     );
 
     return res.json({
