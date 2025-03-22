@@ -183,19 +183,27 @@ const index = async (req, res) => {
 
 const show = async (req, res) => {
   try {
-    const { productId } = req.params;
+    console.log("Product ID ontvangen:", req.params.id);
 
-    const product = await Product.findById(productId)
+    // Controleer of de ID een geldige ObjectId is
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({
+        status: "error",
+        message: `Ongeldige product ID: ${req.params.id}`,
+      });
+    }
+
+    const product = await Product.findById(req.params.id)
       .populate("configurations.configurationId")
       .populate({
         path: "configurations.selectedOptions.optionId",
-        match: { _id: { $ne: null } }, // Voorkomt null optionId
+        match: { _id: { $ne: null } },
       });
 
     if (!product) {
       return res.status(404).json({
         status: "error",
-        message: `Product met ID ${productId} niet gevonden.`,
+        message: `Product met ID ${req.params.id} niet gevonden.`,
       });
     }
 
@@ -208,7 +216,7 @@ const show = async (req, res) => {
 
 const update = async (req, res) => {
   try {
-    const { productId } = req.params;
+    const { id } = req.params; // FIX: Gebruik `id` i.p.v. `productId`
     const {
       productCode,
       productName,
@@ -220,11 +228,19 @@ const update = async (req, res) => {
       configurations,
     } = req.body;
 
-    const product = await Product.findById(productId);
+    // Controleer of de ID een geldige ObjectId is
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        status: "error",
+        message: `Ongeldige product ID: ${id}`,
+      });
+    }
+
+    const product = await Product.findById(id);
     if (!product) {
       return res.status(404).json({
         status: "error",
-        message: `Product met ID ${productId} niet gevonden.`,
+        message: `Product met ID ${id} niet gevonden.`,
       });
     }
 
@@ -325,6 +341,8 @@ const destroy = async (req, res) => {
     });
   }
 };
+
+// Delete all Products
 
 module.exports = {
   create,

@@ -109,18 +109,43 @@ const index = async (req, res) => {
 // Show a specific Configuration by ID
 const show = async (req, res) => {
   try {
-    const configuration = await Configuration.findById(req.params.id);
+    const { id } = req.params;
+    console.log(`📌 Opvragen van configuratie met ID: ${id}`);
+
+    if (!id) {
+      return res.status(400).json({
+        status: "error",
+        message: "Configuratie ID is vereist",
+      });
+    }
+
+    const configuration = await Configuration.findById(id).populate(
+      "options.optionId"
+    );
+
     if (!configuration) {
       return res.status(404).json({
         status: "error",
-        message: "Configuration not found",
+        message: `❌ Geen configuratie gevonden met ID ${id}`,
       });
     }
-    res.status(200).json({ status: "success", data: configuration });
+
+    // Debugging: Log de opties om te controleren of `optionId` null is
+    configuration.options.forEach((option, index) => {
+      if (!option.optionId) {
+        console.warn(`⚠️ Option ${index} heeft een null optionId!`, option);
+      }
+    });
+
+    res.status(200).json({
+      status: "success",
+      data: configuration,
+    });
   } catch (error) {
+    console.error("❌ Fout bij ophalen van configuratie:", error.message);
     res.status(500).json({
       status: "error",
-      message: "Error retrieving configuration",
+      message: "Fout bij ophalen van configuratie",
       error: error.message,
     });
   }
