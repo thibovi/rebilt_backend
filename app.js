@@ -31,6 +31,7 @@ const corsOptions = {
     "https://platform.rebilt.be",
     "http://odettelunettes.rebilt.be/",
     "https://odettelunettes.rebilt.be/",
+    "https://rebilt-backend.onrender.com",
   ],
   methods: ["GET", "POST", "PUT", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"],
