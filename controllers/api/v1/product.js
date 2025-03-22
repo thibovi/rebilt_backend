@@ -216,96 +216,30 @@ const show = async (req, res) => {
 
 const update = async (req, res) => {
   try {
-    const { id } = req.params; // FIX: Gebruik `id` i.p.v. `productId`
-    const {
-      productCode,
-      productName,
-      productType,
-      productPrice,
-      description,
-      brand,
-      activeInactive,
-      configurations,
-    } = req.body;
-
-    // Controleer of de ID een geldige ObjectId is
+    const { id } = req.params;
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({
-        status: "error",
-        message: `Ongeldige product ID: ${id}`,
-      });
+      return res
+        .status(400)
+        .json({ status: "error", message: "Ongeldige product ID." });
     }
 
-    const product = await Product.findById(id);
-    if (!product) {
-      return res.status(404).json({
-        status: "error",
-        message: `Product met ID ${id} niet gevonden.`,
-      });
-    }
-
-    const processedConfigurations = await Promise.all(
-      configurations.map(async (config) => {
-        const { configurationId, selectedOptions } = config;
-
-        const validPartnerConfig = await PartnerConfiguration.findOne({
-          configurationId,
+    const existingProduct = await Product.findById(id);
+    if (!existingProduct) {
+      return res
+        .status(404)
+        .json({
+          status: "error",
+          message: `Product met ID ${id} niet gevonden.`,
         });
-        if (!validPartnerConfig) {
-          console.error(
-            `⚠️ Geen geldige configuratie gevonden voor ID: ${configurationId}`
-          );
-          throw new Error(
-            `Geen geldige configuratie gevonden voor ID: ${configurationId}`
-          );
-        }
+    }
 
-        const processedSelectedOptions = await Promise.all(
-          selectedOptions.map(async (option) => {
-            const { optionId, images = [] } = option;
-
-            if (!optionId) {
-              console.error(
-                "⚠️ optionId is null. Controleer de frontend of database."
-              );
-              throw new Error("Invalid optionId: null value detected.");
-            }
-
-            const optionExists = await Option.findById(optionId);
-            if (!optionExists) {
-              console.error(
-                `⚠️ optionId ${optionId} niet gevonden in de database.`
-              );
-              throw new Error(`Option met ID ${optionId} bestaat niet.`);
-            }
-
-            const processedImages = await Promise.all(
-              images.map(
-                async (image) =>
-                  await uploadFileToCloudinary(image, `Products/${productName}`)
-              )
-            );
-
-            return { optionId, images: processedImages };
-          })
-        );
-
-        return { configurationId, selectedOptions: processedSelectedOptions };
-      })
+    const updatedProduct = await Product.findByIdAndUpdate(
+      id,
+      { $set: req.body }, // Hiermee wordt alleen de gewijzigde data aangepast
+      { new: true, runValidators: true } // `new: true` geeft de geüpdatete versie terug
     );
 
-    product.productCode = productCode;
-    product.productName = productName;
-    product.productType = productType;
-    product.productPrice = productPrice;
-    product.description = description;
-    product.brand = brand;
-    product.activeInactive = activeInactive;
-    product.configurations = processedConfigurations;
-
-    await product.save();
-
-    res.status(200).json({ status: "success", data: product });
+    res.status(200).json({ status: "success", data: updatedProduct });
   } catch (error) {
     console.error("❌ Fout bij het bijwerken van product:", error.message);
     res.status(500).json({ status: "error", message: error.message });
