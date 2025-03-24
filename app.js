@@ -37,6 +37,8 @@ const corsOptions = {
   allowedHeaders: ["Content-Type", "Authorization"],
 };
 
+require("dotenv").config();
+
 app.use(cors(corsOptions));
 app.options("*", cors(corsOptions));
 
@@ -116,5 +118,8 @@ app.use((err, req, res, next) => {
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`Server draait op poort ${PORT}`);
 });
+
+
+
 
 module.exports = app;
