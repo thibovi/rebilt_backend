@@ -3,9 +3,9 @@ const axios = require("axios");
 const analyzeImage = async (imageUrl) => {
   try {
     const response = await axios.post(
-      "https://api.openai.com/v1/images/generate-alt-text",
+      "https://api.openai.com/v1/images/generations", // Correct endpoint for image-related tasks
       {
-        image: imageUrl,
+        prompt: `Analyze the following image: ${imageUrl}`, // Use a text-based prompt
       },
       {
         headers: {
@@ -16,13 +16,16 @@ const analyzeImage = async (imageUrl) => {
     );
 
     return {
-      altText: response.data.alt_text,
-      seoKeywords: response.data.seo_keywords,
+      altText: response.data.alt_text || "No alt text available",
+      seoKeywords: response.data.seo_keywords || [],
     };
   } catch (error) {
-    console.error("Fout bij AI-analyse van afbeelding:", error);
-    throw new Error("AI-analyse mislukt");
+    console.error(
+      "Error during image analysis:",
+      error.response ? error.response.data : error.message
+    );
+    throw new Error("AI analysis failed");
   }
 };
 
-module.exports = { analyzeImage };
+module.exports = analyzeImage;
