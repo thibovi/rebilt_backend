@@ -43,12 +43,20 @@ const create = async (req, res) => {
       brand,
       activeInactive,
       configurations,
+      partnerId, // Voeg partnerId toe aan de destructurering
     } = req.body;
 
     if (!productName || !productType) {
       return res.status(400).json({
         status: "error",
         message: "Productnaam en producttype zijn verplicht.",
+      });
+    }
+
+    if (!partnerId) {
+      return res.status(400).json({
+        status: "error",
+        message: "Partner ID is verplicht.",
       });
     }
 
@@ -111,6 +119,7 @@ const create = async (req, res) => {
       brand,
       activeInactive,
       configurations: processedConfigurations,
+      partnerId, // Voeg partnerId toe aan het product
     });
 
     await newProduct.save();
@@ -225,12 +234,10 @@ const update = async (req, res) => {
 
     const existingProduct = await Product.findById(id);
     if (!existingProduct) {
-      return res
-        .status(404)
-        .json({
-          status: "error",
-          message: `Product met ID ${id} niet gevonden.`,
-        });
+      return res.status(404).json({
+        status: "error",
+        message: `Product met ID ${id} niet gevonden.`,
+      });
     }
 
     const updatedProduct = await Product.findByIdAndUpdate(
