@@ -105,13 +105,10 @@ const update = async (req, res) => {
     const { partnerId, configurationId, options } = req.body;
 
     // Validatie: Zorg dat options correct zijn gestructureerd
-    if (
-      options &&
-      (!Array.isArray(options) || options.some((opt) => !opt.optionId))
-    ) {
+    if (options && !Array.isArray(options)) {
       return res.status(400).json({
         status: "error",
-        message: "Invalid options structure",
+        message: "Options must be an array",
       });
     }
 
