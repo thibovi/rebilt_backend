@@ -97,7 +97,7 @@ app.use("/api/v1/configurations", configurationRouter);
 app.use("/api/v1/partnerConfigurations", partnerConfigurationRouter);
 app.use("/api/v1/options", optionRouter);
 app.use("/api/v1/checkouts", checkoutRouter);
-app.use("/api/v1/imageAnalysis", imageAnalysisRouter);
+app.use("/api/v1/imageanalysis", imageAnalysisRouter);
 
 // Vue frontend laten werken met history mode
 app.get("*", (req, res) => {

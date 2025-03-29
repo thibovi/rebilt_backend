@@ -1,9 +1,7 @@
 const express = require("express");
-const { analyzeUploadedImage } = require("../../../controllers/api/v1/imageController");
-
-
 const router = express.Router();
+const imageController = require("../../../controllers/api/v1/imageController");
 
-router.post("/analyze-image", analyzeUploadedImage);
+router.post("/", imageController.create);
 
 module.exports = router;

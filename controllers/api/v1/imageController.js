@@ -1,5 +1,5 @@
-const { analyzeImage } = require("../../../services/ImageAnalysisService");
-const analyzeUploadedImage = async (req, res) => {
+const analyzeImage = require("../../../services/ImageAnalysisService");
+const create = async (req, res) => {
   try {
     const { imageUrl } = req.body;
 
@@ -16,4 +16,4 @@ const analyzeUploadedImage = async (req, res) => {
   }
 };
 
-module.exports = { analyzeUploadedImage };
+module.exports = { create };
