@@ -1,30 +1,34 @@
 const axios = require("axios");
+const fs = require("fs");
+const path = require("path");
+const tf = require("@tensorflow/tfjs"); // Browsergebaseerde TensorFlow.js
+const mobilenet = require("@tensorflow-models/mobilenet");
+const { createCanvas, loadImage } = require("@napi-rs/canvas"); // Gebruik @napi-rs/canvas
 
-const analyzeImage = async (imageUrl) => {
+const analyzeImage = async (imagePath) => {
   try {
-    const response = await axios.post(
-      "https://api.openai.com/v1/images/generations", // Correct endpoint for image-related tasks
-      {
-        prompt: `Analyze the following image: ${imageUrl}`, // Use a text-based prompt
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    // Laad de afbeelding met @napi-rs/canvas
+    const image = await loadImage(imagePath);
+    const canvas = createCanvas(image.width, image.height);
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(image, 0, 0);
+
+    // Laad het MobileNet-model
+    const model = await mobilenet.load();
+
+    // Voer voorspellingen uit
+    const predictions = await model.classify(canvas);
+
+    // Retourneer de voorspellingen als keywords
+    const keywords = predictions.map((prediction) => prediction.className);
 
     return {
-      altText: response.data.alt_text || "No alt text available",
-      seoKeywords: response.data.seo_keywords || [],
+      message: "Image analysis completed successfully",
+      keywords,
     };
   } catch (error) {
-    console.error(
-      "Error during image analysis:",
-      error.response ? error.response.data : error.message
-    );
-    throw new Error("AI analysis failed");
+    console.error("Error during image analysis:", error.message);
+    throw new Error("Image analysis failed");
   }
 };
 
