@@ -1,4 +1,4 @@
-const { analyzeImage } = require("../../../services/imageAnalysisService");
+const { analyzeImage } = require("../../../services/ImageAnalysisService");
 const analyzeUploadedImage = async (req, res) => {
   try {
     const { imageUrl } = req.body;
