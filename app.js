@@ -100,7 +100,7 @@ app.use("/api/v1/checkouts", checkoutRouter);
 app.use("/api/v1/imageanalysis", imageAnalysisRouter);
 
 // Vue frontend laten werken met history mode
-app.get("*", (req, res) => {
+app.get(/^\/(?!api\/).*/, (req, res) => {
   res.sendFile(path.join(__dirname, "dist", "index.html"));
 });
 
