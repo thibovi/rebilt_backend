@@ -2,7 +2,7 @@ const { analyzeImage } = require("../../../services/ImageAnalysisService");
 const analyzeUploadedImage = async (req, res) => {
   try {
     const { imageUrl } = req.body;
-    
+
     if (!imageUrl) {
       return res.status(400).json({ error: "Geen afbeelding URL opgegeven." });
     }

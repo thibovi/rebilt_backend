@@ -86,6 +86,7 @@ const configurationRouter = require("./routes/api/v1/configurations");
 const partnerConfigurationRouter = require("./routes/api/v1/partnerConfigurations");
 const optionRouter = require("./routes/api/v1/options");
 const checkoutRouter = require("./routes/api/v1/checkouts");
+const imageAnalysisRouter = require("./routes/api/v1/imageAnalysis");
 
 app.use("/api/v1/partners", partnerRouter);
 app.use("/api/v1/users", userRouter);
@@ -96,6 +97,7 @@ app.use("/api/v1/configurations", configurationRouter);
 app.use("/api/v1/partnerConfigurations", partnerConfigurationRouter);
 app.use("/api/v1/options", optionRouter);
 app.use("/api/v1/checkouts", checkoutRouter);
+app.use("/api/v1/imageAnalysis", imageAnalysisRouter);
 
 // Vue frontend laten werken met history mode
 app.get("*", (req, res) => {
@@ -118,8 +120,5 @@ app.use((err, req, res, next) => {
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`Server draait op poort ${PORT}`);
 });
-
-
-
 
 module.exports = app;
