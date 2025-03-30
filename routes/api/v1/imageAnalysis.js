@@ -25,10 +25,6 @@ router.post("/", async (req, res) => {
     // Analyseer de afbeelding
     const result = await analyzeImage(imageBuffer);
 
-    // Voeg expliciete CORS-header toe
-    res.setHeader("Access-Control-Allow-Origin", "https://platform.rebilt.be");
-    res.setHeader("Access-Control-Allow-Credentials", "true");
-
     res.json(result);
   } catch (error) {
     console.error("Fout bij AI-analyse van afbeelding:", error.message);

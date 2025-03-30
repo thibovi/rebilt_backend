@@ -96,7 +96,17 @@ app.use("/api/v1/configurations", configurationRouter);
 app.use("/api/v1/partnerConfigurations", partnerConfigurationRouter);
 app.use("/api/v1/options", optionRouter);
 app.use("/api/v1/checkouts", checkoutRouter);
-app.use("/api/v1/imageanalysis", imageAnalysisRouter);
+
+// ✅ Voeg expliciete CORS-header toe voor imageanalysis
+app.use(
+  "/api/v1/imageanalysis",
+  (req, res, next) => {
+    res.setHeader("Access-Control-Allow-Origin", "https://platform.rebilt.be");
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+    next();
+  },
+  imageAnalysisRouter
+);
 
 // ✅ Vue frontend laten werken met history mode
 app.get(/^\/(?!api\/).*/, (req, res) => {
