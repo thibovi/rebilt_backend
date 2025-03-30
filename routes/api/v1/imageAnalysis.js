@@ -1,11 +1,30 @@
 // routes/api/v1/imageAnalysis.js
 const express = require("express");
+const axios = require("axios");
+const analyzeImage = require("../../../services/ImageAnalysisService"); // Zorg ervoor dat dit correct is
+
 const router = express.Router();
-const analyzeImage = require("../../../services/ImageAnalysisService"); // Importeer de juiste functie
 
 router.post("/", async (req, res) => {
   try {
-    const result = await analyzeImage(req.body.imagePath); // Zorg ervoor dat de juiste data wordt verzonden
+    const { imageUrl } = req.body;
+
+    if (!imageUrl) {
+      return res.status(400).json({ error: "imageUrl is vereist" });
+    }
+
+    // Download de afbeelding in het geheugen
+    const response = await axios({
+      url: imageUrl,
+      method: "GET",
+      responseType: "arraybuffer", // Download als buffer
+    });
+
+    const imageBuffer = Buffer.from(response.data, "binary");
+
+    // Analyseer de afbeelding
+    const result = await analyzeImage(imageBuffer);
+
     res.setHeader("Access-Control-Allow-Origin", "*"); // Voeg expliciete CORS-header toe
     res.json(result);
   } catch (error) {

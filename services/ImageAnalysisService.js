@@ -5,10 +5,10 @@ const tf = require("@tensorflow/tfjs"); // Browsergebaseerde TensorFlow.js
 const mobilenet = require("@tensorflow-models/mobilenet");
 const { createCanvas, loadImage } = require("@napi-rs/canvas"); // Gebruik @napi-rs/canvas
 
-const analyzeImage = async (imagePath) => {
+const analyzeImage = async (imageBuffer) => {
   try {
-    // Laad de afbeelding met @napi-rs/canvas
-    const image = await loadImage(imagePath);
+    // Laad de afbeelding vanuit de buffer
+    const image = await loadImage(imageBuffer);
     const canvas = createCanvas(image.width, image.height);
     const ctx = canvas.getContext("2d");
     ctx.drawImage(image, 0, 0);
