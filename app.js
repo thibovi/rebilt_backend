@@ -7,40 +7,44 @@ const mongoose = require("mongoose");
 const createError = require("http-errors");
 const config = require("config");
 const cors = require("cors");
+require("dotenv").config();
 
 const app = express();
-
-// Poort instellen
 const PORT = process.env.PORT || 3000;
 
-// MongoDB configuratie
+// MongoDB verbinden
 const connection = config.get("mongodb");
-
-// Verbinden met MongoDB
 mongoose
   .connect(connection)
-  .then(() => console.log("MongoDB verbonden"))
-  .catch((err) => console.error("MongoDB verbindingsfout:", err));
+  .then(() => console.log("✅ MongoDB verbonden"))
+  .catch((err) => console.error("❌ MongoDB verbindingsfout:", err));
 
-// CORS middleware
+// CORS-instellingen
 const corsOptions = {
   origin: [
     "http://localhost:5173",
     "http://192.168.0.130:5173",
     "http://172.20.144.1:5173",
     "https://platform.rebilt.be",
-    "http://odettelunettes.rebilt.be/",
-    "https://odettelunettes.rebilt.be/",
+    "http://odettelunettes.rebilt.be",
+    "https://odettelunettes.rebilt.be",
     "https://rebilt-backend.onrender.com",
   ],
-  methods: ["GET", "POST", "PUT", "DELETE"],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true,
 };
-
-require("dotenv").config();
 
 app.use(cors(corsOptions));
 app.options("*", cors(corsOptions));
+
+// Middleware voor correcte CORS-headers bij alle responses
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  next();
+});
 
 // Standaard middleware
 app.use(logger("dev"));
@@ -49,34 +53,28 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "dist")));
 
-// Middleware om subdomeinen te detecteren
-app.use((req, res, next) => {
-  const host = req.headers["x-forwarded-host"] || req.headers.host;
-  const subdomain = host.split(".")[0]; // Dit haalt het subdomein uit de hostnaam
+// Middleware voor subdomeinen
+app.use(async (req, res, next) => {
+  try {
+    const host = req.headers["x-forwarded-host"] || req.headers.host;
+    const subdomain = host.split(".")[0];
 
-  // Log het subdomein elke keer dat er een verzoek komt
-  console.log(`Er wordt geprobeerd te surfen naar subdomein: ${subdomain}`);
+    console.log(`🌐 Subdomein: ${subdomain}`);
 
-  // Zoeken naar het partnerdomein in de database
-  PartnerModel.findOne({ domain: subdomain })
-    .then((partner) => {
-      if (partner) {
-        console.log(
-          `Partner gevonden voor subdomein ${subdomain}: ${partner.domain}`
-        );
-        req.partner = partner; // Bewaar partnerinformatie in de request
-      } else {
-        console.log(`Geen partner gevonden voor subdomein: ${subdomain}`);
-      }
-      next(); // Ga door naar de volgende middleware
-    })
-    .catch((err) => {
-      console.error("Fout bij ophalen van partner:", err);
-      next(); // Ga verder met de request, ook al is er een fout
-    });
+    const partner = await PartnerModel.findOne({ domain: subdomain });
+    if (partner) {
+      console.log(`✅ Partner gevonden: ${partner.domain}`);
+      req.partner = partner;
+    } else {
+      console.log(`❌ Geen partner gevonden voor: ${subdomain}`);
+    }
+  } catch (err) {
+    console.error("❌ Fout bij ophalen van partner:", err);
+  }
+  next();
 });
 
-// Routers
+// Routers importeren
 const userRouter = require("./routes/api/v1/users");
 const productRouter = require("./routes/api/v1/products");
 const orderRouter = require("./routes/api/v1/orders");
@@ -88,6 +86,7 @@ const optionRouter = require("./routes/api/v1/options");
 const checkoutRouter = require("./routes/api/v1/checkouts");
 const imageAnalysisRouter = require("./routes/api/v1/imageAnalysis");
 
+// API-routes instellen
 app.use("/api/v1/partners", partnerRouter);
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/products", productRouter);
@@ -104,11 +103,12 @@ app.get(/^\/(?!api\/).*/, (req, res) => {
   res.sendFile(path.join(__dirname, "dist", "index.html"));
 });
 
-// Error handling (404 na Vue-frontend)
+// Fallback 404 error
 app.use((req, res, next) => {
   next(createError(404));
 });
 
+// Algemene error-handler
 app.use((err, req, res, next) => {
   res.locals.message = err.message;
   res.locals.error = req.app.get("env") === "development" ? err : {};
@@ -116,9 +116,9 @@ app.use((err, req, res, next) => {
   res.json({ error: err.message });
 });
 
-// Start de server
+// Server starten
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(`Server draait op poort ${PORT}`);
+  console.log(`🚀 Server draait op poort ${PORT}`);
 });
 
 module.exports = app;
