@@ -43,8 +43,18 @@ const corsOptions = {
   credentials: true, // Zorg ervoor dat credentials worden ondersteund
 };
 
+// ✅ CORS middleware voor alle routes
 app.use(cors(corsOptions));
+
+// ✅ Middleware voor preflight requests (OPTIONS)
 app.options("*", cors(corsOptions)); // Preflight requests correct afhandelen
+
+// ✅ Middleware voor expliciete CORS headers voor image analysis route
+app.use("/api/v1/imageanalysis", (req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "https://platform.rebilt.be");
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  next();
+});
 
 // ✅ Standaard middleware
 app.use(logger("dev"));
