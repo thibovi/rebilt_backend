@@ -28,6 +28,13 @@ const analyzeImage = async (imagePath) => {
     };
   } catch (error) {
     console.error("Error during image analysis:", error.message);
+
+    // Debugging voor netwerkfouten
+    if (error.response) {
+      console.error("Response data:", error.response.data);
+      console.error("Response status:", error.response.status);
+    }
+
     throw new Error("Image analysis failed");
   }
 };
