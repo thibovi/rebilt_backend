@@ -1,9 +1,7 @@
 // routes/api/v1/imageAnalysis.js
 const express = require("express");
 const router = express.Router();
-
-// Controleer of het juiste pad en de juiste functie is geïmporteerd
-const imageController = require("../../../controllers/api/v1/imageController"); // Zorg ervoor dat dit klopt
+const analyzeImage = require("../../../services/ImageAnalysisService"); // Importeer de juiste functie
 
 router.post("/", async (req, res) => {
   try {
