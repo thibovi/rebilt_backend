@@ -1,7 +1,7 @@
 const express = require("express");
 const multer = require("multer");
 const path = require("path");
-const analyzeImage = require("../services/ImageAnalysisService");
+const analyzeImage = require("../../../services/ImageAnalysisService");
 
 const router = express.Router();
 
