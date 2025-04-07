@@ -14,18 +14,26 @@ const ProductSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  brand: {
+    type: String,
+    required: false,
+  },
   productPrice: {
     type: Number,
     required: true,
     min: 0,
   },
-  description: {
+  pageTitle: {
     type: String,
-    required: false,
+    required: true,
   },
-  brand: {
+  metaDescription: {
     type: String,
-    required: false,
+    required: true,
+  },
+  urlHandle: {
+    type: String,
+    required: true,
   },
   activeInactive: {
     type: String,
