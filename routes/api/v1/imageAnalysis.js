@@ -34,7 +34,10 @@ router.post("/", async (req, res) => {
     res.json(result);
   } catch (error) {
     console.error("Fout bij AI-analyse van afbeelding:", error.stack); // Stacktrace loggen
-    res.status(500).json({ error: error.message });
+    res.status(500).json({
+      error: "Kan afbeelding niet analyseren.",
+      details: error.message,
+    });
   }
 });
 
