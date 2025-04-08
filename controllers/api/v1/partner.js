@@ -20,6 +20,7 @@ const create = async (req, res) => {
     fontFamilyBodyText,
     fontFamilyTitles,
     logo_url,
+    favicon_url,
     black,
     white,
     blue_600,
@@ -71,6 +72,7 @@ const create = async (req, res) => {
       fontFamilyBodyText,
       fontFamilyTitles,
       logo_url: logo_url || null,
+      favicon_url: favicon_url || null,
       black,
       white,
       blue_600,
@@ -214,6 +216,7 @@ const update = async (req, res) => {
       fontFamilyBodyText,
       fontFamilyTitles,
       logo_url,
+      favicon_url,
       black,
       white,
       blue_600,
@@ -267,6 +270,8 @@ const update = async (req, res) => {
         ? fontFamilyTitles
         : partner.fontFamilyTitles;
     partner.logo_url = logo_url !== undefined ? logo_url : partner.logo_url;
+    partner.favicon_url =
+      favicon_url !== undefined ? favicon_url : partner.favicon_url;
     partner.black = black || partner.black;
     partner.white = white || partner.white;
     partner.blue_600 = blue_600 || partner.blue_600;
