@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const partnerSchema = new mongoose.Schema({
   name: { type: String, required: true },
   address: { type: Object, default: {} },
+  contact_person: { type: String, default: null },
   contact_email: { type: String, default: null },
   contact_phone: { type: String, default: null },
   package: { type: String, required: true },

@@ -7,6 +7,7 @@ const create = async (req, res) => {
   const {
     name,
     address,
+    contact_person,
     contact_email,
     contact_phone,
     package,
@@ -59,6 +60,7 @@ const create = async (req, res) => {
     const newPartner = new Partner({
       name,
       address: address || {},
+      contact_person: contact_person || null,
       contact_email: contact_email || null,
       contact_phone: contact_phone || null,
       package,
@@ -203,6 +205,7 @@ const update = async (req, res) => {
     const {
       name,
       address,
+      contact_person,
       contact_email,
       contact_phone,
       package,
@@ -243,6 +246,7 @@ const update = async (req, res) => {
     // Werk de partnergegevens bij
     partner.name = name;
     partner.address = address !== undefined ? address : partner.address;
+    partner.contact_person = contact_person || partner.contact_person;
     partner.contact_email = contact_email || partner.contact_email;
     partner.contact_phone = contact_phone || partner.contact_phone;
     partner.package = package;
