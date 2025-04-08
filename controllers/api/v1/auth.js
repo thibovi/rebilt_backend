@@ -306,19 +306,20 @@ const update = async (req, res) => {
       await updatedUser.setPassword(newPassword);
     }
 
-    // Update user fields with new data
+    // Update user fields with new data, retaining existing values for undefined fields
     Object.assign(updatedUser, {
-      firstname: userData.firstname,
-      lastname: userData.lastname,
-      email: userData.email,
-      role: userData.role,
-      company: userData.company,
-      activeInactive: userData.activeInactive,
-      country: userData.country, // New fields
-      city: userData.city, // New fields
-      postalCode: userData.postalCode, // New fields
-      profileImage: userData.profileImage, // New fields
-      bio: userData.bio, // New fields
+      firstname: userData.firstname || updatedUser.firstname,
+      lastname: userData.lastname || updatedUser.lastname,
+      email: userData.email || updatedUser.email,
+      role: userData.role || updatedUser.role,
+      company:
+        userData.company !== undefined ? userData.company : updatedUser.company,
+      activeInactive: userData.activeInactive || updatedUser.activeInactive,
+      country: userData.country || updatedUser.country,
+      city: userData.city || updatedUser.city,
+      postalCode: userData.postalCode || updatedUser.postalCode,
+      profileImage: userData.profileImage || updatedUser.profileImage,
+      bio: userData.bio || updatedUser.bio,
     });
 
     // Save the updated user
@@ -334,11 +335,11 @@ const update = async (req, res) => {
           id: updatedUser._id,
           company: updatedUser.company,
           activeInactive: updatedUser.activeInactive,
-          country: updatedUser.country, // New fields
-          city: updatedUser.city, // New fields
-          postalCode: updatedUser.postalCode, // New fields
-          profileImage: updatedUser.profileImage, // New fields
-          bio: updatedUser.bio, // New fields
+          country: updatedUser.country,
+          city: updatedUser.city,
+          postalCode: updatedUser.postalCode,
+          profileImage: updatedUser.profileImage,
+          bio: updatedUser.bio,
         },
       },
     });
