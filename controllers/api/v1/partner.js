@@ -228,14 +228,6 @@ const update = async (req, res) => {
       gray_900,
     } = req.body;
 
-    // Alleen de verplichte velden controleren
-    if (!name || !package || !domain) {
-      return res.status(400).json({
-        status: "error",
-        message: "Name, package, and domain are required.",
-      });
-    }
-
     const partner = await Partner.findById(id);
 
     if (!partner) {
