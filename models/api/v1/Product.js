@@ -37,8 +37,8 @@ const ProductSchema = new mongoose.Schema({
   },
   activeInactive: {
     type: String,
-    enum: ["active", "inactive"],
-    default: "active",
+    enum: ["published", "inactive"],
+    default: "published",
   },
   partnerId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -76,6 +76,10 @@ const ProductSchema = new mongoose.Schema({
   thumbnail: {
     type: String,
     required: false, // Thumbnail image URL
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
   },
 });
 

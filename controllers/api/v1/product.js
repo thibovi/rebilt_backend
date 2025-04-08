@@ -124,11 +124,23 @@ const create = async (req, res) => {
       activeInactive,
       configurations: processedConfigurations,
       partnerId, // Voeg partnerId toe aan het product
+      createdAt: new Date(), // Explicitly set createdAt
     });
 
     await newProduct.save();
 
-    res.status(201).json({ status: "success", data: newProduct });
+    const formattedProduct = {
+      ...newProduct.toObject(),
+      createdAt: new Date(newProduct.createdAt).toLocaleString("en-US", {
+        month: "short",
+        day: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+    };
+
+    res.status(201).json({ status: "success", data: formattedProduct });
   } catch (error) {
     console.error("❌ Fout bij het aanmaken van product:", error.message);
     res.status(500).json({ status: "error", message: error.message });
@@ -173,9 +185,15 @@ const index = async (req, res) => {
     const formattedProducts = products.map((product) => {
       // Zorg ervoor dat modelFile en thumbnail als string worden weergegeven
       const productObj = product.toObject();
-
       return {
         ...productObj,
+        createdAt: new Date(productObj.createdAt).toLocaleString("en-US", {
+          month: "short",
+          day: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
       };
     });
 
@@ -220,7 +238,18 @@ const show = async (req, res) => {
       });
     }
 
-    res.status(200).json({ status: "success", data: product });
+    const formattedProduct = {
+      ...product.toObject(),
+      createdAt: new Date(product.createdAt).toLocaleString("en-US", {
+        month: "short",
+        day: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+    };
+
+    res.status(200).json({ status: "success", data: formattedProduct });
   } catch (error) {
     console.error("❌ Fout bij ophalen van product:", error.message);
     res.status(500).json({ status: "error", message: error.message });
