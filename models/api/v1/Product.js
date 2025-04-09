@@ -1,6 +1,12 @@
 const mongoose = require("mongoose");
 
 const ProductSchema = new mongoose.Schema({
+  selectedType: {
+    type: String,
+    required: false,
+    enum: ["2D", "3D"],
+    default: "2D",
+  },
   productCode: {
     type: String,
     required: false,
@@ -39,6 +45,7 @@ const ProductSchema = new mongoose.Schema({
     type: String,
     enum: ["published", "inactive"],
     default: "published",
+    required: true,
   },
   partnerId: {
     type: mongoose.Schema.Types.ObjectId,
