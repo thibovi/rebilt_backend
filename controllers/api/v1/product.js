@@ -43,7 +43,7 @@ const create = async (req, res) => {
       pageTitle,
       metaDescription,
       urlHandle,
-      activeInactive,
+      publishedInactive,
       configurations,
       partnerId, // Voeg partnerId toe aan de destructurering
     } = req.body;
@@ -121,7 +121,7 @@ const create = async (req, res) => {
       pageTitle,
       metaDescription,
       urlHandle,
-      activeInactive,
+      publishedInactive,
       configurations: processedConfigurations,
       partnerId, // Voeg partnerId toe aan het product
       createdAt: new Date(), // Explicitly set createdAt
@@ -150,7 +150,7 @@ const create = async (req, res) => {
 // Get Products with Filters
 const index = async (req, res) => {
   try {
-    const { partnerName, productType, brand, activeInactive } = req.query;
+    const { partnerName, productType, brand, publishedInactive } = req.query;
     const filter = {};
 
     // PartnerName filteren
@@ -173,10 +173,10 @@ const index = async (req, res) => {
       filter.partnerId = partner._id; // Filteren op partnerId
     }
 
-    // Filteren op productType, brand en activeInactive
+    // Filteren op productType, brand en publishedInactive
     if (productType) filter.productType = productType;
     if (brand) filter.brand = brand;
-    if (activeInactive) filter.activeInactive = activeInactive;
+    if (publishedInactive) filter.publishedInactive = publishedInactive;
 
     // Haal de producten op met de filters
     const products = await Product.find(filter);

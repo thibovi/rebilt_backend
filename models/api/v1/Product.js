@@ -35,7 +35,7 @@ const ProductSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  activeInactive: {
+  publishedInactive: {
     type: String,
     enum: ["published", "inactive"],
     default: "published",
