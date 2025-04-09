@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 const ProductSchema = new mongoose.Schema({
-  selectedType: {
+  productSelectedType: {
     type: String,
     required: false,
     enum: ["2D", "3D"],

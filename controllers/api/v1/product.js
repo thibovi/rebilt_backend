@@ -36,7 +36,7 @@ const create = async (req, res) => {
   try {
     const {
       productCode,
-      selectedType,
+      productSelectedType,
       productName,
       productType,
       brand,
@@ -115,7 +115,7 @@ const create = async (req, res) => {
 
     const newProduct = new Product({
       productCode,
-      selectedType,
+      productSelectedType,
       productName,
       productType,
       brand,
