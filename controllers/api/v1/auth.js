@@ -283,15 +283,26 @@ const update = async (req, res) => {
       });
     }
 
-    // Werk de gebruiker bij met de nieuwe gegevens en update lastUpdated
+    // Controleer of er wijzigingen zijn
+    const updates = { ...userData };
+    let isModified = false;
+
+    for (const key in updates) {
+      if (updates[key] !== existingUser[key]) {
+        isModified = true;
+        break;
+      }
+    }
+
+    // Alleen lastUpdated bijwerken als er wijzigingen zijn
+    if (isModified) {
+      updates.lastUpdated = new Date();
+    }
+
+    // Werk de gebruiker bij
     const updatedUser = await User.findByIdAndUpdate(
       id,
-      {
-        $set: {
-          ...userData,
-          lastUpdated: new Date(), // Update lastUpdated naar de huidige tijd
-        },
-      },
+      { $set: updates },
       { new: true, runValidators: true } // `new: true` retourneert de bijgewerkte gebruiker
     );
 
