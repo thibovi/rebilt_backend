@@ -88,6 +88,10 @@ const ProductSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  LastUpdated: {
+    type: Date,
+    default: Date.now,
+  },
 });
 
 const Product = mongoose.model("Product", ProductSchema);
