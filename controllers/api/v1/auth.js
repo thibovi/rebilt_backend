@@ -274,59 +274,26 @@ const update = async (req, res) => {
   }
 
   try {
-    const updatedUser = await User.findById(id);
-
-    if (!updatedUser) {
+    // Controleer of de gebruiker bestaat
+    const existingUser = await User.findById(id);
+    if (!existingUser) {
       return res.status(404).json({
         status: "error",
         message: "User not found",
       });
     }
 
-    const { oldPassword, newPassword } = userData;
-
-    // Check if a new password is provided
-    if (newPassword) {
-      // If new password is provided, check for old password
-      if (!oldPassword) {
-        return res.status(400).json({
-          status: "error",
-          message: "Old password is required to change the password",
-        });
-      }
-
-      // Verify old password
-      const isMatch = await updatedUser.isValidPassword(oldPassword);
-      if (!isMatch.user) {
-        return res.status(401).json({
-          status: "error",
-          message: "Old password is incorrect",
-        });
-      }
-
-      // Set new password
-      await updatedUser.setPassword(newPassword);
-    }
-
-    // Update user fields with new data, retaining existing values for undefined fields
-    Object.assign(updatedUser, {
-      firstname: userData.firstname || updatedUser.firstname,
-      lastname: userData.lastname || updatedUser.lastname,
-      email: userData.email || updatedUser.email,
-      role: userData.role || updatedUser.role,
-      company:
-        userData.company !== undefined ? userData.company : updatedUser.company,
-      activeInactive: userData.activeInactive || updatedUser.activeInactive,
-      country: userData.country || updatedUser.country,
-      city: userData.city || updatedUser.city,
-      postalCode: userData.postalCode || updatedUser.postalCode,
-      profileImage: userData.profileImage || updatedUser.profileImage,
-      bio: userData.bio || updatedUser.bio,
-      lastUpdated: new Date(),
-    });
-
-    // Save the updated user
-    await updatedUser.save();
+    // Werk de gebruiker bij met de nieuwe gegevens en update lastUpdated
+    const updatedUser = await User.findByIdAndUpdate(
+      id,
+      {
+        $set: {
+          ...userData,
+          lastUpdated: new Date(), // Update lastUpdated naar de huidige tijd
+        },
+      },
+      { new: true, runValidators: true } // `new: true` retourneert de bijgewerkte gebruiker
+    );
 
     res.json({
       status: "success",
@@ -343,6 +310,7 @@ const update = async (req, res) => {
           postalCode: updatedUser.postalCode,
           profileImage: updatedUser.profileImage,
           bio: updatedUser.bio,
+          lastUpdated: updatedUser.lastUpdated, // Voeg lastUpdated toe aan de response
         },
       },
     });
