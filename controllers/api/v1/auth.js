@@ -68,8 +68,6 @@ const signup = async (req, res) => {
       postalCode,
       profileImage,
       bio,
-      createdAt: new Date(),
-      lastUpdated: new Date(),
     });
 
     // Gebruik Passport om het wachtwoord te hashen en de gebruiker te registreren
@@ -195,25 +193,15 @@ const index = async (req, res) => {
     const users = await User.find();
 
     // Voeg partnerId toe aan elke gebruiker door de company te matchen met Partner
-    const usersWithPartnerId = users.map((user) => {
-      return {
-        ...user._doc,
-        createdAt: new Date(user.createdAt).toLocaleString("en-US", {
-          month: "short",
-          day: "2-digit",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-        lastUpdated: new Date(user.lastUpdated).toLocaleString("en-US", {
-          month: "short",
-          day: "2-digit",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-      };
-    });
+    const usersWithPartnerId = await Promise.all(
+      users.map(async (user) => {
+        const partner = await Partner.findOne({ name: user.company });
+        return {
+          ...user._doc,
+          partnerId: partner ? partner._id : null, // PartnerId toevoegen of null als niet gevonden
+        };
+      })
+    );
 
     res.json({
       status: "success",
@@ -247,24 +235,19 @@ const show = async (req, res) => {
       status: "success",
       data: {
         user: {
-          ...user.toObject(),
-          formattedCreatedAt: new Date(user.createdAt).toLocaleString("en-US", {
-            month: "short",
-            day: "2-digit",
-            year: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
-          formattedLastUpdated: new Date(user.lastUpdated).toLocaleString(
-            "en-US",
-            {
-              month: "short",
-              day: "2-digit",
-              year: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-            }
-          ),
+          firstname: user.firstname,
+          lastname: user.lastname,
+          email: user.email,
+          id: user._id,
+          role: user.role,
+          company: user.company,
+          partnerId: partner ? partner._id : null, // PartnerId toevoegen of null als niet gevonden
+          activeInactive: user.activeInactive,
+          country: user.country,
+          city: user.city,
+          postalCode: user.postalCode,
+          profileImage: user.profileImage,
+          bio: user.bio,
         },
       },
     });
@@ -289,36 +272,58 @@ const update = async (req, res) => {
   }
 
   try {
-    // Controleer of de gebruiker bestaat
-    const existingUser = await User.findById(id);
-    if (!existingUser) {
+    const updatedUser = await User.findById(id);
+
+    if (!updatedUser) {
       return res.status(404).json({
         status: "error",
         message: "User not found",
       });
     }
 
-    // Controleer of er wijzigingen zijn
-    const updates = { ...userData };
-    let isModified = false;
+    const { oldPassword, newPassword } = userData;
 
-    for (const key in updates) {
-      if (updates[key] !== existingUser[key]) {
-        isModified = true;
-        break;
+    // Check if a new password is provided
+    if (newPassword) {
+      // If new password is provided, check for old password
+      if (!oldPassword) {
+        return res.status(400).json({
+          status: "error",
+          message: "Old password is required to change the password",
+        });
       }
+
+      // Verify old password
+      const isMatch = await updatedUser.isValidPassword(oldPassword);
+      if (!isMatch.user) {
+        return res.status(401).json({
+          status: "error",
+          message: "Old password is incorrect",
+        });
+      }
+
+      // Set new password
+      await updatedUser.setPassword(newPassword);
     }
 
-    if (isModified) {
-      updates.lastUpdated = new Date();
-    }
+    // Update user fields with new data, retaining existing values for undefined fields
+    Object.assign(updatedUser, {
+      firstname: userData.firstname || updatedUser.firstname,
+      lastname: userData.lastname || updatedUser.lastname,
+      email: userData.email || updatedUser.email,
+      role: userData.role || updatedUser.role,
+      company:
+        userData.company !== undefined ? userData.company : updatedUser.company,
+      activeInactive: userData.activeInactive || updatedUser.activeInactive,
+      country: userData.country || updatedUser.country,
+      city: userData.city || updatedUser.city,
+      postalCode: userData.postalCode || updatedUser.postalCode,
+      profileImage: userData.profileImage || updatedUser.profileImage,
+      bio: userData.bio || updatedUser.bio,
+    });
 
-    // Werk de gebruiker bij
-    const updatedUser = await User.findByIdAndUpdate(
-      id,
-      { $set: updates },
-      { new: true, runValidators: true } // `new: true` retourneert de bijgewerkte gebruiker
-    );
+    // Save the updated user
+    await updatedUser.save();
 
     res.json({
       status: "success",
@@ -335,7 +340,6 @@ const update = async (req, res) => {
           postalCode: updatedUser.postalCode,
           profileImage: updatedUser.profileImage,
           bio: updatedUser.bio,
-          lastUpdated: updatedUser.lastUpdated, // Voeg lastUpdated toe aan de response
         },
       },
     });

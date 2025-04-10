@@ -29,8 +29,6 @@ const userSchema = new mongoose.Schema({
   bio: { type: String, default: "" },
   resetCode: Number,
   resetCodeExpiration: Date,
-  createdAt: { type: Date, default: Date.now },
-  lastUpdated: { type: Date, default: Date.now },
 });
 
 // Voeg de plugin toe voor wachtwoordbeheer
