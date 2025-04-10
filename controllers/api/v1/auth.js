@@ -12,7 +12,7 @@ const signup = async (req, res) => {
       email,
       password,
       role,
-      company,
+      company, // Dit gebruiken we om de partner te vinden, optioneel
       activeInactive,
       country,
       city,
@@ -21,6 +21,7 @@ const signup = async (req, res) => {
       bio,
     } = req.body.user;
 
+    // Validatie van verplichte velden
     if (
       !firstname ||
       !lastname ||
@@ -34,11 +35,14 @@ const signup = async (req, res) => {
         .json({ message: "All required fields must be provided." });
     }
 
+    // Controleer of het e-mailadres al bestaat
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: "Email is already in use" });
     }
 
+    // Zoek het partner ID (companyId) op basis van de company naam
+    // We doen dit alleen als company is ingevuld
     let partnerId = null;
     if (company) {
       const partner = await Partner.findOne({ name: company });
@@ -47,27 +51,31 @@ const signup = async (req, res) => {
           .status(404)
           .json({ message: `Company "${company}" not found.` });
       }
-      partnerId = partner._id;
+      partnerId = partner._id; // Koppel de partnerId aan de gebruiker
     }
 
+    // Maak een nieuwe gebruiker aan met optionele velden
     const user = new User({
       firstname,
       lastname,
       email,
       role,
       activeInactive,
-      company,
-      partnerId,
+      company, // Optioneel om te bewaren voor de leesbaarheid
+      partnerId, // Koppel de partnerId aan de gebruiker (kan null zijn)
       country,
       city,
       postalCode,
       profileImage,
       bio,
-      createdAt: new Date(),
-      lastUpdated: new Date(),
     });
 
+    // Gebruik Passport om het wachtwoord te hashen en de gebruiker te registreren
     await User.register(user, password);
+
+    // Genereer een JWT-token inclusief partnerId als het aanwezig is
+    const expiresIn = 3600; // 1 uur (in seconden)
+    const expirationTime = Math.floor(Date.now() / 1000) + expiresIn;
 
     const token = jwt.sign(
       {
@@ -75,31 +83,30 @@ const signup = async (req, res) => {
         firstname: user.firstname,
         lastname: user.lastname,
         role: user.role,
-        companyId: partnerId,
+        companyId: partnerId, // Partner ID toevoegen aan token (kan null zijn)
+        exp: expirationTime, // Expliciete vervaltijd
       },
-      process.env.JWT_SECRET || "MyVerySecretWord",
-      { expiresIn: "1h" }
+      "MyVerySecretWord"
     );
 
+    // Response met gebruikersinformatie en token
     res.status(201).json({
       status: "success",
       data: {
-        token,
+        token: token,
         user: {
           id: user._id,
           firstname: user.firstname,
           lastname: user.lastname,
           email: user.email,
           role: user.role,
-          company: user.company,
+          company: user.company, // Handig voor leesbaarheid
           activeInactive: user.activeInactive,
           country: user.country,
           city: user.city,
           postalCode: user.postalCode,
           profileImage: user.profileImage,
           bio: user.bio,
-          createdAt: user.createdAt,
-          lastUpdated: user.lastUpdated,
         },
       },
     });
@@ -182,14 +189,16 @@ const login = async (req, res) => {
 
 const index = async (req, res) => {
   try {
+    // Haal alle gebruikers op
     const users = await User.find();
 
+    // Voeg partnerId toe aan elke gebruiker door de company te matchen met Partner
     const usersWithPartnerId = await Promise.all(
       users.map(async (user) => {
         const partner = await Partner.findOne({ name: user.company });
         return {
-          ...user.toObject(),
-          partnerId: partner ? partner._id : null,
+          ...user._doc,
+          partnerId: partner ? partner._id : null, // PartnerId toevoegen of null als niet gevonden
         };
       })
     );
@@ -211,14 +220,15 @@ const index = async (req, res) => {
 
 const show = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params; // Haal de ID uit de requestparameters
 
-    const user = await User.findById(id);
+    const user = await User.findById(id); // Zoek de gebruiker op basis van de ID
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
+    // Zoek de bijbehorende partner op
     const partner = await Partner.findOne({ name: user.company });
 
     res.json({
@@ -231,15 +241,13 @@ const show = async (req, res) => {
           id: user._id,
           role: user.role,
           company: user.company,
-          partnerId: partner ? partner._id : null,
+          partnerId: partner ? partner._id : null, // PartnerId toevoegen of null als niet gevonden
           activeInactive: user.activeInactive,
           country: user.country,
           city: user.city,
           postalCode: user.postalCode,
           profileImage: user.profileImage,
           bio: user.bio,
-          createdAt: user.createdAt,
-          lastUpdated: user.lastUpdated,
         },
       },
     });
@@ -264,9 +272,9 @@ const update = async (req, res) => {
   }
 
   try {
-    const existingUser = await User.findById(id);
+    const updatedUser = await User.findById(id);
 
-    if (!existingUser) {
+    if (!updatedUser) {
       return res.status(404).json({
         status: "error",
         message: "User not found",
@@ -275,7 +283,9 @@ const update = async (req, res) => {
 
     const { oldPassword, newPassword } = userData;
 
+    // Check if a new password is provided
     if (newPassword) {
+      // If new password is provided, check for old password
       if (!oldPassword) {
         return res.status(400).json({
           status: "error",
@@ -283,7 +293,8 @@ const update = async (req, res) => {
         });
       }
 
-      const isMatch = await existingUser.isValidPassword(oldPassword);
+      // Verify old password
+      const isMatch = await updatedUser.isValidPassword(oldPassword);
       if (!isMatch.user) {
         return res.status(401).json({
           status: "error",
@@ -291,40 +302,45 @@ const update = async (req, res) => {
         });
       }
 
-      await existingUser.setPassword(newPassword);
+      // Set new password
+      await updatedUser.setPassword(newPassword);
     }
 
-    let isModified = false;
-    for (const key in userData) {
-      if (userData[key] !== existingUser[key]) {
-        isModified = true;
-        existingUser[key] = userData[key];
-      }
-    }
+    // Update user fields with new data, retaining existing values for undefined fields
+    Object.assign(updatedUser, {
+      firstname: userData.firstname || updatedUser.firstname,
+      lastname: userData.lastname || updatedUser.lastname,
+      email: userData.email || updatedUser.email,
+      role: userData.role || updatedUser.role,
+      company:
+        userData.company !== undefined ? userData.company : updatedUser.company,
+      activeInactive: userData.activeInactive || updatedUser.activeInactive,
+      country: userData.country || updatedUser.country,
+      city: userData.city || updatedUser.city,
+      postalCode: userData.postalCode || updatedUser.postalCode,
+      profileImage: userData.profileImage || updatedUser.profileImage,
+      bio: userData.bio || updatedUser.bio,
+      lastUpdated: new Date().toISOString(), // Update lastUpdated field
+    });
 
-    if (isModified) {
-      existingUser.lastUpdated = new Date();
-    }
-
-    await existingUser.save();
+    // Save the updated user
+    await updatedUser.save();
 
     res.json({
       status: "success",
       data: {
         user: {
-          firstname: existingUser.firstname,
-          lastname: existingUser.lastname,
-          email: existingUser.email,
-          id: existingUser._id,
-          company: existingUser.company,
-          activeInactive: existingUser.activeInactive,
-          country: existingUser.country,
-          city: existingUser.city,
-          postalCode: existingUser.postalCode,
-          profileImage: existingUser.profileImage,
-          bio: existingUser.bio,
-          createdAt: existingUser.createdAt,
-          lastUpdated: existingUser.lastUpdated,
+          firstname: updatedUser.firstname,
+          lastname: updatedUser.lastname,
+          email: updatedUser.email,
+          id: updatedUser._id,
+          company: updatedUser.company,
+          activeInactive: updatedUser.activeInactive,
+          country: updatedUser.country,
+          city: updatedUser.city,
+          postalCode: updatedUser.postalCode,
+          profileImage: updatedUser.profileImage,
+          bio: updatedUser.bio,
         },
       },
     });
