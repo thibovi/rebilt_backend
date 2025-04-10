@@ -84,14 +84,8 @@ const ProductSchema = new mongoose.Schema({
     type: String,
     required: false, // Thumbnail image URL
   },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-  lastUpdated: {
-    type: Date,
-    default: Date.now,
-  },
+  createdAt: { type: Date, default: Date.now },
+  lastUpdated: { type: Date, default: Date.now }, // Add lastUpdated field
 });
 
 const Product = mongoose.model("Product", ProductSchema);

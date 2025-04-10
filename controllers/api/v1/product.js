@@ -127,7 +127,7 @@ const create = async (req, res) => {
       configurations: processedConfigurations,
       partnerId, // Voeg partnerId toe aan het product
       createdAt: new Date(), // Explicitly set createdAt
-      lastUpdated: new Date(),
+      lastUpdated: new Date(), // Initialize lastUpdated with the same value as createdAt
     });
 
     await newProduct.save();
@@ -204,13 +204,6 @@ const index = async (req, res) => {
           hour: "2-digit",
           minute: "2-digit",
         }),
-        lastUpdated: new Date(productObj.lastUpdated).toLocaleString("en-US", {
-          month: "short",
-          day: "2-digit",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
       };
     });
 
@@ -264,13 +257,6 @@ const show = async (req, res) => {
         hour: "2-digit",
         minute: "2-digit",
       }),
-      lastUpdated: new Date(product.lastUpdated).toLocaleString("en-US", {
-        month: "short",
-        day: "2-digit",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
     };
 
     res.status(200).json({ status: "success", data: formattedProduct });
@@ -297,14 +283,10 @@ const update = async (req, res) => {
       });
     }
 
-    // Voeg lastUpdated toe aan de update
     const updatedProduct = await Product.findByIdAndUpdate(
       id,
       {
-        $set: {
-          ...req.body,
-          lastUpdated: new Date(), // Stel lastUpdated in op het huidige tijdstip
-        },
+        $set: { ...req.body, lastUpdated: new Date() }, // Update lastUpdated to the current time
       },
       { new: true, runValidators: true } // `new: true` geeft de geüpdatete versie terug
     );
