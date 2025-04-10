@@ -88,7 +88,6 @@ const create = async (req, res) => {
       gray_800,
       gray_900,
       created_at: new Date(),
-      last_updated: new Date(),
     });
 
     await newPartner.save();
@@ -290,7 +289,7 @@ const update = async (req, res) => {
     partner.gray_700 = gray_700 || partner.gray_700;
     partner.gray_800 = gray_800 || partner.gray_800;
     partner.gray_900 = gray_900 || partner.gray_900;
-    partner.lastUpdated = new Date();
+
     await partner.save();
     res.json({
       status: "success",
