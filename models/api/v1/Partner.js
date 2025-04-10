@@ -30,6 +30,8 @@ const partnerSchema = new mongoose.Schema({
   gray_700: { type: String, default: null }, // Hex or RGB string
   gray_800: { type: String, default: null }, // Hex or RGB string
   gray_900: { type: String, default: null }, // Hex or RGB string
+  createdAt: { type: Date, default: Date.now },
+  lastUpdated: { type: Date, default: Date.now },
 });
 
 const Partner = mongoose.model("Partner", partnerSchema);

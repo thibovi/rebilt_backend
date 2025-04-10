@@ -68,6 +68,8 @@ const signup = async (req, res) => {
       postalCode,
       profileImage,
       bio,
+      createdAt: new Date(),
+      lastUpdated: new Date(),
     });
 
     // Gebruik Passport om het wachtwoord te hashen en de gebruiker te registreren
@@ -320,6 +322,7 @@ const update = async (req, res) => {
       postalCode: userData.postalCode || updatedUser.postalCode,
       profileImage: userData.profileImage || updatedUser.profileImage,
       bio: userData.bio || updatedUser.bio,
+      lastUpdated: new Date(),
     });
 
     // Save the updated user
