@@ -195,15 +195,25 @@ const index = async (req, res) => {
     const users = await User.find();
 
     // Voeg partnerId toe aan elke gebruiker door de company te matchen met Partner
-    const usersWithPartnerId = await Promise.all(
-      users.map(async (user) => {
-        const partner = await Partner.findOne({ name: user.company });
-        return {
-          ...user._doc,
-          partnerId: partner ? partner._id : null, // PartnerId toevoegen of null als niet gevonden
-        };
-      })
-    );
+    const usersWithPartnerId = users.map((user) => {
+      return {
+        ...user._doc,
+        createdAt: new Date(user.createdAt).toLocaleString("en-US", {
+          month: "short",
+          day: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        lastUpdated: new Date(user.lastUpdated).toLocaleString("en-US", {
+          month: "short",
+          day: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      };
+    });
 
     res.json({
       status: "success",
@@ -237,19 +247,24 @@ const show = async (req, res) => {
       status: "success",
       data: {
         user: {
-          firstname: user.firstname,
-          lastname: user.lastname,
-          email: user.email,
-          id: user._id,
-          role: user.role,
-          company: user.company,
-          partnerId: partner ? partner._id : null, // PartnerId toevoegen of null als niet gevonden
-          activeInactive: user.activeInactive,
-          country: user.country,
-          city: user.city,
-          postalCode: user.postalCode,
-          profileImage: user.profileImage,
-          bio: user.bio,
+          ...user.toObject(),
+          formattedCreatedAt: new Date(user.createdAt).toLocaleString("en-US", {
+            month: "short",
+            day: "2-digit",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+          formattedLastUpdated: new Date(user.lastUpdated).toLocaleString(
+            "en-US",
+            {
+              month: "short",
+              day: "2-digit",
+              year: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            }
+          ),
         },
       },
     });
@@ -294,7 +309,6 @@ const update = async (req, res) => {
       }
     }
 
-    // Alleen lastUpdated bijwerken als er wijzigingen zijn
     if (isModified) {
       updates.lastUpdated = new Date();
     }
