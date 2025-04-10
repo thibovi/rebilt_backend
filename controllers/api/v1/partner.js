@@ -37,22 +37,10 @@ const create = async (req, res) => {
   } = req.body;
 
   // Validatie voor verplichte velden
-  if (
-    !name ||
-    !package ||
-    !domain ||
-    !primary_color ||
-    !secondary_color ||
-    !titles_color ||
-    !text_color ||
-    !background_color ||
-    !button_color ||
-    !fontFamilyBodyText ||
-    !fontFamilyTitles
-  ) {
+  if (!name || !package) {
     return res.status(400).json({
       status: "error",
-      message: "Name, package, domain, colors, and fonts are required.",
+      message: "Name and package are required.",
     });
   }
 
