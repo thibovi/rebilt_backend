@@ -8,6 +8,12 @@ const partnerSchema = new mongoose.Schema({
   contact_phone: { type: String, default: null },
   package: { type: String, required: true },
   domain: { type: String, required: null },
+  activeUnactive: {
+    type: String,
+    enum: ["active", "inactive"],
+    default: "active",
+    required: true,
+  },
   primary_color: { type: String, required: true }, // RGB string
   secondary_color: { type: String, required: true }, // RGB string
   titles_color: { type: String, required: true }, // RGB string

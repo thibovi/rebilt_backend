@@ -12,6 +12,7 @@ const create = async (req, res) => {
     contact_phone,
     package,
     domain,
+    activeUnactive,
     primary_color,
     secondary_color,
     titles_color,
@@ -53,6 +54,7 @@ const create = async (req, res) => {
       contact_phone: contact_phone || null,
       package,
       domain,
+      activeUnactive,
       primary_color,
       secondary_color,
       titles_color,
@@ -199,6 +201,7 @@ const update = async (req, res) => {
       contact_phone,
       package,
       domain,
+      activeUnactive,
       primary_color,
       secondary_color,
       titles_color,
@@ -240,6 +243,7 @@ const update = async (req, res) => {
     partner.contact_phone = contact_phone || partner.contact_phone;
     partner.package = package;
     partner.domain = domain;
+    partner.activeUnactive = activeUnactive || partner.activeUnactive;
     partner.primary_color =
       primary_color !== undefined ? primary_color : partner.primary_color;
     partner.secondary_color =
