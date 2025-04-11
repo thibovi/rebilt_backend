@@ -4,16 +4,12 @@ const analyzeImage = require("../../../services/ImageAnalysisService"); // Dit i
 const create = async (req, res) => {
   try {
     const { imageUrl } = req.body;
-    console.log("Afbeelding URL ontvangen:", imageUrl);
 
     if (!imageUrl) {
       return res.status(400).json({ error: "Geen afbeelding URL opgegeven." });
     }
 
-    // Probeer de afbeelding te analyseren
-    console.log("Start analyse van afbeelding...");
     const metadata = await analyzeImage(imageUrl);
-    console.log("Geanalyseerde metadata:", metadata);
 
     return res.json(metadata);
   } catch (error) {
