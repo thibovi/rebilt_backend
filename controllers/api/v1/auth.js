@@ -23,12 +23,13 @@ const signup = async (req, res) => {
 
     // Validatie van verplichte velden
     if (
-      !firstname ||
-      !lastname ||
-      !email ||
-      !password ||
-      !role ||
-      !activeInactive
+      (!firstname ||
+        !lastname ||
+        !email ||
+        !password ||
+        !role ||
+        !activeInactive,
+      !company)
     ) {
       return res
         .status(400)
@@ -318,7 +319,9 @@ const update = async (req, res) => {
       country: userData.country || updatedUser.country,
       city: userData.city || updatedUser.city,
       postalCode: userData.postalCode || updatedUser.postalCode,
-      profileImage: userData.profileImage || updatedUser.profileImage,
+      profileImage: userData.hasOwnProperty("profileImage")
+        ? userData.profileImage
+        : updatedUser.profileImage,
       bio: userData.bio || updatedUser.bio,
       lastUpdated: new Date().toISOString(), // Update lastUpdated field
     });
