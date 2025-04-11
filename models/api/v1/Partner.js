@@ -8,7 +8,7 @@ const partnerSchema = new mongoose.Schema({
   contact_phone: { type: String, default: null },
   package: { type: String, required: true },
   domain: { type: String, required: null },
-  activeUnactive: {
+  activeInactive: {
     type: String,
     enum: ["active", "inactive"],
     default: "active",
