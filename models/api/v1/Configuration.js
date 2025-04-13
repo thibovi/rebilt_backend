@@ -11,7 +11,6 @@ const configurationSchema = new mongoose.Schema({
         ref: "Option", // Verwijst naar de Option collectie
         required: true,
       },
-      price: { type: Number, required: true }, // Dit kan aangepast worden naar je eigen veld
     },
   ],
 });
