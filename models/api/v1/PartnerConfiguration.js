@@ -11,6 +11,12 @@ const PartnerConfigurationSchema = new mongoose.Schema({
     ref: "Configuration",
     required: true,
   },
+  categoryIds: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",
+    },
+  ],
   options: [
     {
       optionId: {

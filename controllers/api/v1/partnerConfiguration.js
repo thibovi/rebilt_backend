@@ -3,9 +3,8 @@ const PartnerConfiguration = require("../../../models/api/v1/PartnerConfiguratio
 // Create PartnerConfiguration
 const create = async (req, res) => {
   try {
-    const { partnerId, configurationId, options } = req.body;
+    const { partnerId, configurationId, options, categoryIds } = req.body;
 
-    // Validatie: Check of een PartnerConfiguration al bestaat
     const existingConfig = await PartnerConfiguration.findOne({
       partnerId,
       configurationId,
@@ -19,7 +18,6 @@ const create = async (req, res) => {
       });
     }
 
-    // Validatie: Zorg dat options correct zijn gestructureerd
     if (!options || !Array.isArray(options)) {
       return res.status(400).json({
         status: "error",
@@ -27,17 +25,15 @@ const create = async (req, res) => {
       });
     }
 
-    // Maak een nieuwe partnerconfiguratie aan
     const newPartnerConfiguration = new PartnerConfiguration({
       partnerId,
       configurationId,
-      options, // `options` bevat nu `optionId` en `images`
+      categoryIds, // ✅ toegevoegd
+      options,
     });
 
-    // Sla de partnerconfiguratie op
     const savedPartnerConfiguration = await newPartnerConfiguration.save();
 
-    // Stuur een succesbericht terug
     res.status(201).json({
       status: "success",
       data: savedPartnerConfiguration,
@@ -57,7 +53,8 @@ const index = async (req, res) => {
     const partnerConfigs = await PartnerConfiguration.find()
       .populate("partnerId", "name")
       .populate("configurationId", "name")
-      .populate("options.optionId", "name");
+      .populate("options.optionId", "name")
+      .populate("categoryIds", "name"); // ✅ toegevoegd
 
     res.status(200).json({
       status: "success",
@@ -78,7 +75,8 @@ const show = async (req, res) => {
     const partnerConfig = await PartnerConfiguration.findById(req.params.id)
       .populate("partnerId", "name")
       .populate("configurationId", "name")
-      .populate("options.optionId", "name");
+      .populate("options.optionId", "name")
+      .populate("categoryIds", "name"); // ✅ toegevoegd
 
     if (!partnerConfig) {
       return res
@@ -102,9 +100,8 @@ const show = async (req, res) => {
 // Update Partner Configuration
 const update = async (req, res) => {
   try {
-    const { partnerId, configurationId, options } = req.body;
+    const { partnerId, configurationId, options, categoryIds } = req.body;
 
-    // Validatie: Zorg dat options correct zijn gestructureerd
     if (options && !Array.isArray(options)) {
       return res.status(400).json({
         status: "error",
@@ -114,7 +111,12 @@ const update = async (req, res) => {
 
     const updatedPartnerConfig = await PartnerConfiguration.findByIdAndUpdate(
       req.params.id,
-      { partnerId, configurationId, options },
+      {
+        partnerId,
+        configurationId,
+        categoryIds, // ✅ toegevoegd
+        options,
+      },
       { new: true }
     );
 
