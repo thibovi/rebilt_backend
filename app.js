@@ -16,6 +16,7 @@ const PORT = process.env.PORT || 3000;
 const connection = config.get("mongodb");
 mongoose
   .connect(connection)
+  .then(() => console.log("✅ MongoDB verbonden"))
   .catch((err) => console.error("❌ MongoDB verbindingsfout:", err));
 
 // ✅ CORS-instellingen
@@ -62,14 +63,20 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "dist")));
 
+// ✅ Middleware voor subdomeinen
 app.use(async (req, res, next) => {
   try {
     const host = req.headers["x-forwarded-host"] || req.headers.host;
     const subdomain = host.split(".")[0];
 
+    console.log(`🌐 Subdomein: ${subdomain}`);
+
     const partner = await PartnerModel.findOne({ domain: subdomain });
     if (partner) {
+      console.log(`✅ Partner gevonden: ${partner.domain}`);
       req.partner = partner;
+    } else {
+      console.log(`❌ Geen partner gevonden voor: ${subdomain}`);
     }
   } catch (err) {
     console.error("❌ Fout bij ophalen van partner:", err);
@@ -127,6 +134,11 @@ app.use((err, req, res, next) => {
   res.locals.error = req.app.get("env") === "development" ? err : {};
   res.status(err.status || 500);
   res.json({ error: err.message });
+});
+
+// ✅ Server starten
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`🚀 Server draait op poort ${PORT}`);
 });
 
 module.exports = app;
