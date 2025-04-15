@@ -207,8 +207,6 @@ const index = async (req, res) => {
       };
     });
 
-    console.log("Formatted Products:", formattedProducts); // Log voor debug
-
     res.json({
       status: "success",
       data: { products: formattedProducts },
@@ -224,8 +222,6 @@ const index = async (req, res) => {
 
 const show = async (req, res) => {
   try {
-    console.log("Product ID ontvangen:", req.params.id);
-
     // Controleer of de ID een geldige ObjectId is
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
       return res.status(400).json({

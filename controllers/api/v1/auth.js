@@ -393,9 +393,6 @@ const forgotPassword = async (req, res) => {
     user.resetCodeExpiration = Date.now() + 3600000; // 1 uur geldig
     await user.save();
 
-    console.log(process.env.COMBELL_EMAIL);
-    console.log(process.env.COMBELL_PASSWORD);
-
     const transporter = nodemailer.createTransport({
       host: "smtp-auth.mailprotect.be",
       port: 587,
@@ -454,8 +451,6 @@ const verifyCode = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "Gebruiker niet gevonden." });
     }
-
-    console.log("Gebruiker gevonden:", user);
 
     if (!user.resetCode) {
       return res

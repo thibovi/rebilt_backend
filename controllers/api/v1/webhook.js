@@ -28,9 +28,6 @@ const create = async (req, res) => {
   switch (event.type) {
     case "payment_intent.succeeded":
       const paymentIntent = event.data.object; // de payment_intent gegevens
-      console.log(
-        `PaymentIntent voor ${paymentIntent.amount_received} is geslaagd!`
-      );
 
       // Opslaan van het webhook event in de database
       try {
@@ -40,7 +37,6 @@ const create = async (req, res) => {
         });
 
         await webhook.save();
-        console.log("Webhook data succesvol opgeslagen in de database");
 
         // Maak de partner aan na succesvolle betaling
         const customerData = {
@@ -58,8 +54,6 @@ const create = async (req, res) => {
         // Maak de partner via je API
         const partner = new Partner(partnerData);
         await partner.save();
-
-        console.log("Partner succesvol aangemaakt.");
       } catch (error) {
         console.error("Fout bij het opslaan van de webhook gegevens:", error);
         return res
@@ -71,7 +65,6 @@ const create = async (req, res) => {
 
     case "payment_intent.failed":
       const paymentFailed = event.data.object; // de payment_intent gegevens bij mislukking
-      console.log(`PaymentIntent met ID ${paymentFailed.id} is mislukt!`);
 
       // Foutafhandelingslogica, bijvoorbeeld opslaan in database of een notificatie sturen
       try {
@@ -81,9 +74,6 @@ const create = async (req, res) => {
         });
 
         await webhookFailed.save();
-        console.log(
-          "Webhook data (mislukte betaling) opgeslagen in de database"
-        );
       } catch (error) {
         console.error("Fout bij het opslaan van de mislukte betaling:", error);
         return res
@@ -93,7 +83,6 @@ const create = async (req, res) => {
       break;
 
     default:
-      console.log(`Onverwerkte event type: ${event.type}`);
       break;
   }
 

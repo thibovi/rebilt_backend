@@ -110,7 +110,6 @@ const index = async (req, res) => {
 const show = async (req, res) => {
   try {
     const { id } = req.params;
-    console.log(`📌 Opvragen van configuratie met ID: ${id}`);
 
     if (!id) {
       return res.status(400).json({

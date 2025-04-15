@@ -9,8 +9,6 @@ router.get("/", async (req, res) => {
     const host = req.headers.host;
     const subdomain = host.split(".")[0]; // Het subdomein zonder .reblit.be
 
-    console.log("Subdomein gedetecteerd:", subdomain);
-
     // Zoek de partner in de database op basis van het domein
     const partner = await PartnerModel.findOne({ domain: `${subdomain}.be` });
 
