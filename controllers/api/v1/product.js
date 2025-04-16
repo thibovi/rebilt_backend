@@ -47,7 +47,7 @@ const create = async (req, res) => {
       publishedInactive,
       configurations,
       partnerId,
-      categoryIds, // Voeg categoryIds toe aan de destructurering
+      categoryIds, // Verwacht een array van objecten met `_id` en `name`
     } = req.body;
 
     if (!productName || !productType) {
@@ -63,6 +63,16 @@ const create = async (req, res) => {
         message: "Partner ID is verplicht.",
       });
     }
+
+    // Valideer en extraheren van de `_id`-waarden uit `categoryIds`
+    const categoryIdsArray = categoryIds.map((category) => {
+      if (!category._id || !category.name) {
+        throw new Error(
+          "Elke categorie moet een geldig `_id` en `name` bevatten."
+        );
+      }
+      return category._id; // Alleen de `_id` opslaan
+    });
 
     const processedConfigurations = await Promise.all(
       configurations.map(async (config) => {
@@ -127,7 +137,7 @@ const create = async (req, res) => {
       publishedInactive,
       configurations: processedConfigurations,
       partnerId,
-      categoryIds, // Voeg categoryIds toe aan het product
+      categoryIds: categoryIdsArray, // Alleen de `_id`-waarden opslaan
       createdAt: new Date(),
       lastUpdated: new Date(),
     });
@@ -232,7 +242,7 @@ const show = async (req, res) => {
         path: "configurations.selectedOptions.optionId",
         match: { _id: { $ne: null } },
       })
-      .populate("categoryIds"); // Voeg categoryIds toe aan de populate
+      .populate("categoryIds", "_id name"); // Alleen `_id` en `name` ophalen
 
     if (!product) {
       return res.status(404).json({
