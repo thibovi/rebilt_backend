@@ -1,16 +1,19 @@
 const mongoose = require("mongoose");
 
-const CategorySchema = new mongoose.Schema({
+const categorySchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
-    unique: true, // Zorgt ervoor dat dezelfde categorie niet twee keer wordt toegevoegd
+    unique: true,
   },
-  subTypes: {
-    type: [String], // Lijst met subtypes
-    default: [], // Optioneel
-  },
+  subTypes: [
+    {
+      name: {
+        type: String,
+        required: true,
+      },
+    },
+  ],
 });
 
-const Category = mongoose.model("Category", CategorySchema);
-module.exports = Category;
+module.exports = mongoose.model("Category", categorySchema);

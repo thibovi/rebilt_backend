@@ -5,16 +5,16 @@ const mongoose = require("mongoose");
 // Create Category
 const create = async (req, res) => {
   try {
-    const { name, subTypes = [] } = req.body; // subTypes is optioneel
+    const { name, subTypes = [] } = req.body;
 
-    // Validate required fields
+    console.log("Ontvangen payload:", { name, subTypes }); // Debugging
+
     if (!name) {
       return res.status(400).json({
         message: "Name is required",
       });
     }
 
-    // Check if category already exists
     const existingCategory = await Category.findOne({ name });
     if (existingCategory) {
       return res.status(400).json({
@@ -22,13 +22,11 @@ const create = async (req, res) => {
       });
     }
 
-    // Create new category
     const newCategory = new Category({
       name,
       subTypes,
     });
 
-    // Save category to the database
     await newCategory.save();
     res.status(201).json({
       status: "success",
@@ -100,6 +98,8 @@ const show = async (req, res) => {
 const update = async (req, res) => {
   const { id } = req.params;
   const { name, subTypes } = req.body;
+
+  console.log("Ontvangen payload voor update:", { name, subTypes }); // Debugging
 
   if (!name || !Array.isArray(subTypes)) {
     return res.status(400).json({
