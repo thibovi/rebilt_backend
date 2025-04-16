@@ -46,7 +46,8 @@ const create = async (req, res) => {
       urlHandle,
       publishedInactive,
       configurations,
-      partnerId, // Voeg partnerId toe aan de destructurering
+      partnerId,
+      categoryIds, // Voeg categoryIds toe aan de destructurering
     } = req.body;
 
     if (!productName || !productType) {
@@ -125,9 +126,10 @@ const create = async (req, res) => {
       urlHandle,
       publishedInactive,
       configurations: processedConfigurations,
-      partnerId, // Voeg partnerId toe aan het product
-      createdAt: new Date(), // Explicitly set createdAt
-      lastUpdated: new Date(), // Initialize lastUpdated with the same value as createdAt
+      partnerId,
+      categoryIds, // Voeg categoryIds toe aan het product
+      createdAt: new Date(),
+      lastUpdated: new Date(),
     });
 
     await newProduct.save();
@@ -163,14 +165,13 @@ const index = async (req, res) => {
     const { partnerName, productType, brand, publishedInactive } = req.query;
     const filter = {};
 
-    // PartnerName filteren
     if (partnerName) {
       const partnerNameWithSpaces = partnerName.replace(
         /([a-z])([A-Z])/g,
         "$1 $2"
       );
       const partner = await Partner.findOne({
-        name: { $regex: new RegExp(`^${partnerNameWithSpaces}$`, "i") }, // case-insensitive search
+        name: { $regex: new RegExp(`^${partnerNameWithSpaces}$`, "i") },
       });
 
       if (!partner) {
@@ -180,20 +181,16 @@ const index = async (req, res) => {
         });
       }
 
-      filter.partnerId = partner._id; // Filteren op partnerId
+      filter.partnerId = partner._id;
     }
 
-    // Filteren op productType, brand en publishedInactive
     if (productType) filter.productType = productType;
     if (brand) filter.brand = brand;
     if (publishedInactive) filter.publishedInactive = publishedInactive;
 
-    // Haal de producten op met de filters
-    const products = await Product.find(filter);
+    const products = await Product.find(filter).populate("categoryIds");
 
-    // Zorg ervoor dat modelFile en thumbnail aanwezig zijn in de response
     const formattedProducts = products.map((product) => {
-      // Zorg ervoor dat modelFile en thumbnail als string worden weergegeven
       const productObj = product.toObject();
       return {
         ...productObj,
@@ -222,7 +219,6 @@ const index = async (req, res) => {
 
 const show = async (req, res) => {
   try {
-    // Controleer of de ID een geldige ObjectId is
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
       return res.status(400).json({
         status: "error",
@@ -235,7 +231,8 @@ const show = async (req, res) => {
       .populate({
         path: "configurations.selectedOptions.optionId",
         match: { _id: { $ne: null } },
-      });
+      })
+      .populate("categoryIds"); // Voeg categoryIds toe aan de populate
 
     if (!product) {
       return res.status(404).json({
