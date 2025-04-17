@@ -47,9 +47,9 @@ const create = async (req, res) => {
       publishedInactive,
       configurations,
       partnerId,
-      categoryIds, // Verwacht een array van objecten met `_id` en `name`
-      modelFile, // Voeg modelFile toe
-      thumbnail, // Voeg thumbnail toe
+      categoryIds,
+      modelFile,
+      thumbnail,
     } = req.body;
 
     if (!productName || !productType) {
@@ -66,14 +66,13 @@ const create = async (req, res) => {
       });
     }
 
-    // Valideer en extraheren van de `_id`-waarden uit `categoryIds`
     const categoryIdsArray = categoryIds.map((category) => {
       if (!category._id || !category.name) {
         throw new Error(
           "Elke categorie moet een geldig `_id` en `name` bevatten."
         );
       }
-      return category._id; // Alleen de `_id` opslaan
+      return category._id;
     });
 
     const processedConfigurations = await Promise.all(
@@ -84,9 +83,6 @@ const create = async (req, res) => {
           configurationId,
         });
         if (!validPartnerConfig) {
-          console.error(
-            `⚠️ Geen geldige configuratie gevonden voor ID: ${configurationId}`
-          );
           throw new Error(
             `Geen geldige configuratie gevonden voor ID: ${configurationId}`
           );
@@ -97,17 +93,11 @@ const create = async (req, res) => {
             const { optionId, images = [] } = option;
 
             if (!optionId) {
-              console.error(
-                "⚠️ optionId is null. Controleer de frontend of database."
-              );
               throw new Error("Invalid optionId: null value detected.");
             }
 
             const optionExists = await Option.findById(optionId);
             if (!optionExists) {
-              console.error(
-                `⚠️ optionId ${optionId} niet gevonden in de database.`
-              );
               throw new Error(`Option met ID ${optionId} bestaat niet.`);
             }
 
@@ -245,7 +235,7 @@ const show = async (req, res) => {
         path: "configurations.selectedOptions.optionId",
         match: { _id: { $ne: null } },
       })
-      .populate("categoryIds", "_id name"); // Alleen `_id` en `name` ophalen
+      .populate("categoryIds", "_id name");
 
     if (!product) {
       return res.status(404).json({
@@ -257,6 +247,13 @@ const show = async (req, res) => {
     const formattedProduct = {
       ...product.toObject(),
       createdAt: new Date(product.createdAt).toLocaleString("en-US", {
+        month: "short",
+        day: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+      lastUpdated: new Date(product.lastUpdated).toLocaleString("en-US", {
         month: "short",
         day: "2-digit",
         year: "numeric",
