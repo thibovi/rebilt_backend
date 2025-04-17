@@ -48,6 +48,8 @@ const create = async (req, res) => {
       configurations,
       partnerId,
       categoryIds, // Verwacht een array van objecten met `_id` en `name`
+      modelFile, // Voeg modelFile toe
+      thumbnail, // Voeg thumbnail toe
     } = req.body;
 
     if (!productName || !productType) {
@@ -137,7 +139,8 @@ const create = async (req, res) => {
       publishedInactive,
       configurations: processedConfigurations,
       partnerId,
-      categoryIds: categoryIdsArray, // Alleen de `_id`-waarden opslaan
+      categoryIds: categoryIdsArray,
+      ...(productSelectedType === "3D" && { modelFile, thumbnail }),
       createdAt: new Date(),
       lastUpdated: new Date(),
     });
