@@ -94,5 +94,10 @@ const ProductSchema = new mongoose.Schema({
   lastUpdated: { type: Date, default: Date.now }, // Add lastUpdated field
 });
 
+ProductSchema.pre("save", function (next) {
+  this.lastUpdated = new Date(); // Update lastUpdated bij elke save
+  next();
+});
+
 const Product = mongoose.model("Product", ProductSchema);
 module.exports = Product;

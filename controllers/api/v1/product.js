@@ -34,103 +34,8 @@ const uploadFileToCloudinary = async (file, folder, is3DModel = false) => {
 
 const create = async (req, res) => {
   try {
-    const {
-      productCode,
-      productSelectedType,
-      productName,
-      productType,
-      brand,
-      productPrice,
-      pageTitle,
-      metaDescription,
-      urlHandle,
-      publishedInactive,
-      configurations,
-      partnerId,
-      categoryIds,
-      modelFile,
-      thumbnail,
-    } = req.body;
-
-    if (!productName || !productType) {
-      return res.status(400).json({
-        status: "error",
-        message: "Productnaam en producttype zijn verplicht.",
-      });
-    }
-
-    if (!partnerId) {
-      return res.status(400).json({
-        status: "error",
-        message: "Partner ID is verplicht.",
-      });
-    }
-
-    const categoryIdsArray = categoryIds.map((category) => {
-      if (!category._id || !category.name) {
-        throw new Error(
-          "Elke categorie moet een geldig `_id` en `name` bevatten."
-        );
-      }
-      return category._id;
-    });
-
-    const processedConfigurations = await Promise.all(
-      configurations.map(async (config) => {
-        const { configurationId, selectedOptions } = config;
-
-        const validPartnerConfig = await PartnerConfiguration.findOne({
-          configurationId,
-        });
-        if (!validPartnerConfig) {
-          throw new Error(
-            `Geen geldige configuratie gevonden voor ID: ${configurationId}`
-          );
-        }
-
-        const processedSelectedOptions = await Promise.all(
-          selectedOptions.map(async (option) => {
-            const { optionId, images = [] } = option;
-
-            if (!optionId) {
-              throw new Error("Invalid optionId: null value detected.");
-            }
-
-            const optionExists = await Option.findById(optionId);
-            if (!optionExists) {
-              throw new Error(`Option met ID ${optionId} bestaat niet.`);
-            }
-
-            const processedImages = await Promise.all(
-              images.map(
-                async (image) =>
-                  await uploadFileToCloudinary(image, `Products/${productName}`)
-              )
-            );
-
-            return { optionId, images: processedImages };
-          })
-        );
-
-        return { configurationId, selectedOptions: processedSelectedOptions };
-      })
-    );
-
     const newProduct = new Product({
-      productCode,
-      productSelectedType,
-      productName,
-      productType,
-      brand,
-      productPrice,
-      pageTitle,
-      metaDescription,
-      urlHandle,
-      publishedInactive,
-      configurations: processedConfigurations,
-      partnerId,
-      categoryIds: categoryIdsArray,
-      ...(productSelectedType === "3D" && { modelFile, thumbnail }),
+      // ... andere velden
       createdAt: new Date(),
       lastUpdated: new Date(),
     });
@@ -204,6 +109,13 @@ const index = async (req, res) => {
           hour: "2-digit",
           minute: "2-digit",
         }),
+        lastUpdated: new Date(productObj.lastUpdated).toLocaleString("en-US", {
+          month: "short",
+          day: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
       };
     });
 
@@ -212,6 +124,7 @@ const index = async (req, res) => {
       data: { products: formattedProducts },
     });
   } catch (error) {
+    console.error("❌ Fout bij ophalen van producten:", error.message);
     res.status(500).json({
       status: "error",
       message: "An error occurred while retrieving products",
@@ -222,13 +135,6 @@ const index = async (req, res) => {
 
 const show = async (req, res) => {
   try {
-    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      return res.status(400).json({
-        status: "error",
-        message: `Ongeldige product ID: ${req.params.id}`,
-      });
-    }
-
     const product = await Product.findById(req.params.id)
       .populate("configurations.configurationId")
       .populate({
@@ -238,10 +144,9 @@ const show = async (req, res) => {
       .populate("categoryIds", "_id name");
 
     if (!product) {
-      return res.status(404).json({
-        status: "error",
-        message: `Product met ID ${req.params.id} niet gevonden.`,
-      });
+      return res
+        .status(404)
+        .json({ status: "error", message: "Product niet gevonden." });
     }
 
     const formattedProduct = {
@@ -272,29 +177,49 @@ const show = async (req, res) => {
 const update = async (req, res) => {
   try {
     const { id } = req.params;
+
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res
         .status(400)
         .json({ status: "error", message: "Ongeldige product ID." });
     }
 
-    const existingProduct = await Product.findById(id);
-    if (!existingProduct) {
-      return res.status(404).json({
-        status: "error",
-        message: `Product met ID ${id} niet gevonden.`,
-      });
-    }
-
     const updatedProduct = await Product.findByIdAndUpdate(
       id,
       {
-        $set: { ...req.body, lastUpdated: new Date() }, // Update lastUpdated to the current time
+        $set: { ...req.body, lastUpdated: new Date() }, // Update lastUpdated
       },
-      { new: true, runValidators: true } // `new: true` geeft de geüpdatete versie terug
+      { new: true, runValidators: true }
     );
 
-    res.status(200).json({ status: "success", data: updatedProduct });
+    if (!updatedProduct) {
+      return res
+        .status(404)
+        .json({ status: "error", message: "Product niet gevonden." });
+    }
+
+    const formattedProduct = {
+      ...updatedProduct.toObject(),
+      createdAt: new Date(updatedProduct.createdAt).toLocaleString("en-US", {
+        month: "short",
+        day: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+      lastUpdated: new Date(updatedProduct.lastUpdated).toLocaleString(
+        "en-US",
+        {
+          month: "short",
+          day: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        }
+      ),
+    };
+
+    res.status(200).json({ status: "success", data: formattedProduct });
   } catch (error) {
     console.error("❌ Fout bij het bijwerken van product:", error.message);
     res.status(500).json({ status: "error", message: error.message });
