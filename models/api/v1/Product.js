@@ -90,6 +90,12 @@ const ProductSchema = new mongoose.Schema({
     type: String,
     required: false, // Thumbnail image URL
   },
+  arVisualizationType: {
+    type: String,
+    enum: ["space", "body", "face", "hands"],
+    default: "space",
+    required: false,
+  },
   createdAt: { type: Date, default: Date.now },
   lastUpdated: { type: Date, default: Date.now }, // Add lastUpdated field
 });

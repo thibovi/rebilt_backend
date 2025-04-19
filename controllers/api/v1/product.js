@@ -35,7 +35,7 @@ const uploadFileToCloudinary = async (file, folder, is3DModel = false) => {
 const create = async (req, res) => {
   try {
     const newProduct = new Product({
-      // ... andere velden
+      arVisualizationType,
       createdAt: new Date(),
       lastUpdated: new Date(),
     });
