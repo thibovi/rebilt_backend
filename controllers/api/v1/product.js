@@ -34,33 +34,28 @@ const uploadFileToCloudinary = async (file, folder, is3DModel = false) => {
 
 const create = async (req, res) => {
   try {
+    const { configurations } = req.body;
+
+    // Converteer _id naar ObjectId indien nodig
+    configurations.forEach((config) => {
+      config.selectedOptions.forEach((option) => {
+        if (option._id && typeof option._id === "string") {
+          option._id = mongoose.Types.ObjectId.isValid(option._id)
+            ? mongoose.Types.ObjectId(option._id)
+            : undefined; // Laat weg als het geen geldige ObjectId is
+        }
+      });
+    });
+
     const newProduct = new Product({
-      arVisualizationType,
+      ...req.body,
       createdAt: new Date(),
       lastUpdated: new Date(),
     });
 
     await newProduct.save();
 
-    const formattedProduct = {
-      ...newProduct.toObject(),
-      createdAt: new Date(newProduct.createdAt).toLocaleString("en-US", {
-        month: "short",
-        day: "2-digit",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-      lastUpdated: new Date(newProduct.lastUpdated).toLocaleString("en-US", {
-        month: "short",
-        day: "2-digit",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-    };
-
-    res.status(201).json({ status: "success", data: formattedProduct });
+    res.status(201).json({ status: "success", data: newProduct });
   } catch (error) {
     console.error("❌ Fout bij het aanmaken van product:", error.message);
     res.status(500).json({ status: "error", message: error.message });
