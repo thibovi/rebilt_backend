@@ -39,7 +39,7 @@ const signup = async (req, res) => {
     // Controleer of het e-mailadres al bestaat
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ message: "Email is already in use" });
+      return res.status(409).json({ message: "Email is already in use" }); // Gebruik 409 Conflict
     }
 
     // Zoek het partner ID (companyId) op basis van de company naam
@@ -65,7 +65,7 @@ const signup = async (req, res) => {
       company, // Optioneel om te bewaren voor de leesbaarheid
       partnerId, // Koppel de partnerId aan de gebruiker (kan null zijn)
       country,
-      city,
+      city,y
       postalCode,
       profileImage,
       bio,
