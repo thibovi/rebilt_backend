@@ -65,7 +65,7 @@ const signup = async (req, res) => {
       company, // Optioneel om te bewaren voor de leesbaarheid
       partnerId, // Koppel de partnerId aan de gebruiker (kan null zijn)
       country,
-      city,y
+      city,
       postalCode,
       profileImage,
       bio,
