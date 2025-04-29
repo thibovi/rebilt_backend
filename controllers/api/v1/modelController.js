@@ -9,26 +9,29 @@ const create = (req, res) => {
     return res.status(400).json({ error: "No images provided" });
   }
 
-  // Placeholder for 3D model generation logic
-  // This could involve processing images and creating a model
   try {
-    // Example: Process images and generate a model
-    const modelData = processImagesToModel(images); // Implement this function
+    // Process images and generate a model
+    const modelData = processImagesToModel(images);
 
-    // Save the model data to a file or database
-    const modelPath = path.join(
-      __dirname,
-      "../../../models/generatedModel.json"
-    );
+    // Save the model data to a file
+    const modelFileName = "generatedModel.json";
+    const modelPath = path.join(__dirname, "../../../models", modelFileName);
     fs.writeFileSync(modelPath, JSON.stringify(modelData));
 
-    return res
-      .status(200)
-      .json({ message: "3D model generated successfully", modelPath });
+    // Return a public URL to the model
+    const publicModelUrl = `${req.protocol}://${req.get(
+      "host"
+    )}/models/${modelFileName}`;
+
+    return res.status(200).json({
+      message: "3D model generated successfully",
+      modelPath: publicModelUrl, // Retourneer de URL in plaats van het lokale pad
+    });
   } catch (error) {
-    return res
-      .status(500)
-      .json({ error: "Failed to generate 3D model", details: error.message });
+    return res.status(500).json({
+      error: "Failed to generate 3D model",
+      details: error.message,
+    });
   }
 };
 
