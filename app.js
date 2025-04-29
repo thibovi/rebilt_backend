@@ -95,6 +95,7 @@ const partnerConfigurationRouter = require("./routes/api/v1/partnerConfiguration
 const optionRouter = require("./routes/api/v1/options");
 const checkoutRouter = require("./routes/api/v1/checkouts");
 const imageAnalysisRouter = require("./routes/api/v1/imageAnalysis");
+const modelRoutes = require("./routes/api/v1/modelRoutes");
 
 // ✅ API-routes instellen
 app.use("/api/v1/partners", partnerRouter);
@@ -106,6 +107,7 @@ app.use("/api/v1/configurations", configurationRouter);
 app.use("/api/v1/partnerConfigurations", partnerConfigurationRouter);
 app.use("/api/v1/options", optionRouter);
 app.use("/api/v1/checkouts", checkoutRouter);
+app.use("/api/models", modelRoutes);
 
 // ✅ Voeg expliciete CORS-header toe voor imageanalysis
 app.use(
