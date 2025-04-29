@@ -1,31 +1,63 @@
-const fs = require("fs");
-const path = require("path");
+const axios = require("axios");
 
-// Function to generate a 3D model from images
-const create = (req, res) => {
-  const images = req.body.images; // Expecting an array of image paths
+const MESHY_API_URL = "https://api.meshy.ai/openapi/v1/image-to-3d";
+const MESHY_API_KEY = "msy_syQoepFKHteZQnvUInBpTxjAlPNTLu2Rq5Y5"; // Vervang dit door je eigen API-sleutel
+
+/**
+ * Functie om een afbeelding naar Meshy.ai te sturen en een 3D-model te genereren.
+ * @param {string} imageUrl - De publiek toegankelijke URL van de afbeelding.
+ * @returns {Promise<string>} - De URL van het gegenereerde 3D-model.
+ */
+const uploadToMeshy = async (imageUrl) => {
+  try {
+    const headers = {
+      Authorization: `Bearer ${MESHY_API_KEY}`,
+    };
+
+    const payload = {
+      image_url: imageUrl, // Publiek toegankelijke URL van de afbeelding
+      enable_pbr: true, // Schakel PBR in (Physically Based Rendering)
+      should_remesh: true, // Vraag om remeshing
+      should_texture: true, // Vraag om texturering
+    };
+
+    const response = await axios.post(MESHY_API_URL, payload, { headers });
+
+    if (response.status !== 200) {
+      throw new Error("Failed to upload image to Meshy.ai");
+    }
+
+    return response.data.model_url; // URL van het gegenereerde 3D-model
+  } catch (error) {
+    console.error(
+      "Error uploading to Meshy.ai:",
+      error.response?.data || error.message
+    );
+    throw error;
+  }
+};
+
+/**
+ * Express route handler om een 3D-model te genereren op basis van een afbeelding.
+ * @param {Object} req - De Express request object.
+ * @param {Object} res - De Express response object.
+ */
+const create = async (req, res) => {
+  const { images } = req.body; // Verwacht een array van afbeeldings-URL's
 
   if (!images || !Array.isArray(images) || images.length === 0) {
     return res.status(400).json({ error: "No images provided" });
   }
 
   try {
-    // Process images and generate a model
-    const modelData = processImagesToModel(images);
+    // Verwerk de eerste afbeelding (Meshy.ai ondersteunt mogelijk één afbeelding per request)
+    const imageUrl = images[0]; // Gebruik de eerste afbeelding in de array
+    const modelUrl = await uploadToMeshy(imageUrl);
 
-    // Save the model data to a file
-    const modelFileName = "generatedModel.json";
-    const modelPath = path.join(__dirname, "../../../models", modelFileName);
-    fs.writeFileSync(modelPath, JSON.stringify(modelData));
-
-    // Return a public URL to the model
-    const publicModelUrl = `${req.protocol}://${req.get(
-      "host"
-    )}/models/${modelFileName}`;
-
+    // Retourneer de URL van het gegenereerde 3D-model
     return res.status(200).json({
       message: "3D model generated successfully",
-      modelPath: publicModelUrl, // Retourneer de URL in plaats van het lokale pad
+      modelPath: modelUrl,
     });
   } catch (error) {
     return res.status(500).json({
@@ -33,17 +65,6 @@ const create = (req, res) => {
       details: error.message,
     });
   }
-};
-
-// Placeholder function for processing images
-const processImagesToModel = (images) => {
-  // Implement image processing logic here
-  // Return a mock model data for now
-  return {
-    dimensions: { width: 100, height: 100, depth: 100 },
-    textures: images.map((image) => ({ path: image })),
-    createdAt: new Date(),
-  };
 };
 
 module.exports = { create };
