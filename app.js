@@ -96,6 +96,7 @@ const optionRouter = require("./routes/api/v1/options");
 const checkoutRouter = require("./routes/api/v1/checkouts");
 const imageAnalysisRouter = require("./routes/api/v1/imageAnalysis");
 const modelRoutes = require("./routes/api/v1/modelRoutes");
+const cloudinaryRoutes = require("./routes/api/v1/cloudinary");
 
 app.use("/models", express.static(path.join(__dirname, "models")));
 
@@ -110,8 +111,8 @@ app.use("/api/v1/partnerConfigurations", partnerConfigurationRouter);
 app.use("/api/v1/options", optionRouter);
 app.use("/api/v1/checkouts", checkoutRouter);
 app.use("/api/v1/models", modelRoutes);
+app.use("/api/v1/cloudinary", cloudinaryRoutes);
 
-// ✅ Voeg expliciete CORS-header toe voor imageanalysis
 app.use(
   "/api/v1/imageanalysis",
   (req, res, next) => {
