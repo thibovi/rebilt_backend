@@ -17,7 +17,22 @@ const uploadToMeshy = async (imageUrl) => {
 
   try {
     const response = await axios.post(MESHY_API_URL, payload, { headers });
-    return response.data.result;
+
+    // Log the full response from Meshy.ai
+    console.log("Meshy.ai response:", response.data);
+
+    // Validate the response structure
+    if (!response.data || !response.data.result) {
+      throw new Error("Invalid response from Meshy.ai: Missing result.");
+    }
+
+    // If result is a string, assume it's the ID
+    const result =
+      typeof response.data.result === "string"
+        ? { id: response.data.result }
+        : response.data.result;
+
+    return result;
   } catch (error) {
     console.error(
       "Error uploading to Meshy.ai:",
@@ -38,10 +53,21 @@ const create = async (req, res) => {
 
   try {
     const imageUrl = images[0];
-    await uploadToMeshy(imageUrl);
+    const result = await uploadToMeshy(imageUrl);
 
+    // Controleer of de respons een ID bevat
+    if (!result || !result.id) {
+      throw new Error("Meshy.ai did not return a valid ID.");
+    }
+
+    // Log de volledige respons van Meshy.ai
+    console.log("Meshy.ai response:", result);
+
+    // Zorg ervoor dat de respons de ID en model_url bevat
     return res.status(200).json({
       message: "3D model generated successfully",
+      id: result.id, // Voeg de ID toe aan de respons
+      model_url: result.model_urls?.glb || null, // Voeg de GLB URL toe als deze bestaat
     });
   } catch (error) {
     console.error("Error in create function:", error.message);

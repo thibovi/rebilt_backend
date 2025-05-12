@@ -1,3 +1,4 @@
+// Importeer de express-router en de controller
 const express = require("express");
 const router = express.Router();
 const cloudinaryController = require("../../../controllers/api/v1/cloudinary");
@@ -16,5 +17,8 @@ router.put("/:id", cloudinaryController.update);
 
 // Route voor het verwijderen van een configuratie
 router.delete("/:id", cloudinaryController.destroy);
+
+// Nieuwe route voor het uploaden van een mesh URL
+router.post("/upload-mesh", cloudinaryController.uploadMesh);
 
 module.exports = router;

@@ -162,4 +162,51 @@ const destroy = async (req, res) => {
   }
 };
 
-module.exports = { create, index, show, update, destroy };
+// Upload a mesh URL to Cloudinary
+const uploadMeshToCloudinary = async (meshUrl) => {
+  try {
+    const result = await cloudinary.uploader.upload(meshUrl, {
+      resource_type: "auto", // Automatically detect file type
+      folder: "meshes", // Folder in Cloudinary for meshes
+    });
+    return result.secure_url; // Return the secure URL of the uploaded file
+  } catch (error) {
+    throw new Error(`Cloudinary upload failed: ${error.message}`);
+  }
+};
+
+// Upload a mesh URL and create a Cloudinary entry
+const uploadMesh = async (req, res) => {
+  try {
+    const { name, meshUrl, partnerId } = req.body;
+
+    if (!name || !meshUrl || !partnerId) {
+      return res.status(400).json({
+        status: "error",
+        message: "Name, meshUrl, and partnerId are required",
+      });
+    }
+
+    // Upload the mesh URL to Cloudinary
+    const uploadedMeshUrl = await uploadMeshToCloudinary(meshUrl);
+
+    // Create a new Cloudinary entry in the database
+    const newMeshEntry = new Cloudinary({
+      partnerId,
+      name,
+      modelFile: uploadedMeshUrl, // Store the uploaded mesh URL
+    });
+
+    const savedMesh = await newMeshEntry.save();
+    res.status(201).json({ status: "success", data: savedMesh });
+  } catch (error) {
+    console.error("Error in uploadMesh controller:", error);
+    res.status(500).json({
+      status: "error",
+      message: error.message || "General Error",
+      stack: error.stack,
+    });
+  }
+};
+
+module.exports = { create, index, show, update, destroy, uploadMesh };
