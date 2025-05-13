@@ -209,4 +209,43 @@ const uploadMesh = async (req, res) => {
   }
 };
 
-module.exports = { create, index, show, update, destroy, uploadMesh };
+const search = async (req, res) => {
+  try {
+    const { name, modelFile } = req.query;
+
+    if (!name || !modelFile) {
+      return res.status(400).json({
+        status: "error",
+        message: "Name and modelFile are required for searching",
+      });
+    }
+
+    // Decode the modelFile URL
+    const decodedModelFile = decodeURIComponent(modelFile);
+    console.log("Decoded modelFile:", decodedModelFile);
+
+    // Search for the model in the database
+    const model = await Cloudinary.findOne({
+      name,
+      modelFile: decodedModelFile,
+    });
+
+    if (!model) {
+      return res.status(404).json({
+        status: "error",
+        message: "Model not found",
+      });
+    }
+
+    res.status(200).json({ status: "success", data: model });
+  } catch (error) {
+    console.error("Error in search controller:", error);
+    res.status(500).json({
+      status: "error",
+      message: "Error searching for model",
+      error: error.message,
+    });
+  }
+};
+
+module.exports = { create, index, show, update, destroy, uploadMesh, search };
