@@ -8,19 +8,6 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// Upload model to Cloudinary
-const uploadModelToCloudinary = async (file) => {
-  try {
-    const result = await cloudinary.uploader.upload(file, {
-      resource_type: "auto", // Automatically detect file type
-      folder: "models", // Folder in Cloudinary
-    });
-    return result.secure_url;
-  } catch (error) {
-    throw new Error(`Cloudinary upload failed: ${error.message}`);
-  }
-};
-
 // Create a new Cloudinary entry
 const create = async (req, res) => {
   try {

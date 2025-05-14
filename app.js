@@ -24,7 +24,8 @@ const allowedOrigins = [
   "http://localhost:5173",
   "http://192.168.0.130:5173",
   "http://172.20.144.1:5173",
-  "https://platform.rebilt.be", // Zorg ervoor dat dit domein is toegestaan
+  "https://rebilt.be",
+  "https://platform.rebilt.be",
   "http://odettelunettes.rebilt.be",
   "https://odettelunettes.rebilt.be",
   "https://rebilt-backend.onrender.com",
