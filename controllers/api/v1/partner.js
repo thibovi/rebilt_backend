@@ -35,6 +35,7 @@ const create = async (req, res) => {
     gray_700,
     gray_800,
     gray_900,
+    hasTwoDToThreeDTool, // Nieuw veld toegevoegd
   } = req.body;
 
   // Validatie voor verplichte velden
@@ -77,6 +78,7 @@ const create = async (req, res) => {
       gray_700,
       gray_800,
       gray_900,
+      hasTwoDToThreeDTool: hasTwoDToThreeDTool || false, // Standaard op false
       created_at: new Date(),
     });
 
@@ -189,7 +191,6 @@ const show = async (req, res) => {
   }
 };
 
-// Functie om een partner bij te werken
 const update = async (req, res) => {
   try {
     const { id } = req.params;
@@ -224,6 +225,7 @@ const update = async (req, res) => {
       gray_700,
       gray_800,
       gray_900,
+      hasTwoDToThreeDTool, // Nieuw veld toegevoegd
     } = req.body;
 
     const partner = await Partner.findById(id);
@@ -281,6 +283,10 @@ const update = async (req, res) => {
     partner.gray_700 = gray_700 || partner.gray_700;
     partner.gray_800 = gray_800 || partner.gray_800;
     partner.gray_900 = gray_900 || partner.gray_900;
+    partner.hasTwoDToThreeDTool =
+      hasTwoDToThreeDTool !== undefined
+        ? hasTwoDToThreeDTool
+        : partner.hasTwoDToThreeDTool; // Update het veld
 
     await partner.save();
     res.json({

@@ -7,6 +7,7 @@ const partnerSchema = new mongoose.Schema({
   contact_email: { type: String, default: null },
   contact_phone: { type: String, default: null },
   package: { type: String, required: true },
+  hasTwoDToThreeDTool: { type: Boolean, default: false },
   domain: { type: String, required: null },
   activeInactive: {
     type: String,
