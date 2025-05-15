@@ -73,16 +73,20 @@ app.use(express.static(path.join(__dirname, "dist")));
 app.use(async (req, res, next) => {
   try {
     const host = req.headers["x-forwarded-host"] || req.headers.host;
-    const subdomain = host.split(".")[0];
+
+    // Haal het subdomein op (bijvoorbeeld "odettelunettes" van "odettelunettes.rebilt.be")
+    const subdomain = host.endsWith(".rebilt.be") ? host.split(".")[0] : null;
 
     console.log(`🌐 Subdomein: ${subdomain}`);
 
-    const partner = await PartnerModel.findOne({ domain: subdomain });
-    if (partner) {
-      console.log(`✅ Partner gevonden: ${partner.domain}`);
-      req.partner = partner;
-    } else {
-      console.log(`❌ Geen partner gevonden voor: ${subdomain}`);
+    if (subdomain) {
+      const partner = await PartnerModel.findOne({ domain: subdomain });
+      if (partner) {
+        console.log(`✅ Partner gevonden: ${partner.domain}`);
+        req.partner = partner;
+      } else {
+        console.log(`❌ Geen partner gevonden voor: ${subdomain}`);
+      }
     }
   } catch (err) {
     console.error("❌ Fout bij ophalen van partner:", err);
