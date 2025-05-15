@@ -35,7 +35,10 @@ const create = async (req, res) => {
     gray_700,
     gray_800,
     gray_900,
-    hasTwoDToThreeDTool, // Nieuw veld toegevoegd
+    hasTwoDToThreeDTool,
+    seoTitle, // Nieuw veld toegevoegd
+    metaDescription, // Nieuw veld toegevoegd
+    seoImage, // Nieuw veld toegevoegd
   } = req.body;
 
   // Validatie voor verplichte velden
@@ -78,7 +81,10 @@ const create = async (req, res) => {
       gray_700,
       gray_800,
       gray_900,
-      hasTwoDToThreeDTool: hasTwoDToThreeDTool || false, // Standaard op false
+      hasTwoDToThreeDTool: hasTwoDToThreeDTool || false,
+      seoTitle: seoTitle || null, // SEO-veld
+      metaDescription: metaDescription || null, // SEO-veld
+      seoImage: seoImage || null, // SEO-veld
       created_at: new Date(),
     });
 
@@ -225,7 +231,10 @@ const update = async (req, res) => {
       gray_700,
       gray_800,
       gray_900,
-      hasTwoDToThreeDTool, // Nieuw veld toegevoegd
+      hasTwoDToThreeDTool,
+      seoTitle, // Nieuw veld toegevoegd
+      metaDescription, // Nieuw veld toegevoegd
+      seoImage, // Nieuw veld toegevoegd
     } = req.body;
 
     const partner = await Partner.findById(id);
@@ -286,7 +295,11 @@ const update = async (req, res) => {
     partner.hasTwoDToThreeDTool =
       hasTwoDToThreeDTool !== undefined
         ? hasTwoDToThreeDTool
-        : partner.hasTwoDToThreeDTool; // Update het veld
+        : partner.hasTwoDToThreeDTool;
+    partner.seoTitle = seoTitle !== undefined ? seoTitle : partner.seoTitle; // SEO-veld
+    partner.metaDescription =
+      metaDescription !== undefined ? metaDescription : partner.metaDescription; // SEO-veld
+    partner.seoImage = seoImage !== undefined ? seoImage : partner.seoImage; // SEO-veld
 
     await partner.save();
     res.json({

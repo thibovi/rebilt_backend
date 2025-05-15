@@ -38,6 +38,9 @@ const partnerSchema = new mongoose.Schema({
   gray_800: { type: String, default: null }, // Hex or RGB string
   gray_900: { type: String, default: null }, // Hex or RGB string
   createdAt: { type: Date, default: Date.now },
+  seoTitle: { type: String, default: null }, // Titel voor SEO
+  metaDescription: { type: String, default: null }, // Meta description voor SEO
+  seoImage: { type: String, default: null }, // URL van een afbeelding voor SEO
 });
 
 const Partner = mongoose.model("Partner", partnerSchema);
