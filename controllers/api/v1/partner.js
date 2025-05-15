@@ -185,7 +185,46 @@ const show = async (req, res) => {
 
     res.json({
       status: "success",
-      data: { partner },
+      data: {
+        partner: {
+          id: partner._id,
+          name: partner.name,
+          address: partner.address,
+          contact_person: partner.contact_person,
+          contact_email: partner.contact_email,
+          contact_phone: partner.contact_phone,
+          package: partner.package,
+          domain: partner.domain,
+          activeInactive: partner.activeInactive,
+          primary_color: partner.primary_color,
+          secondary_color: partner.secondary_color,
+          titles_color: partner.titles_color,
+          text_color: partner.text_color,
+          background_color: partner.background_color,
+          button_color: partner.button_color,
+          fontFamilyBodyText: partner.fontFamilyBodyText,
+          fontFamilyTitles: partner.fontFamilyTitles,
+          logo_url: partner.logo_url,
+          favicon_url: partner.favicon_url,
+          black: partner.black,
+          white: partner.white,
+          blue_600: partner.blue_600,
+          gray_100: partner.gray_100,
+          gray_200: partner.gray_200,
+          gray_300: partner.gray_300,
+          gray_400: partner.gray_400,
+          gray_500: partner.gray_500,
+          gray_600: partner.gray_600,
+          gray_700: partner.gray_700,
+          gray_800: partner.gray_800,
+          gray_900: partner.gray_900,
+          hasTwoDToThreeDTool: partner.hasTwoDToThreeDTool,
+          seoTitle: partner.seoTitle, // SEO-veld
+          metaDescription: partner.metaDescription, // SEO-veld
+          seoImage: partner.seoImage, // SEO-veld
+          createdAt: partner.createdAt,
+        },
+      },
     });
   } catch (err) {
     console.error("Error retrieving partner:", err);
