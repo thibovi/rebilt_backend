@@ -20,20 +20,25 @@ mongoose
   .catch((err) => console.error("❌ MongoDB verbindingsfout:", err));
 
 // ✅ CORS-instellingen
-const allowedOrigins = [
-  "http://localhost:5173",
-  "http://192.168.0.130:5173",
-  "http://172.20.144.1:5173",
-  "https://rebilt.be",
-  "https://platform.rebilt.be",
-  "http://odettelunettes.rebilt.be",
-  "https://odettelunettes.rebilt.be",
-  "https://rebilt-backend.onrender.com",
-];
-
 const corsOptions = {
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
+    const allowedOrigins = [
+      "http://localhost:5173",
+      "http://192.168.0.130:5173",
+      "http://172.20.144.1:5173",
+      "https://rebilt.be",
+      "https://platform.rebilt.be",
+      "https://rebilt-backend.onrender.com",
+    ];
+
+    // Sta alle subdomeinen van rebilt.be toe
+    const rebiltSubdomainRegex = /^https?:\/\/([a-z0-9-]+\.)?rebilt\.be$/;
+
+    if (
+      !origin ||
+      allowedOrigins.includes(origin) ||
+      rebiltSubdomainRegex.test(origin)
+    ) {
       callback(null, true);
     } else {
       callback(new Error("Niet toegestane CORS-origin"));
