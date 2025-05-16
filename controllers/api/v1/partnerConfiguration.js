@@ -97,46 +97,35 @@ const show = async (req, res) => {
   }
 };
 
-// Update Partner Configuration
 const update = async (req, res) => {
   try {
-    const { partnerId, configurationId, options, categoryIds } = req.body;
-
-    if (options && !Array.isArray(options)) {
-      return res.status(400).json({
-        status: "error",
-        message: "Options must be an array",
-      });
-    }
-
-    // Alleen velden updaten die in de body zitten
     const updateFields = {};
-    if (partnerId !== undefined) updateFields.partnerId = partnerId;
-    if (configurationId !== undefined)
-      updateFields.configurationId = configurationId;
-    if (categoryIds !== undefined) updateFields.categoryIds = categoryIds;
-    if (options !== undefined) updateFields.options = options;
+    // Voeg alleen velden toe die in req.body zitten
+    Object.keys(req.body).forEach((key) => {
+      updateFields[key] = req.body[key];
+    });
 
-    const updatedPartnerConfig = await PartnerConfiguration.findByIdAndUpdate(
+    const updatedPartner = await Partner.findByIdAndUpdate(
       req.params.id,
       updateFields,
       { new: true }
     );
 
-    if (!updatedPartnerConfig) {
-      return res
-        .status(404)
-        .json({ status: "error", message: "Partner Configuration not found" });
+    if (!updatedPartner) {
+      return res.status(404).json({
+        status: "error",
+        message: "Partner not found",
+      });
     }
 
     res.status(200).json({
       status: "success",
-      data: updatedPartnerConfig,
+      data: updatedPartner,
     });
   } catch (error) {
     res.status(500).json({
       status: "error",
-      message: "Error updating partner configuration",
+      message: "Error updating partner",
       error: error.message,
     });
   }
