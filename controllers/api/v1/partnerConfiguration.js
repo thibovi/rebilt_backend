@@ -109,17 +109,14 @@ const update = async (req, res) => {
       });
     }
 
-    // Alleen velden updaten die meegestuurd zijn
-    const updateFields = {};
-    if (partnerId !== undefined) updateFields.partnerId = partnerId;
-    if (configurationId !== undefined)
-      updateFields.configurationId = configurationId;
-    if (categoryIds !== undefined) updateFields.categoryIds = categoryIds;
-    if (options !== undefined) updateFields.options = options;
-
     const updatedPartnerConfig = await PartnerConfiguration.findByIdAndUpdate(
       req.params.id,
-      updateFields,
+      {
+        partnerId,
+        configurationId,
+        categoryIds, // ✅ toegevoegd
+        options,
+      },
       { new: true }
     );
 

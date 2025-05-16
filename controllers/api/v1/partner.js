@@ -271,9 +271,9 @@ const update = async (req, res) => {
       gray_800,
       gray_900,
       hasTwoDToThreeDTool,
-      seoTitle, // Nieuw veld toegevoegd
-      metaDescription, // Nieuw veld toegevoegd
-      seoImage, // Nieuw veld toegevoegd
+      seoTitle,
+      metaDescription,
+      seoImage,
     } = req.body;
 
     const partner = await Partner.findById(id);
@@ -286,59 +286,46 @@ const update = async (req, res) => {
     }
 
     // Werk de partnergegevens bij
-    partner.name = name;
-    partner.address = address !== undefined ? address : partner.address;
-    partner.contact_person = contact_person || partner.contact_person;
-    partner.contact_email = contact_email || partner.contact_email;
-    partner.contact_phone = contact_phone || partner.contact_phone;
-    partner.package = package;
-    partner.domain = domain;
-    partner.activeInactive = activeInactive || partner.activeInactive;
-    partner.primary_color =
-      primary_color !== undefined ? primary_color : partner.primary_color;
-    partner.secondary_color =
-      secondary_color !== undefined ? secondary_color : partner.secondary_color;
-    partner.titles_color =
-      titles_color !== undefined ? titles_color : partner.titles_color;
-    partner.text_color =
-      text_color !== undefined ? text_color : partner.text_color;
-    partner.background_color =
-      background_color !== undefined
-        ? background_color
-        : partner.background_color;
-    partner.button_color =
-      button_color !== undefined ? button_color : partner.button_color;
-    partner.fontFamilyBodyText =
-      fontFamilyBodyText !== undefined
-        ? fontFamilyBodyText
-        : partner.fontFamilyBodyText;
-    partner.fontFamilyTitles =
-      fontFamilyTitles !== undefined
-        ? fontFamilyTitles
-        : partner.fontFamilyTitles;
-    partner.logo_url = logo_url !== undefined ? logo_url : partner.logo_url;
-    partner.favicon_url =
-      favicon_url !== undefined ? favicon_url : partner.favicon_url;
-    partner.black = black || partner.black;
-    partner.white = white || partner.white;
-    partner.blue_600 = blue_600 || partner.blue_600;
-    partner.gray_100 = gray_100 || partner.gray_100;
-    partner.gray_200 = gray_200 || partner.gray_200;
-    partner.gray_300 = gray_300 || partner.gray_300;
-    partner.gray_400 = gray_400 || partner.gray_400;
-    partner.gray_500 = gray_500 || partner.gray_500;
-    partner.gray_600 = gray_600 || partner.gray_600;
-    partner.gray_700 = gray_700 || partner.gray_700;
-    partner.gray_800 = gray_800 || partner.gray_800;
-    partner.gray_900 = gray_900 || partner.gray_900;
-    partner.hasTwoDToThreeDTool =
-      hasTwoDToThreeDTool !== undefined
-        ? hasTwoDToThreeDTool
-        : partner.hasTwoDToThreeDTool;
-    partner.seoTitle = seoTitle !== undefined ? seoTitle : partner.seoTitle; // SEO-veld
-    partner.metaDescription =
-      metaDescription !== undefined ? metaDescription : partner.metaDescription; // SEO-veld
-    partner.seoImage = seoImage !== undefined ? seoImage : partner.seoImage; // SEO-veld
+    if (name !== undefined) partner.name = name;
+    if (address !== undefined) partner.address = address;
+    if (contact_person !== undefined) partner.contact_person = contact_person;
+    if (contact_email !== undefined) partner.contact_email = contact_email;
+    if (contact_phone !== undefined) partner.contact_phone = contact_phone;
+    if (package !== undefined) partner.package = package;
+    if (domain !== undefined) partner.domain = domain; // Alleen aanpassen als meegestuurd
+    if (activeInactive !== undefined) partner.activeInactive = activeInactive;
+    if (primary_color !== undefined) partner.primary_color = primary_color;
+    if (secondary_color !== undefined)
+      partner.secondary_color = secondary_color;
+    if (titles_color !== undefined) partner.titles_color = titles_color;
+    if (text_color !== undefined) partner.text_color = text_color;
+    if (background_color !== undefined)
+      partner.background_color = background_color;
+    if (button_color !== undefined) partner.button_color = button_color;
+    if (fontFamilyBodyText !== undefined)
+      partner.fontFamilyBodyText = fontFamilyBodyText;
+    if (fontFamilyTitles !== undefined)
+      partner.fontFamilyTitles = fontFamilyTitles;
+    if (logo_url !== undefined) partner.logo_url = logo_url;
+    if (favicon_url !== undefined) partner.favicon_url = favicon_url;
+    if (black !== undefined) partner.black = black;
+    if (white !== undefined) partner.white = white;
+    if (blue_600 !== undefined) partner.blue_600 = blue_600;
+    if (gray_100 !== undefined) partner.gray_100 = gray_100;
+    if (gray_200 !== undefined) partner.gray_200 = gray_200;
+    if (gray_300 !== undefined) partner.gray_300 = gray_300;
+    if (gray_400 !== undefined) partner.gray_400 = gray_400;
+    if (gray_500 !== undefined) partner.gray_500 = gray_500;
+    if (gray_600 !== undefined) partner.gray_600 = gray_600;
+    if (gray_700 !== undefined) partner.gray_700 = gray_700;
+    if (gray_800 !== undefined) partner.gray_800 = gray_800;
+    if (gray_900 !== undefined) partner.gray_900 = gray_900;
+    if (hasTwoDToThreeDTool !== undefined)
+      partner.hasTwoDToThreeDTool = hasTwoDToThreeDTool;
+    if (seoTitle !== undefined) partner.seoTitle = seoTitle;
+    if (metaDescription !== undefined)
+      partner.metaDescription = metaDescription;
+    if (seoImage !== undefined) partner.seoImage = seoImage;
 
     await partner.save();
     res.json({
