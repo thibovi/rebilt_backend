@@ -3,10 +3,15 @@ const Partner = require("../../../models/api/v1/Partner");
 require("dotenv").config();
 
 // Functie voor het aanmaken van een nieuwe partner
+// ...existing code...
 const create = async (req, res) => {
   const {
     name,
-    address,
+    street,
+    housenumber,
+    postalCode,
+    city,
+    country,
     contact_person,
     contact_email,
     contact_phone,
@@ -36,12 +41,11 @@ const create = async (req, res) => {
     gray_800,
     gray_900,
     hasTwoDToThreeDTool,
-    seoTitle, // Nieuw veld toegevoegd
-    metaDescription, // Nieuw veld toegevoegd
-    seoImage, // Nieuw veld toegevoegd
+    seoTitle,
+    metaDescription,
+    seoImage,
   } = req.body;
 
-  // Validatie voor verplichte velden
   if (!name || !package) {
     return res.status(400).json({
       status: "error",
@@ -52,7 +56,11 @@ const create = async (req, res) => {
   try {
     const newPartner = new Partner({
       name,
-      address: address || {},
+      street: street || null,
+      housenumber: housenumber || null,
+      postalCode: postalCode || null,
+      city: city || null,
+      country: country || null,
       contact_person: contact_person || null,
       contact_email: contact_email || null,
       contact_phone: contact_phone || null,
@@ -82,9 +90,9 @@ const create = async (req, res) => {
       gray_800,
       gray_900,
       hasTwoDToThreeDTool: hasTwoDToThreeDTool || false,
-      seoTitle: seoTitle || null, // SEO-veld
-      metaDescription: metaDescription || null, // SEO-veld
-      seoImage: seoImage || null, // SEO-veld
+      seoTitle: seoTitle || null,
+      metaDescription: metaDescription || null,
+      seoImage: seoImage || null,
       created_at: new Date(),
     });
 
@@ -241,7 +249,11 @@ const update = async (req, res) => {
     const { id } = req.params;
     const {
       name,
-      address,
+      street,
+      housenumber,
+      postalCode,
+      city,
+      country,
       contact_person,
       contact_email,
       contact_phone,
@@ -285,14 +297,17 @@ const update = async (req, res) => {
       });
     }
 
-    // Werk de partnergegevens bij
     if (name !== undefined) partner.name = name;
-    if (address !== undefined) partner.address = address;
+    if (street !== undefined) partner.street = street;
+    if (housenumber !== undefined) partner.housenumber = housenumber;
+    if (postalCode !== undefined) partner.postalCode = postalCode;
+    if (city !== undefined) partner.city = city;
+    if (country !== undefined) partner.country = country;
     if (contact_person !== undefined) partner.contact_person = contact_person;
     if (contact_email !== undefined) partner.contact_email = contact_email;
     if (contact_phone !== undefined) partner.contact_phone = contact_phone;
     if (package !== undefined) partner.package = package;
-    if (domain !== undefined) partner.domain = domain; // Alleen aanpassen als meegestuurd
+    if (domain !== undefined) partner.domain = domain;
     if (activeInactive !== undefined) partner.activeInactive = activeInactive;
     if (primary_color !== undefined) partner.primary_color = primary_color;
     if (secondary_color !== undefined)

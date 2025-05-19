@@ -2,7 +2,11 @@ const mongoose = require("mongoose");
 
 const partnerSchema = new mongoose.Schema({
   name: { type: String, required: true },
-  address: { type: Object, default: {} },
+  street: { type: String, default: null },
+  housenumber: { type: String, default: null },
+  postalCode: { type: String, default: null },
+  city: { type: String, default: null },
+  country: { type: String, default: null },
   contact_person: { type: String, default: null },
   contact_email: { type: String, default: null },
   contact_phone: { type: String, default: null },
