@@ -3,7 +3,10 @@ const Partner = require("../../../models/api/v1/Partner");
 require("dotenv").config();
 
 // Functie voor het aanmaken van een nieuwe partner
-// ...existing code...
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const postalCodeRegex = /^[0-9]{4,6}$/; // Pas aan voor jouw land
+const phoneRegex = /^[+0-9\s\-()]{8,20}$/; // Eenvoudige check
+
 const create = async (req, res) => {
   const {
     name,
@@ -46,10 +49,35 @@ const create = async (req, res) => {
     seoImage,
   } = req.body;
 
+  // Basisverplichtingen
   if (!name || !package) {
     return res.status(400).json({
       status: "error",
       message: "Name and package are required.",
+    });
+  }
+
+  // Email validatie
+  if (contact_email && !emailRegex.test(contact_email)) {
+    return res.status(400).json({
+      status: "error",
+      message: "Invalid email address.",
+    });
+  }
+
+  // Postcode validatie
+  if (postalCode && !postalCodeRegex.test(postalCode)) {
+    return res.status(400).json({
+      status: "error",
+      message: "Invalid postal code.",
+    });
+  }
+
+  // Telefoonnummer validatie
+  if (contact_phone && !phoneRegex.test(contact_phone)) {
+    return res.status(400).json({
+      status: "error",
+      message: "Invalid phone number.",
     });
   }
 
@@ -287,6 +315,32 @@ const update = async (req, res) => {
       metaDescription,
       seoImage,
     } = req.body;
+
+    // Validaties
+    if (contact_email && !emailRegex.test(contact_email)) {
+      return res.status(400).json({
+        status: "error",
+        message: "Invalid email address.",
+      });
+    }
+    if (postalCode && !postalCodeRegex.test(postalCode)) {
+      return res.status(400).json({
+        status: "error",
+        message: "Invalid postal code.",
+      });
+    }
+    if (contact_phone && !phoneRegex.test(contact_phone)) {
+      return res.status(400).json({
+        status: "error",
+        message: "Invalid phone number.",
+      });
+    }
+    if (activeInactive && !["active", "inactive"].includes(activeInactive)) {
+      return res.status(400).json({
+        status: "error",
+        message: "activeInactive must be 'active' or 'inactive'.",
+      });
+    }
 
     const partner = await Partner.findById(id);
 
