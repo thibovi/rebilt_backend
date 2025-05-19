@@ -588,6 +588,17 @@ const resetPassword = async (req, res) => {
   }
 };
 
+const checkEmailExists = async (req, res) => {
+  const { email } = req.query;
+  if (!email) {
+    return res
+      .status(400)
+      .json({ exists: false, message: "Email is required" });
+  }
+  const user = await User.findOne({ email });
+  res.json({ exists: !!user });
+};
+
 module.exports = {
   signup,
   login,
@@ -598,4 +609,5 @@ module.exports = {
   forgotPassword,
   verifyCode,
   resetPassword,
+  checkEmailExists,
 };
