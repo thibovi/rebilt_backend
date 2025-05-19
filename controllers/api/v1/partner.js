@@ -225,7 +225,11 @@ const show = async (req, res) => {
         partner: {
           id: partner._id,
           name: partner.name,
-          address: partner.address,
+          street: partner.street,
+          housenumber: partner.housenumber,
+          postalCode: partner.postalCode,
+          city: partner.city,
+          country: partner.country,
           contact_person: partner.contact_person,
           contact_email: partner.contact_email,
           contact_phone: partner.contact_phone,
@@ -255,9 +259,9 @@ const show = async (req, res) => {
           gray_800: partner.gray_800,
           gray_900: partner.gray_900,
           hasTwoDToThreeDTool: partner.hasTwoDToThreeDTool,
-          seoTitle: partner.seoTitle, // SEO-veld
-          metaDescription: partner.metaDescription, // SEO-veld
-          seoImage: partner.seoImage, // SEO-veld
+          seoTitle: partner.seoTitle,
+          metaDescription: partner.metaDescription,
+          seoImage: partner.seoImage,
           createdAt: partner.createdAt,
         },
       },
