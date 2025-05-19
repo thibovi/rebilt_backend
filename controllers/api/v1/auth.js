@@ -4,6 +4,11 @@ const Partner = require("../../../models/api/v1/Partner");
 const nodemailer = require("nodemailer");
 require("dotenv").config();
 
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const postalCodeRegex = /^[0-9]{4,6}$/;
+const passwordRegex =
+  /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]{8,}$/;
+
 const signup = async (req, res) => {
   try {
     const {
@@ -12,7 +17,7 @@ const signup = async (req, res) => {
       email,
       password,
       role,
-      company, // Dit gebruiken we om de partner te vinden, optioneel
+      company,
       activeInactive,
       street,
       houseNumber,
@@ -25,23 +30,40 @@ const signup = async (req, res) => {
 
     // Validatie van verplichte velden
     if (
-      (!firstname ||
-        !lastname ||
-        !email ||
-        !password ||
-        !role ||
-        !activeInactive,
-      !company)
+      !firstname ||
+      !lastname ||
+      !email ||
+      !password ||
+      !role ||
+      !activeInactive
     ) {
       return res
         .status(400)
         .json({ message: "All required fields must be provided." });
     }
 
+    // Email validatie
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ message: "Invalid email address." });
+    }
+
+    // PostalCode validatie
+    if (postalCode && !postalCodeRegex.test(postalCode)) {
+      return res.status(400).json({ message: "Invalid postal code." });
+    }
+
+    // Password validatie
+    if (!passwordRegex.test(password)) {
+      return res.status(400).json({
+        message:
+          "Password must be at least 8 characters long and contain at least one letter and one number.",
+      });
+    }
+
     // Controleer of het e-mailadres al bestaat
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(409).json({ message: "Email is already in use" }); // Gebruik 409 Conflict
+      return res.status(409).json({ message: "Email is already in use" });
     }
 
     // Zoek het partner ID (companyId) op basis van de company naam
@@ -277,6 +299,31 @@ const update = async (req, res) => {
     return res.status(400).json({
       status: "error",
       message: "User data is required for update",
+    });
+  }
+
+  // Email validatie (indien gewijzigd)
+  if (userData.email && !emailRegex.test(userData.email)) {
+    return res.status(400).json({
+      status: "error",
+      message: "Invalid email address.",
+    });
+  }
+
+  // PostalCode validatie (indien gewijzigd)
+  if (userData.postalCode && !postalCodeRegex.test(userData.postalCode)) {
+    return res.status(400).json({
+      status: "error",
+      message: "Invalid postal code.",
+    });
+  }
+
+  // Password validatie (indien gewijzigd)
+  if (userData.newPassword && !passwordRegex.test(userData.newPassword)) {
+    return res.status(400).json({
+      status: "error",
+      message:
+        "Password must be at least 8 characters long and contain at least one letter and one number.",
     });
   }
 
