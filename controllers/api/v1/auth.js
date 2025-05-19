@@ -14,9 +14,11 @@ const signup = async (req, res) => {
       role,
       company, // Dit gebruiken we om de partner te vinden, optioneel
       activeInactive,
-      country,
-      city,
+      street,
+      houseNumber,
       postalCode,
+      city,
+      country,
       profileImage,
       bio,
     } = req.body.user;
@@ -64,9 +66,11 @@ const signup = async (req, res) => {
       activeInactive,
       company, // Optioneel om te bewaren voor de leesbaarheid
       partnerId, // Koppel de partnerId aan de gebruiker (kan null zijn)
-      country,
-      city,
+      street,
+      houseNumber,
       postalCode,
+      city,
+      country,
       profileImage,
       bio,
     });
@@ -103,9 +107,11 @@ const signup = async (req, res) => {
           role: user.role,
           company: user.company, // Handig voor leesbaarheid
           activeInactive: user.activeInactive,
-          country: user.country,
-          city: user.city,
+          streeet: user.street,
+          houseNumber: user.houseNumber,
           postalCode: user.postalCode,
+          city: user.city,
+          country: user.country,
           profileImage: user.profileImage,
           bio: user.bio,
         },
@@ -244,9 +250,11 @@ const show = async (req, res) => {
           company: user.company,
           partnerId: partner ? partner._id : null, // PartnerId toevoegen of null als niet gevonden
           activeInactive: user.activeInactive,
-          country: user.country,
-          city: user.city,
+          street: user.street,
+          houseNumber: user.houseNumber,
           postalCode: user.postalCode,
+          city: user.city,
+          country: user.country,
           profileImage: user.profileImage,
           bio: user.bio,
         },
@@ -316,9 +324,11 @@ const update = async (req, res) => {
       company:
         userData.company !== undefined ? userData.company : updatedUser.company,
       activeInactive: userData.activeInactive || updatedUser.activeInactive,
-      country: userData.country || updatedUser.country,
-      city: userData.city || updatedUser.city,
+      street: userData.street || updatedUser.street,
+      houseNumber: userData.houseNumber || updatedUser.houseNumber,
       postalCode: userData.postalCode || updatedUser.postalCode,
+      city: userData.city || updatedUser.city,
+      country: userData.country || updatedUser.country,
       profileImage: userData.hasOwnProperty("profileImage")
         ? userData.profileImage
         : updatedUser.profileImage,
@@ -339,9 +349,11 @@ const update = async (req, res) => {
           id: updatedUser._id,
           company: updatedUser.company,
           activeInactive: updatedUser.activeInactive,
-          country: updatedUser.country,
-          city: updatedUser.city,
+          street: updatedUser.street,
+          houseNumber: updatedUser.houseNumber,
           postalCode: updatedUser.postalCode,
+          city: updatedUser.city,
+          country: updatedUser.country,
           profileImage: updatedUser.profileImage,
           bio: updatedUser.bio,
         },
