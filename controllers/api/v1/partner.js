@@ -5,7 +5,7 @@ require("dotenv").config();
 // Functie voor het aanmaken van een nieuwe partner
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const postalCodeRegex = /^[0-9]{4,6}$/; // Pas aan voor jouw land
-const phoneRegex = /^[+0-9\s\-()]{8,20}$/; // Eenvoudige check
+const phoneRegex = /^\+\d{1,4}\s?\d{6,14}$/;
 
 const create = async (req, res) => {
   const {
