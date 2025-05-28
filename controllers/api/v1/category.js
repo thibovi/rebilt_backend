@@ -1,30 +1,33 @@
 // controllers/api/v1/categoryController.js
 const Category = require("../../../models/api/v1/Category");
+const Partner = require("../../../models/api/v1/Partner");
 const mongoose = require("mongoose");
 
 // Create Category
+// ...existing code...
 const create = async (req, res) => {
   try {
-    const { name, subTypes = [] } = req.body;
+    const { name, subTypes = [], partnerId } = req.body; // partnerId toevoegen
 
-    console.log("Ontvangen payload:", { name, subTypes }); // Debugging
+    console.log("Ontvangen payload:", { name, subTypes, partnerId }); // Debugging
 
-    if (!name) {
+    if (!name || !partnerId) {
       return res.status(400).json({
-        message: "Name is required",
+        message: "Name and partnerId are required",
       });
     }
 
-    const existingCategory = await Category.findOne({ name });
+    const existingCategory = await Category.findOne({ name, partnerId });
     if (existingCategory) {
       return res.status(400).json({
-        message: `Category with name "${name}" already exists.`,
+        message: `Category with name "${name}" already exists for this partner.`,
       });
     }
 
     const newCategory = new Category({
       name,
       subTypes,
+      partnerId, // partnerId opslaan
     });
 
     await newCategory.save();
@@ -41,7 +44,6 @@ const create = async (req, res) => {
   }
 };
 
-// Get all Categories
 const index = async (req, res) => {
   try {
     const categories = await Category.find();
@@ -97,20 +99,20 @@ const show = async (req, res) => {
 // Update Category
 const update = async (req, res) => {
   const { id } = req.params;
-  const { name, subTypes } = req.body;
+  const { name, subTypes, partnerId } = req.body; // partnerId toevoegen
 
-  console.log("Ontvangen payload voor update:", { name, subTypes }); // Debugging
+  console.log("Ontvangen payload voor update:", { name, subTypes, partnerId }); // Debugging
 
-  if (!name || !Array.isArray(subTypes)) {
+  if (!name || !Array.isArray(subTypes) || !partnerId) {
     return res.status(400).json({
-      message: "Name and subTypes (array) are required.",
+      message: "Name, subTypes (array), and partnerId are required.",
     });
   }
 
   try {
     const updatedCategory = await Category.findByIdAndUpdate(
       id,
-      { name, subTypes },
+      { name, subTypes, partnerId }, // partnerId updaten
       { new: true, runValidators: true }
     );
 

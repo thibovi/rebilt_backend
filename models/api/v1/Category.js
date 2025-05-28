@@ -6,6 +6,11 @@ const categorySchema = new mongoose.Schema({
     required: true,
     unique: true,
   },
+  partnerId: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    ref: "Partner",
+  },
   subTypes: [
     {
       name: {
