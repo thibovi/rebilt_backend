@@ -4,7 +4,6 @@ const Partner = require("../../../models/api/v1/Partner");
 const mongoose = require("mongoose");
 
 // Create Category
-// ...existing code...
 const create = async (req, res) => {
   try {
     const { name, subTypes = [], partnerId } = req.body; // partnerId toevoegen

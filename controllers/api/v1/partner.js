@@ -57,12 +57,22 @@ const create = async (req, res) => {
     });
   }
 
-  // Email validatie
   if (contact_email && !emailRegex.test(contact_email)) {
     return res.status(400).json({
       status: "error",
       message: "Invalid email address.",
     });
+  }
+
+  // Check of contact_email al bestaat
+  if (contact_email) {
+    const existingPartner = await Partner.findOne({ contact_email });
+    if (existingPartner) {
+      return res.status(400).json({
+        status: "error",
+        message: "Contact email is already in use.",
+      });
+    }
   }
 
   // Postcode validatie
