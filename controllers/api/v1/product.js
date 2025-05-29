@@ -81,6 +81,7 @@ const index = async (req, res) => {
       const productObj = product.toObject();
       return {
         ...productObj,
+        subType: productObj.subType || null, // <-- voeg deze regel toe
         createdAt: new Date(productObj.createdAt).toLocaleString("en-US", {
           month: "short",
           day: "2-digit",
@@ -130,6 +131,7 @@ const show = async (req, res) => {
 
     const formattedProduct = {
       ...product.toObject(),
+      subType: product.subType || null, // <-- voeg deze regel toe
       createdAt: new Date(product.createdAt).toLocaleString("en-US", {
         month: "short",
         day: "2-digit",

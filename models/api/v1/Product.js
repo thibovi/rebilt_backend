@@ -8,6 +8,10 @@ const ProductSchema = new mongoose.Schema({
       ref: "Category",
     },
   ],
+  subType: {
+    type: String,
+    required: false,
+  },
   productSelectedType: {
     type: String,
     required: false,
@@ -22,10 +26,6 @@ const ProductSchema = new mongoose.Schema({
   productName: {
     type: String,
     required: true,
-  },
-  subType: {
-    type: String,
-    required: false,
   },
   brand: {
     type: String,
