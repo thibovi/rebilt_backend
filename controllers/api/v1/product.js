@@ -33,6 +33,10 @@ const create = async (req, res) => {
 
     const newProduct = new Product({
       ...req.body,
+      subType:
+        req.body.subType && req.body.subType.trim() !== ""
+          ? req.body.subType
+          : null,
       createdAt: new Date(),
       lastUpdated: new Date(),
     });
