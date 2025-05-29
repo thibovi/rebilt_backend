@@ -1,3 +1,4 @@
+const { sub } = require("@tensorflow/tfjs");
 const mongoose = require("mongoose");
 
 const ProductSchema = new mongoose.Schema({
@@ -22,9 +23,9 @@ const ProductSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  productType: {
+  subType: {
     type: String,
-    required: true,
+    required: false,
   },
   brand: {
     type: String,

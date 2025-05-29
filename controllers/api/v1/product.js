@@ -16,22 +16,6 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// Function to upload image or model to Cloudinary
-const uploadFileToCloudinary = async (file, folder, is3DModel = false) => {
-  try {
-    const options = { folder };
-
-    if (is3DModel) {
-      options.resource_type = "raw"; // For 3D models like .obj or .glb
-    }
-
-    const result = await cloudinary.uploader.upload(file, options);
-    return result.secure_url; // Return the URL of the uploaded file
-  } catch (error) {
-    throw new Error(`Cloudinary upload failed: ${error.message}`);
-  }
-};
-
 const create = async (req, res) => {
   try {
     const { configurations } = req.body;
@@ -65,7 +49,7 @@ const create = async (req, res) => {
 // Get Products with Filters
 const index = async (req, res) => {
   try {
-    const { partnerName, productType, brand, publishedInactive } = req.query;
+    const { partnerName, subType, brand, publishedInactive } = req.query;
     const filter = {};
 
     if (partnerName) {
@@ -87,7 +71,7 @@ const index = async (req, res) => {
       filter.partnerId = partner._id;
     }
 
-    if (productType) filter.productType = productType;
+    if (subType) filter.subType = subType;
     if (brand) filter.brand = brand;
     if (publishedInactive) filter.publishedInactive = publishedInactive;
 
