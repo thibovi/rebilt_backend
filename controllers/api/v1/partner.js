@@ -473,7 +473,7 @@ const checkEmailExists = async (req, res) => {
       .status(400)
       .json({ exists: false, message: "Email is required" });
   }
-  const user = await User.findOne({ email });
+  const user = await Partner.findOne({ email });
   res.json({ exists: !!user });
 };
 
