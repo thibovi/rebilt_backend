@@ -11,6 +11,8 @@ router.get("/", partnerController.index);
 // Route voor het ophalen van partner op basis van naam
 router.get("/partner/:partnerName", partnerController.findByName);
 
+router.get("/check-email", partnerController.checkEmailExists);
+
 // Route voor het ophalen van partner op basis van ID
 router.get("/:id", partnerController.show);
 
