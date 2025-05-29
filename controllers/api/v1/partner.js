@@ -473,8 +473,16 @@ const checkEmailExists = async (req, res) => {
       .status(400)
       .json({ exists: false, message: "Email is required" });
   }
-  const user = await Partner.findOne({ email });
-  res.json({ exists: !!user });
+  // Zoek op contact_email!
+  const partner = await Partner.findOne({ contact_email: email });
+  if (partner) {
+    // Geef het partner-object of alleen id terug
+    return res.json({
+      exists: true,
+      partner: { _id: partner._id, contact_email: partner.contact_email },
+    });
+  }
+  res.json({ exists: false, partner: null });
 };
 
 module.exports = {
