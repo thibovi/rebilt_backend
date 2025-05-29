@@ -337,6 +337,18 @@ const update = async (req, res) => {
         message: "Invalid email address.",
       });
     }
+
+    // Unieke check bij update
+    if (contact_email) {
+      const existingPartner = await Partner.findOne({ contact_email });
+      if (existingPartner && existingPartner._id.toString() !== id) {
+        return res.status(400).json({
+          status: "error",
+          message: "Contact email is already in use.",
+        });
+      }
+    }
+
     if (postalCode && !postalCodeRegex.test(postalCode)) {
       return res.status(400).json({
         status: "error",
