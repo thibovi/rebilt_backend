@@ -16,9 +16,10 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+// ...existing code...
 const create = async (req, res) => {
   try {
-    const { configurations } = req.body;
+    const { configurations, selectedFilters } = req.body;
 
     // Converteer _id naar ObjectId indien nodig
     configurations.forEach((config) => {
@@ -26,13 +27,25 @@ const create = async (req, res) => {
         if (option._id && typeof option._id === "string") {
           option._id = mongoose.Types.ObjectId.isValid(option._id)
             ? mongoose.Types.ObjectId(option._id)
-            : undefined; // Laat weg als het geen geldige ObjectId is
+            : undefined;
         }
       });
     });
 
+    // Optioneel: validatie van selectedFilters (bijvoorbeeld of filterId een geldige ObjectId is)
+    if (selectedFilters && Array.isArray(selectedFilters)) {
+      selectedFilters.forEach((sf) => {
+        if (sf.filterId && typeof sf.filterId === "string") {
+          sf.filterId = mongoose.Types.ObjectId.isValid(sf.filterId)
+            ? mongoose.Types.ObjectId(sf.filterId)
+            : undefined;
+        }
+      });
+    }
+
     const newProduct = new Product({
       ...req.body,
+      selectedFilters, // zorg dat deze wordt meegenomen
       subType:
         req.body.subType && req.body.subType.trim() !== ""
           ? req.body.subType
@@ -162,6 +175,7 @@ const show = async (req, res) => {
 const update = async (req, res) => {
   try {
     const { id } = req.params;
+    const { selectedFilters } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res
@@ -169,10 +183,21 @@ const update = async (req, res) => {
         .json({ status: "error", message: "Ongeldige product ID." });
     }
 
+    // Optioneel: validatie van selectedFilters
+    if (selectedFilters && Array.isArray(selectedFilters)) {
+      selectedFilters.forEach((sf) => {
+        if (sf.filterId && typeof sf.filterId === "string") {
+          sf.filterId = mongoose.Types.ObjectId.isValid(sf.filterId)
+            ? mongoose.Types.ObjectId(sf.filterId)
+            : undefined;
+        }
+      });
+    }
+
     const updatedProduct = await Product.findByIdAndUpdate(
       id,
       {
-        $set: { ...req.body, lastUpdated: new Date() }, // Update lastUpdated
+        $set: { ...req.body, selectedFilters, lastUpdated: new Date() },
       },
       { new: true, runValidators: true }
     );

@@ -59,6 +59,19 @@ const ProductSchema = new mongoose.Schema({
     required: true,
     ref: "Partner",
   },
+  selectedFilters: [
+    {
+      filterId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Filter",
+        required: true,
+      },
+      selectedOption: {
+        type: String, // of ObjectId als je opties als subdocumenten met een eigen id opslaat
+        required: false,
+      },
+    },
+  ],
   configurations: [
     {
       configurationId: {
