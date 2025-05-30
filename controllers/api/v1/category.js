@@ -1,6 +1,5 @@
 // controllers/api/v1/categoryController.js
 const Category = require("../../../models/api/v1/Category");
-const Partner = require("../../../models/api/v1/Partner");
 const mongoose = require("mongoose");
 
 // Create Category
