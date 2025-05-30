@@ -11,6 +11,12 @@ const filterSchema = new mongoose.Schema({
     required: true,
     ref: "Partner",
   },
+  categoryIds: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",
+    },
+  ],
   options: [
     {
       name: {

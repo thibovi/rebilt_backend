@@ -3,11 +3,17 @@ const Filter = require("../../../models/api/v1/Filter");
 const mongoose = require("mongoose");
 
 // Create Filter
+// ...existing code...
 const create = async (req, res) => {
   try {
-    const { name, options = [], partnerId } = req.body; // partnerId toevoegen
+    const { name, options = [], partnerId, categoryIds = [] } = req.body; // categoryIds toegevoegd
 
-    console.log("Ontvangen payload:", { name, options, partnerId }); // Debugging
+    console.log("Ontvangen payload:", {
+      name,
+      options,
+      partnerId,
+      categoryIds,
+    }); // Debugging
 
     if (!name || !partnerId) {
       return res.status(400).json({
@@ -25,7 +31,8 @@ const create = async (req, res) => {
     const newFilter = new Filter({
       name,
       options,
-      partnerId, // partnerId opslaan
+      partnerId,
+      categoryIds, // categoryIds opslaan
     });
 
     await newFilter.save();
@@ -97,9 +104,14 @@ const show = async (req, res) => {
 // Update Filter
 const update = async (req, res) => {
   const { id } = req.params;
-  const { name, options, partnerId } = req.body; // partnerId toevoegen
+  const { name, options, partnerId, categoryIds } = req.body; // categoryIds toegevoegd
 
-  console.log("Ontvangen payload voor update:", { name, options, partnerId }); // Debugging
+  console.log("Ontvangen payload voor update:", {
+    name,
+    options,
+    partnerId,
+    categoryIds,
+  }); // Debugging
 
   if (!name || !Array.isArray(options) || !partnerId) {
     return res.status(400).json({
@@ -110,7 +122,7 @@ const update = async (req, res) => {
   try {
     const updatedFilter = await Filter.findByIdAndUpdate(
       id,
-      { name, options, partnerId }, // partnerId updaten
+      { name, options, partnerId, categoryIds }, // categoryIds updaten
       { new: true, runValidators: true }
     );
 
