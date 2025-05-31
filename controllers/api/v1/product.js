@@ -220,6 +220,7 @@ const update = async (req, res) => {
 
     const formattedProduct = {
       ...updatedProduct.toObject(),
+      subType: updatedProduct.subType || null, // <-- voeg deze regel toe
       createdAt: new Date(updatedProduct.createdAt).toLocaleString("en-US", {
         month: "short",
         day: "2-digit",
