@@ -26,7 +26,7 @@ const create = async (req, res) => {
       config.selectedOptions.forEach((option) => {
         if (option._id && typeof option._id === "string") {
           option._id = mongoose.Types.ObjectId.isValid(option._id)
-            ? mongoose.Types.ObjectId(option._id)
+            ? new mongoose.Types.ObjectId(option._id)
             : undefined;
         }
       });
@@ -37,8 +37,18 @@ const create = async (req, res) => {
       selectedFilters.forEach((sf) => {
         if (sf.filterId && typeof sf.filterId === "string") {
           sf.filterId = mongoose.Types.ObjectId.isValid(sf.filterId)
-            ? mongoose.Types.ObjectId(sf.filterId)
+            ? new mongoose.Types.ObjectId(sf.filterId)
             : undefined;
+        }
+        // CONVERSIE VAN OPTIE-IDS
+        if (sf.selectedOptions && Array.isArray(sf.selectedOptions)) {
+          sf.selectedOptions = sf.selectedOptions
+            .map((optId) =>
+              mongoose.Types.ObjectId.isValid(optId)
+                ? new mongoose.Types.ObjectId(optId)
+                : undefined
+            )
+            .filter(Boolean);
         }
       });
     }
