@@ -108,6 +108,7 @@ const checkoutRouter = require("./routes/api/v1/checkouts");
 const imageAnalysisRouter = require("./routes/api/v1/imageAnalysis");
 const modelRoutes = require("./routes/api/v1/modelRoutes");
 const cloudinaryRoutes = require("./routes/api/v1/cloudinary");
+const uploadRouter = require("./routes/api/v1/upload");
 
 app.use("/models", express.static(path.join(__dirname, "models")));
 
@@ -124,6 +125,7 @@ app.use("/api/v1/options", optionRouter);
 app.use("/api/v1/checkouts", checkoutRouter);
 app.use("/api/v1/models", modelRoutes);
 app.use("/api/v1/cloudinary", cloudinaryRoutes);
+app.use("/api/v1/upload", uploadRouter);
 
 app.use(
   "/api/v1/imageanalysis",

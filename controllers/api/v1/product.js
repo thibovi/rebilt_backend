@@ -146,6 +146,7 @@ const show = async (req, res) => {
       .populate("configurations.configurationId")
       .populate({
         path: "configurations.selectedOptions.optionId",
+        select: "name type price textureUrl", // <-- textureUrl expliciet selecteren
         match: { _id: { $ne: null } },
       })
       .populate("categoryIds", "_id name");
@@ -158,7 +159,7 @@ const show = async (req, res) => {
 
     const formattedProduct = {
       ...product.toObject(),
-      subType: product.subType || null, // <-- voeg deze regel toe
+      subType: product.subType || null,
       createdAt: new Date(product.createdAt).toLocaleString("en-US", {
         month: "short",
         day: "2-digit",

@@ -3,11 +3,11 @@ const Option = require("../../../models/api/v1/Option");
 // Create Option
 const create = async (req, res) => {
   try {
-    // Haal name en type uit de request body
-    const { name, type, price } = req.body;
+    // Haal name, type, price en textureUrl uit de request body
+    const { name, type, price, textureUrl } = req.body;
 
     // Maak een nieuwe optie aan met de juiste velden
-    const newOption = new Option({ name, type, price });
+    const newOption = new Option({ name, type, price, textureUrl });
 
     // Sla de optie op in de database
     const savedOption = await newOption.save();
@@ -67,33 +67,29 @@ const show = async (req, res) => {
 };
 
 // Update Option
-// Update Option
 const update = async (req, res) => {
   try {
     // Haal de nieuwe waarden uit de request body
-    const { name, type, price } = req.body;
+    const { name, type, price, textureUrl } = req.body;
 
     // Voer de update uit
     const updatedOption = await Option.findByIdAndUpdate(
-      req.params.id, // Zoek naar de optie op basis van de ID
-      { name, type, price }, // Werk de velden bij
-      { new: true } // Zorg ervoor dat de bijgewerkte versie van de optie wordt geretourneerd
+      req.params.id,
+      { name, type, price, textureUrl }, // textureUrl toegevoegd
+      { new: true }
     );
 
-    // Als de optie niet wordt gevonden, geef dan een foutmelding
     if (!updatedOption) {
       return res
         .status(404)
         .json({ status: "error", message: "Option not found" });
     }
 
-    // Stuur de succesvolle respons met de bijgewerkte optie
     res.status(200).json({
       status: "success",
       data: updatedOption,
     });
   } catch (error) {
-    // Foutmelding bij mislukking
     res.status(500).json({
       status: "error",
       message: "Error updating option",
