@@ -19,7 +19,7 @@ cloudinary.config({
 // ...existing code...
 const create = async (req, res) => {
   try {
-    const { configurations, selectedFilters } = req.body;
+    const { configurations, selectedFilters, layers } = req.body;
 
     // Converteer _id naar ObjectId indien nodig
     configurations.forEach((config) => {
