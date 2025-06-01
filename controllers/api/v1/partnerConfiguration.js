@@ -47,14 +47,13 @@ const create = async (req, res) => {
   }
 };
 
-// List all Partner Configurations
 const index = async (req, res) => {
   try {
     const partnerConfigs = await PartnerConfiguration.find()
       .populate("partnerId", "name")
       .populate("configurationId", "name")
-      .populate("options.optionId", "name")
-      .populate("categoryIds", "name"); // ✅ toegevoegd
+      .populate("options.optionId", "name textureUrl") // <-- textureUrl toevoegen
+      .populate("categoryIds", "name");
 
     res.status(200).json({
       status: "success",
@@ -69,14 +68,13 @@ const index = async (req, res) => {
   }
 };
 
-// Show a specific Partner Configuration
 const show = async (req, res) => {
   try {
     const partnerConfig = await PartnerConfiguration.findById(req.params.id)
       .populate("partnerId", "name")
       .populate("configurationId", "name")
-      .populate("options.optionId", "name")
-      .populate("categoryIds", "name"); // ✅ toegevoegd
+      .populate("options.optionId", "name textureUrl") // <-- textureUrl toevoegen
+      .populate("categoryIds", "name");
 
     if (!partnerConfig) {
       return res
