@@ -99,6 +99,17 @@ const ProductSchema = new mongoose.Schema({
     type: String,
     required: false, // 3D model file URL (if applicable)
   },
+  layers: [
+    {
+      name: { type: String, required: true }, // bijv. "zool"
+      configurationIds: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Configuration",
+        },
+      ],
+    },
+  ],
   thumbnail: {
     type: String,
     required: false, // Thumbnail image URL

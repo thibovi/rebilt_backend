@@ -53,9 +53,24 @@ const create = async (req, res) => {
       });
     }
 
+    if (layers && Array.isArray(layers)) {
+      layers.forEach((layer) => {
+        if (layer.configurationIds && Array.isArray(layer.configurationIds)) {
+          layer.configurationIds = layer.configurationIds
+            .map((id) =>
+              mongoose.Types.ObjectId.isValid(id)
+                ? new mongoose.Types.ObjectId(id)
+                : undefined
+            )
+            .filter(Boolean);
+        }
+      });
+    }
+
     const newProduct = new Product({
       ...req.body,
-      selectedFilters, // zorg dat deze wordt meegenomen
+      selectedFilters,
+      layers, // <-- zorg dat deze wordt meegenomen
       subType:
         req.body.subType && req.body.subType.trim() !== ""
           ? req.body.subType
@@ -146,10 +161,11 @@ const show = async (req, res) => {
       .populate("configurations.configurationId")
       .populate({
         path: "configurations.selectedOptions.optionId",
-        select: "name type price textureUrl", // <-- textureUrl expliciet selecteren
+        select: "name type price textureUrl",
         match: { _id: { $ne: null } },
       })
-      .populate("categoryIds", "_id name");
+      .populate("categoryIds", "_id name")
+      .populate("layers.configurationIds");
 
     if (!product) {
       return res
@@ -186,7 +202,7 @@ const show = async (req, res) => {
 const update = async (req, res) => {
   try {
     const { id } = req.params;
-    const { selectedFilters } = req.body;
+    const { selectedFilters, layers } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res
@@ -205,10 +221,24 @@ const update = async (req, res) => {
       });
     }
 
+    if (layers && Array.isArray(layers)) {
+      layers.forEach((layer) => {
+        if (layer.configurationIds && Array.isArray(layer.configurationIds)) {
+          layer.configurationIds = layer.configurationIds
+            .map((id) =>
+              mongoose.Types.ObjectId.isValid(id)
+                ? new mongoose.Types.ObjectId(id)
+                : undefined
+            )
+            .filter(Boolean);
+        }
+      });
+    }
+
     const updatedProduct = await Product.findByIdAndUpdate(
       id,
       {
-        $set: { ...req.body, selectedFilters, lastUpdated: new Date() },
+        $set: { ...req.body, selectedFilters, layers, lastUpdated: new Date() },
       },
       { new: true, runValidators: true }
     );
