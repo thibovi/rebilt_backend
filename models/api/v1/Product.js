@@ -117,7 +117,6 @@ const ProductSchema = new mongoose.Schema({
   arVisualizationType: {
     type: String,
     enum: ["space", "body", "face", "hands"],
-    default: "space",
     required: false,
   },
   createdAt: { type: Date, default: Date.now },
