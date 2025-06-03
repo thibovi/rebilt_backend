@@ -20,6 +20,7 @@ const create = async (req, res) => {
     contact_phone,
     package,
     domain,
+    allowPdfDownload,
     activeInactive,
     primary_color,
     secondary_color,
@@ -104,6 +105,7 @@ const create = async (req, res) => {
       contact_phone: contact_phone || null,
       package,
       domain,
+      allowPdfDownload: allowPdfDownload || false,
       activeInactive,
       primary_color,
       secondary_color,
@@ -245,6 +247,7 @@ const show = async (req, res) => {
           contact_phone: partner.contact_phone,
           package: partner.package,
           domain: partner.domain,
+          allowPdfDownload: partner.allowPdfDownload,
           activeInactive: partner.activeInactive,
           primary_color: partner.primary_color,
           secondary_color: partner.secondary_color,
@@ -301,6 +304,7 @@ const update = async (req, res) => {
       contact_phone,
       package,
       domain,
+      allowPdfDownload,
       activeInactive,
       primary_color,
       secondary_color,
@@ -388,6 +392,8 @@ const update = async (req, res) => {
     if (contact_phone !== undefined) partner.contact_phone = contact_phone;
     if (package !== undefined) partner.package = package;
     if (domain !== undefined) partner.domain = domain;
+    if (allowPdfDownload !== undefined)
+      partner.allowPdfDownload = allowPdfDownload;
     if (activeInactive !== undefined) partner.activeInactive = activeInactive;
     if (primary_color !== undefined) partner.primary_color = primary_color;
     if (secondary_color !== undefined)
