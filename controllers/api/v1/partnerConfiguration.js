@@ -49,10 +49,15 @@ const create = async (req, res) => {
 
 const index = async (req, res) => {
   try {
-    const partnerConfigs = await PartnerConfiguration.find()
+    const filter = {};
+    if (req.query.partnerId) {
+      filter.partnerId = req.query.partnerId;
+    }
+
+    const partnerConfigs = await PartnerConfiguration.find(filter)
       .populate("partnerId", "name")
       .populate("configurationId", "name")
-      .populate("options.optionId", "name textureUrl") // <-- textureUrl toevoegen
+      .populate("options.optionId", "name textureUrl")
       .populate("categoryIds", "name");
 
     res.status(200).json({
