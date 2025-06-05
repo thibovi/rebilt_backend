@@ -25,6 +25,7 @@ const partnerSchema = new mongoose.Schema({
   text_color: { type: String, required: true }, // RGB string
   background_color: { type: String, required: true }, // RGB string
   button_color: { type: String, required: true }, // RGB string
+  button_text_color: { type: String, required: true }, // RGB string
   fontFamilyBodyText: { type: String, required: true },
   fontFamilyTitles: { type: String, required: true },
   logo_url: { type: String, default: null },

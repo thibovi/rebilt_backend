@@ -28,6 +28,7 @@ const create = async (req, res) => {
     text_color,
     background_color,
     button_color,
+    button_text_color,
     fontFamilyBodyText,
     fontFamilyTitles,
     logo_url,
@@ -113,6 +114,7 @@ const create = async (req, res) => {
       text_color,
       background_color,
       button_color,
+      button_text_color,
       fontFamilyBodyText,
       fontFamilyTitles,
       logo_url: logo_url || null,
@@ -255,6 +257,7 @@ const show = async (req, res) => {
           text_color: partner.text_color,
           background_color: partner.background_color,
           button_color: partner.button_color,
+          button_text_color: partner.button_text_color,
           fontFamilyBodyText: partner.fontFamilyBodyText,
           fontFamilyTitles: partner.fontFamilyTitles,
           logo_url: partner.logo_url,
@@ -312,6 +315,7 @@ const update = async (req, res) => {
       text_color,
       background_color,
       button_color,
+      button_text_color,
       fontFamilyBodyText,
       fontFamilyTitles,
       logo_url,
@@ -403,6 +407,8 @@ const update = async (req, res) => {
     if (background_color !== undefined)
       partner.background_color = background_color;
     if (button_color !== undefined) partner.button_color = button_color;
+    if (button_text_color !== undefined)
+      partner.button_text_color = button_text_color;
     if (fontFamilyBodyText !== undefined)
       partner.fontFamilyBodyText = fontFamilyBodyText;
     if (fontFamilyTitles !== undefined)
