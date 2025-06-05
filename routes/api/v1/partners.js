@@ -12,6 +12,7 @@ router.get("/", partnerController.index);
 router.get("/partner/:partnerName", partnerController.findByName);
 
 router.get("/check-email", partnerController.checkEmailExists);
+router.get("/domain/:host", partnerController.findByDomain);
 
 // Route voor het ophalen van partner op basis van ID
 router.get("/:id", partnerController.show);

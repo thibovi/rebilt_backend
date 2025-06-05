@@ -478,6 +478,31 @@ const destroy = async (req, res) => {
   }
 };
 
+const findByDomain = async (req, res) => {
+  try {
+    const { host } = req.params;
+    const partner = await Partner.findOne({ domain: host });
+    if (!partner) {
+      return res.status(404).json({
+        success: false,
+        message: `Geen partner gevonden met het domein: ${host}`,
+      });
+    }
+    res.status(200).json({
+      success: true,
+      data: partner,
+    });
+  } catch (error) {
+    console.error("Error bij ophalen van partner via domein:", error);
+    res.status(500).json({
+      success: false,
+      message:
+        "Er is een fout opgetreden bij het ophalen van de partner via domein.",
+      error,
+    });
+  }
+};
+
 const checkEmailExists = async (req, res) => {
   const { email } = req.query;
   if (!email) {
@@ -504,5 +529,6 @@ module.exports = {
   show,
   update,
   destroy,
+  findByDomain,
   checkEmailExists,
 };
