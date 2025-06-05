@@ -44,7 +44,13 @@ const create = async (req, res) => {
 
 const index = async (req, res) => {
   try {
-    const categories = await Category.find();
+    // Haal partnerId uit de querystring
+    const { partnerId } = req.query;
+    let query = {};
+    if (partnerId) {
+      query.partnerId = partnerId;
+    }
+    const categories = await Category.find(query);
     res.status(200).json({
       status: "success",
       data: categories,
