@@ -254,15 +254,11 @@ const update = async (req, res) => {
     }
 
     // Zorg dat subType (enkelvoud) wordt meegenomen
-    let subTypes = req.body.subTypes;
-    if (subTypes && Array.isArray(subTypes)) {
-      subTypes = subTypes
-        .map((id) =>
-          mongoose.Types.ObjectId.isValid(id)
-            ? new mongoose.Types.ObjectId(id)
-            : undefined
-        )
-        .filter(Boolean);
+    let subType = req.body.subType;
+    if (subType && typeof subType === "string") {
+      subType = mongoose.Types.ObjectId.isValid(subType)
+        ? new mongoose.Types.ObjectId(subType)
+        : subType;
     }
 
     // Je mag subTypes (meervoud) laten staan als je die ook gebruikt, maar frontend stuurt subType!
@@ -276,6 +272,7 @@ const update = async (req, res) => {
     //     )
     //     .filter(Boolean);
     // }
+
     const updatedProduct = await Product.findByIdAndUpdate(
       id,
       {
@@ -283,7 +280,7 @@ const update = async (req, res) => {
           ...req.body,
           selectedFilters,
           layers,
-          subTypes, // <-- sla array op!
+          subType, // <-- voeg deze toe!
           lastUpdated: new Date(),
         },
       },
