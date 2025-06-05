@@ -204,7 +204,11 @@ const update = async (req, res) => {
     const { id } = req.params;
     const { selectedFilters, layers } = req.body;
 
+    console.log("🔄 Update product aangeroepen voor ID:", id);
+    console.log("Request body:", JSON.stringify(req.body, null, 2));
+
     if (!mongoose.Types.ObjectId.isValid(id)) {
+      console.log("❌ Ongeldige product ID:", id);
       return res
         .status(400)
         .json({ status: "error", message: "Ongeldige product ID." });
@@ -215,7 +219,7 @@ const update = async (req, res) => {
       selectedFilters.forEach((sf) => {
         if (sf.filterId && typeof sf.filterId === "string") {
           sf.filterId = mongoose.Types.ObjectId.isValid(sf.filterId)
-            ? new mongoose.Types.ObjectId(sf.filterId) // <-- JUIST!
+            ? new mongoose.Types.ObjectId(sf.filterId)
             : undefined;
         }
         // Voeg deze conversie toe voor selectedOptions:
@@ -229,6 +233,10 @@ const update = async (req, res) => {
             .filter(Boolean);
         }
       });
+      console.log(
+        "✅ selectedFilters na conversie:",
+        JSON.stringify(selectedFilters, null, 2)
+      );
     }
 
     if (layers && Array.isArray(layers)) {
@@ -243,6 +251,7 @@ const update = async (req, res) => {
             .filter(Boolean);
         }
       });
+      console.log("✅ layers na conversie:", JSON.stringify(layers, null, 2));
     }
 
     const updatedProduct = await Product.findByIdAndUpdate(
@@ -254,6 +263,7 @@ const update = async (req, res) => {
     );
 
     if (!updatedProduct) {
+      console.log("❌ Product niet gevonden voor update:", id);
       return res
         .status(404)
         .json({ status: "error", message: "Product niet gevonden." });
@@ -261,7 +271,7 @@ const update = async (req, res) => {
 
     const formattedProduct = {
       ...updatedProduct.toObject(),
-      subType: updatedProduct.subType || null, // <-- voeg deze regel toe
+      subType: updatedProduct.subType || null,
       createdAt: new Date(updatedProduct.createdAt).toLocaleString("en-US", {
         month: "short",
         day: "2-digit",
@@ -280,6 +290,11 @@ const update = async (req, res) => {
         }
       ),
     };
+
+    console.log(
+      "✅ Product succesvol geüpdatet:",
+      JSON.stringify(formattedProduct, null, 2)
+    );
 
     res.status(200).json({ status: "success", data: formattedProduct });
   } catch (error) {
