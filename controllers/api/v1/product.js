@@ -37,10 +37,10 @@ const create = async (req, res) => {
       selectedFilters.forEach((sf) => {
         if (sf.filterId && typeof sf.filterId === "string") {
           sf.filterId = mongoose.Types.ObjectId.isValid(sf.filterId)
-            ? new mongoose.Types.ObjectId(sf.filterId)
+            ? new mongoose.Types.ObjectId(sf.filterId) // <-- JUIST!
             : undefined;
         }
-        // Voeg deze conversie toe:
+        // Voeg deze conversie toe voor selectedOptions:
         if (sf.selectedOptions && Array.isArray(sf.selectedOptions)) {
           sf.selectedOptions = sf.selectedOptions
             .map((optId) =>
