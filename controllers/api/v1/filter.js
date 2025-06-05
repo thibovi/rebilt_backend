@@ -51,7 +51,13 @@ const create = async (req, res) => {
 
 const index = async (req, res) => {
   try {
-    const filters = await Filter.find();
+    const { partnerId } = req.query;
+    let filters;
+    if (partnerId) {
+      filters = await Filter.find({ partnerId });
+    } else {
+      filters = await Filter.find();
+    }
     res.status(200).json({
       status: "success",
       data: filters,
