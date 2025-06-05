@@ -254,10 +254,27 @@ const update = async (req, res) => {
       console.log("✅ layers na conversie:", JSON.stringify(layers, null, 2));
     }
 
+    let subTypes = req.body.subTypes;
+    if (subTypes && Array.isArray(subTypes)) {
+      subTypes = subTypes
+        .map((id) =>
+          mongoose.Types.ObjectId.isValid(id)
+            ? new mongoose.Types.ObjectId(id)
+            : undefined
+        )
+        .filter(Boolean);
+    }
+
     const updatedProduct = await Product.findByIdAndUpdate(
       id,
       {
-        $set: { ...req.body, selectedFilters, layers, lastUpdated: new Date() },
+        $set: {
+          ...req.body,
+          selectedFilters,
+          layers,
+          subTypes, // <-- voeg deze toe!
+          lastUpdated: new Date(),
+        },
       },
       { new: true, runValidators: true }
     );
