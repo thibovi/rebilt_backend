@@ -222,7 +222,6 @@ const update = async (req, res) => {
             ? new mongoose.Types.ObjectId(sf.filterId)
             : undefined;
         }
-        // Voeg deze conversie toe voor selectedOptions:
         if (sf.selectedOptions && Array.isArray(sf.selectedOptions)) {
           sf.selectedOptions = sf.selectedOptions
             .map((optId) =>
@@ -254,16 +253,25 @@ const update = async (req, res) => {
       console.log("✅ layers na conversie:", JSON.stringify(layers, null, 2));
     }
 
-    let subTypes = req.body.subTypes;
-    if (subTypes && Array.isArray(subTypes)) {
-      subTypes = subTypes
-        .map((id) =>
-          mongoose.Types.ObjectId.isValid(id)
-            ? new mongoose.Types.ObjectId(id)
-            : undefined
-        )
-        .filter(Boolean);
+    // Zorg dat subType (enkelvoud) wordt meegenomen
+    let subType = req.body.subType;
+    if (subType && typeof subType === "string") {
+      subType = mongoose.Types.ObjectId.isValid(subType)
+        ? new mongoose.Types.ObjectId(subType)
+        : subType;
     }
+
+    // Je mag subTypes (meervoud) laten staan als je die ook gebruikt, maar frontend stuurt subType!
+    // let subTypes = req.body.subTypes;
+    // if (subTypes && Array.isArray(subTypes)) {
+    //   subTypes = subTypes
+    //     .map((id) =>
+    //       mongoose.Types.ObjectId.isValid(id)
+    //         ? new mongoose.Types.ObjectId(id)
+    //         : undefined
+    //     )
+    //     .filter(Boolean);
+    // }
 
     const updatedProduct = await Product.findByIdAndUpdate(
       id,
@@ -272,7 +280,7 @@ const update = async (req, res) => {
           ...req.body,
           selectedFilters,
           layers,
-          subTypes, // <-- voeg deze toe!
+          subType, // <-- voeg deze toe!
           lastUpdated: new Date(),
         },
       },
