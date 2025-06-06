@@ -1,5 +1,7 @@
 const express = require("express");
 const router = express.Router();
+const multer = require("multer");
+const upload = multer({ dest: "uploads/fonts/" }); // tijdelijke opslag
 const cloudinaryController = require("../../../controllers/api/v1/cloudinary");
 
 // Route for searching models
@@ -23,6 +25,10 @@ router.delete("/:id", cloudinaryController.destroy);
 // Route for uploading a mesh URL
 router.post("/upload-mesh", cloudinaryController.uploadMesh);
 
-router.post("/upload-font", cloudinaryController.uploadFont);
+router.post(
+  "/upload-font",
+  upload.single("font"),
+  cloudinaryController.uploadFont
+);
 
 module.exports = router;

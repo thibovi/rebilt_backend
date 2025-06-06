@@ -1,5 +1,7 @@
+const multer = require("multer");
 const Cloudinary = require("../../../models/api/v1/Cloudinary");
 const cloudinary = require("cloudinary").v2;
+const fs = require("fs");
 
 // Configure Cloudinary
 cloudinary.config({
@@ -237,28 +239,30 @@ const search = async (req, res) => {
 
 const uploadFont = async (req, res) => {
   try {
-    const { name, fontUrl, partnerId } = req.body;
-
-    if (!name || !fontUrl || !partnerId) {
+    const { name, partnerId } = req.body;
+    if (!name || !partnerId || !req.file) {
       return res.status(400).json({
         status: "error",
-        message: "Name, fontUrl, and partnerId are required",
+        message: "Name, partnerId en font-bestand zijn verplicht",
       });
     }
 
-    // Upload het font-bestand naar Cloudinary
-    const result = await cloudinary.uploader.upload(fontUrl, {
-      resource_type: "raw", // Fonts zijn meestal raw files
+    // Upload het bestand naar Cloudinary
+    const result = await cloudinary.uploader.upload(req.file.path, {
+      resource_type: "raw",
       folder: "fonts",
       public_id: `fonts/${name.replace(/\s+/g, "_").toLowerCase()}`,
       context: `display_name=${name}`,
     });
 
-    // Sla de Cloudinary entry op in de database (optioneel)
+    // Verwijder het tijdelijke bestand
+    fs.unlinkSync(req.file.path);
+
+    // Sla de Cloudinary entry op in de database
     const newFont = new Cloudinary({
       partnerId,
       name,
-      modelFile: result.secure_url, // Hier kun je evt. een apart veld voor fontFile maken
+      modelFile: result.secure_url,
     });
 
     const savedFont = await newFont.save();
