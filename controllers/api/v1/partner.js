@@ -478,8 +478,6 @@ const update = async (req, res) => {
     });
     // Sla de gewijzigde partner op in de database
     await partner.save();
-    res.json({});
-    await partner.save();
     res.json({
       status: "success",
       message: "Partner updated successfully.",
