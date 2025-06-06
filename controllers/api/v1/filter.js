@@ -132,6 +132,21 @@ const update = async (req, res) => {
     });
   }
 
+  if (!mongoose.Types.ObjectId.isValid(partnerId)) {
+    return res.status(400).json({ message: "Invalid partnerId." });
+  }
+  if (categoryIds && !Array.isArray(categoryIds)) {
+    return res.status(400).json({ message: "categoryIds must be an array." });
+  }
+  if (
+    categoryIds &&
+    categoryIds.some((id) => !mongoose.Types.ObjectId.isValid(id))
+  ) {
+    return res
+      .status(400)
+      .json({ message: "Invalid categoryId in categoryIds." });
+  }
+
   // Zet partnerId en categoryIds om naar ObjectId
   try {
     partnerId = new mongoose.Types.ObjectId(partnerId);
