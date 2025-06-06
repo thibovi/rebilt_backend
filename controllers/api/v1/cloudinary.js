@@ -12,6 +12,7 @@ cloudinary.config({
 });
 
 // Create a new Cloudinary entry
+// ...existing code...
 const create = async (req, res) => {
   try {
     const { name, fileUrl, partnerId } = req.body;
@@ -23,13 +24,25 @@ const create = async (req, res) => {
       });
     }
 
+    // Als het bestand al op Cloudinary staat, sla alleen de URL op
+    if (fileUrl.startsWith("https://res.cloudinary.com/")) {
+      const newCloudinary = new Cloudinary({
+        partnerId,
+        name,
+        modelFile: fileUrl,
+      });
+      const savedModel = await newCloudinary.save();
+      return res.status(201).json({ status: "success", data: savedModel });
+    }
+
+    // Anders: upload het bestand naar Cloudinary (voor niet-Cloudinary URLs)
     let result;
     try {
       result = await cloudinary.uploader.upload(fileUrl, {
-        resource_type: "auto", // Detecteer automatisch het bestandstype
-        folder: "models", // Upload naar de map "models"
-        public_id: `models/${name.replace(/\s+/g, "_").toLowerCase()}`, // Gebruik de naam als public_id
-        context: `display_name=${name}`, // Stel de display_name in
+        resource_type: "auto",
+        folder: "models",
+        public_id: `models/${name.replace(/\s+/g, "_").toLowerCase()}`,
+        context: `display_name=${name}`,
       });
     } catch (uploadError) {
       console.error("Cloudinary upload failed:", uploadError);
@@ -40,11 +53,10 @@ const create = async (req, res) => {
       });
     }
 
-    // Maak een nieuwe Cloudinary entry in de database
     const newCloudinary = new Cloudinary({
-      partnerId, // Alleen opslaan in de database
+      partnerId,
       name,
-      modelFile: result.secure_url, // URL van het geüploade bestand
+      modelFile: result.secure_url,
     });
 
     const savedModel = await newCloudinary.save();
@@ -58,6 +70,7 @@ const create = async (req, res) => {
     });
   }
 };
+// ...existing code...
 
 // List all Cloudinary entries
 const index = async (req, res) => {
