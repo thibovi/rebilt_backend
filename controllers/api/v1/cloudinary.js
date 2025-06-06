@@ -2,6 +2,7 @@ const multer = require("multer");
 const Cloudinary = require("../../../models/api/v1/Cloudinary");
 const cloudinary = require("cloudinary").v2;
 const fs = require("fs");
+const path = require("path");
 
 // Configure Cloudinary
 cloudinary.config({
@@ -239,6 +240,8 @@ const search = async (req, res) => {
 
 const uploadFont = async (req, res) => {
   try {
+    console.log("req.file:", req.file);
+    console.log("req.body:", req.body);
     const { name, partnerId } = req.body;
     if (!name || !partnerId || !req.file) {
       return res.status(400).json({
@@ -247,18 +250,20 @@ const uploadFont = async (req, res) => {
       });
     }
 
-    // Upload het bestand naar Cloudinary
-    const result = await cloudinary.uploader.upload(req.file.path, {
+    let absolutePath = path.resolve(req.file.path);
+    absolutePath = absolutePath.replace(/\\/g, "/");
+    console.log("Upload path to Cloudinary:", absolutePath);
+    console.log("Bestand bestaat:", fs.existsSync(absolutePath));
+    console.log("Cloudinary config:", cloudinary.config());
+
+    // Probeer eerst zonder extra opties
+    const result = await cloudinary.uploader.upload(absolutePath, {
       resource_type: "raw",
-      folder: "fonts",
-      public_id: `fonts/${name.replace(/\s+/g, "_").toLowerCase()}`,
-      context: `display_name=${name}`,
     });
 
-    // Verwijder het tijdelijke bestand
-    fs.unlinkSync(req.file.path);
-
-    // Sla de Cloudinary entry op in de database
+    if (fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path);
+    }
     const newFont = new Cloudinary({
       partnerId,
       name,
@@ -268,7 +273,7 @@ const uploadFont = async (req, res) => {
     const savedFont = await newFont.save();
     res.status(201).json({ status: "success", data: savedFont });
   } catch (error) {
-    console.error("Error in uploadFont controller:", error);
+    console.error("Error in uploadFont controller:", error, error.stack);
     res.status(500).json({
       status: "error",
       message: error.message || "General Error",
