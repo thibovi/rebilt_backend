@@ -20,9 +20,9 @@ const create = async (req, res) => {
     }
 
     // Zet partnerId en categoryIds om naar ObjectId
-    const partnerObjectId = mongoose.Types.ObjectId(partnerId);
-    const categoryObjectIds = categoryIds.map((id) =>
-      mongoose.Types.ObjectId(id)
+    const partnerObjectId = new mongoose.Types.ObjectId(partnerId);
+    const categoryObjectIds = categoryIds.map(
+      (id) => new mongoose.Types.ObjectId(id)
     );
 
     const existingFilter = await Filter.findOne({
