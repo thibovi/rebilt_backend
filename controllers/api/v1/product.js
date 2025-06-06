@@ -339,12 +339,12 @@ const destroy = async (req, res) => {
     }
 
     // Optionally, you could delete the associated files from Cloudinary (modelFile and thumbnail) here
-    if (deletedProduct.modelFile) {
+    if (deletedProduct.modelFile && deletedProduct.modelFile.public_id) {
       // Delete the model file from Cloudinary
       await cloudinary.uploader.destroy(deletedProduct.modelFile.public_id);
     }
 
-    if (deletedProduct.thumbnail) {
+    if (deletedProduct.thumbnail && deletedProduct.thumbnail.public_id) {
       // Delete the thumbnail file from Cloudinary
       await cloudinary.uploader.destroy(deletedProduct.thumbnail.public_id);
     }
