@@ -23,4 +23,6 @@ router.delete("/:id", cloudinaryController.destroy);
 // Route for uploading a mesh URL
 router.post("/upload-mesh", cloudinaryController.uploadMesh);
 
+router.post("/upload-font", cloudinaryController.uploadFont);
+
 module.exports = router;

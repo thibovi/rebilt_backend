@@ -318,6 +318,8 @@ const update = async (req, res) => {
       button_text_color,
       fontFamilyBodyText,
       fontFamilyTitles,
+      customFontBodyUrl,
+      customFontTitlesUrl,
       logo_url,
       favicon_url,
       black,
@@ -413,6 +415,10 @@ const update = async (req, res) => {
       partner.fontFamilyBodyText = fontFamilyBodyText;
     if (fontFamilyTitles !== undefined)
       partner.fontFamilyTitles = fontFamilyTitles;
+    if (customFontBodyUrl !== undefined)
+      partner.customFontBodyUrl = customFontBodyUrl;
+    if (customFontTitlesUrl !== undefined)
+      partner.customFontTitlesUrl = customFontTitlesUrl;
     if (logo_url !== undefined) partner.logo_url = logo_url;
     if (favicon_url !== undefined) partner.favicon_url = favicon_url;
     if (black !== undefined) partner.black = black;

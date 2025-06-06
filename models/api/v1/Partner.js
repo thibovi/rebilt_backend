@@ -27,7 +27,9 @@ const partnerSchema = new mongoose.Schema({
   button_color: { type: String, required: true }, // RGB string
   button_text_color: { type: String, required: true }, // RGB string
   fontFamilyBodyText: { type: String, required: true },
+  customFontBodyUrl: { type: String, default: null }, // URL naar geüploade body font
   fontFamilyTitles: { type: String, required: true },
+  customFontTitlesUrl: { type: String, default: null }, // URL naar geüploade title font
   logo_url: { type: String, default: null },
   favicon_url: { type: String, default: null },
   black: { type: String, default: null }, // Hex or RGB string
