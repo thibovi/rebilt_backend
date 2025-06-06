@@ -117,7 +117,7 @@ const show = async (req, res) => {
 // Update Filter
 const update = async (req, res) => {
   const { id } = req.params;
-  const { name, options, partnerId, categoryIds } = req.body; // categoryIds toegevoegd
+  let { name, options, partnerId, categoryIds } = req.body;
 
   console.log("Ontvangen payload voor update:", {
     name,
@@ -132,10 +132,24 @@ const update = async (req, res) => {
     });
   }
 
+  // Zet partnerId en categoryIds om naar ObjectId
+  try {
+    partnerId = new mongoose.Types.ObjectId(partnerId);
+    if (Array.isArray(categoryIds)) {
+      categoryIds = categoryIds.map((id) => new mongoose.Types.ObjectId(id));
+    } else {
+      categoryIds = [];
+    }
+  } catch (err) {
+    return res.status(400).json({
+      message: "Invalid partnerId or categoryIds.",
+    });
+  }
+
   try {
     const updatedFilter = await Filter.findByIdAndUpdate(
       id,
-      { name, options, partnerId, categoryIds }, // categoryIds updaten
+      { name, options, partnerId, categoryIds },
       { new: true, runValidators: true }
     );
 
