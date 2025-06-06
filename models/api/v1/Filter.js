@@ -4,7 +4,6 @@ const filterSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
-    unique: true,
   },
   partnerId: {
     type: mongoose.Schema.Types.ObjectId,
