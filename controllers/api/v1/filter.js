@@ -2,18 +2,16 @@
 const Filter = require("../../../models/api/v1/Filter");
 const mongoose = require("mongoose");
 
-// Create Filter
-// ...existing code...
 const create = async (req, res) => {
   try {
-    const { name, options = [], partnerId, categoryIds = [] } = req.body; // categoryIds toegevoegd
+    const { name, options = [], partnerId, categoryIds = [] } = req.body;
 
     console.log("Ontvangen payload:", {
       name,
       options,
       partnerId,
       categoryIds,
-    }); // Debugging
+    });
 
     if (!name || !partnerId) {
       return res.status(400).json({
@@ -21,7 +19,16 @@ const create = async (req, res) => {
       });
     }
 
-    const existingFilter = await Filter.findOne({ name, partnerId });
+    // Zet partnerId en categoryIds om naar ObjectId
+    const partnerObjectId = mongoose.Types.ObjectId(partnerId);
+    const categoryObjectIds = categoryIds.map((id) =>
+      mongoose.Types.ObjectId(id)
+    );
+
+    const existingFilter = await Filter.findOne({
+      name,
+      partnerId: partnerObjectId,
+    });
     if (existingFilter) {
       return res.status(400).json({
         message: `Filter with name "${name}" already exists for this partner.`,
@@ -31,8 +38,8 @@ const create = async (req, res) => {
     const newFilter = new Filter({
       name,
       options,
-      partnerId,
-      categoryIds, // categoryIds opslaan
+      partnerId: partnerObjectId,
+      categoryIds: categoryObjectIds,
     });
 
     await newFilter.save();
