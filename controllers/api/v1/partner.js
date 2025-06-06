@@ -135,7 +135,7 @@ const create = async (req, res) => {
       seoTitle: seoTitle || null,
       metaDescription: metaDescription || null,
       seoImage: seoImage || null,
-      created_at: new Date(),
+      createdAt: new Date(),
     });
 
     await newPartner.save();
@@ -387,6 +387,8 @@ const update = async (req, res) => {
       });
     }
 
+    console.log("Updating partner:", partner.name);
+
     if (name !== undefined) partner.name = name;
     if (street !== undefined) partner.street = street;
     if (housenumber !== undefined) partner.housenumber = housenumber;
@@ -440,18 +442,57 @@ const update = async (req, res) => {
       partner.metaDescription = metaDescription;
     if (seoImage !== undefined) partner.seoImage = seoImage;
 
+    console.log("Updated partner data:", {
+      name: partner.name,
+      contact_email: partner.contact_email,
+      activeInactive: partner.activeInactive,
+      primary_color: partner.primary_color,
+      secondary_color: partner.secondary_color,
+      titles_color: partner.titles_color,
+      text_color: partner.text_color,
+      background_color: partner.background_color,
+      button_color: partner.button_color,
+      button_text_color: partner.button_text_color,
+      fontFamilyBodyText: partner.fontFamilyBodyText,
+      fontFamilyTitles: partner.fontFamilyTitles,
+      logo_url: partner.logo_url,
+      favicon_url: partner.favicon_url,
+      black: partner.black,
+      white: partner.white,
+      blue_600: partner.blue_600,
+      gray_100: partner.gray_100,
+      gray_200: partner.gray_200,
+      gray_300: partner.gray_300,
+      gray_400: partner.gray_400,
+      gray_500: partner.gray_500,
+      gray_600: partner.gray_600,
+      gray_700: partner.gray_700,
+      gray_800: partner.gray_800,
+      gray_900: partner.gray_900,
+      hasTwoDToThreeDTool: partner.hasTwoDToThreeDTool,
+      seoTitle: partner.seoTitle,
+      metaDescription: partner.metaDescription,
+      seoImage: partner.seoImage,
+      customFontBodyUrl: partner.customFontBodyUrl,
+      customFontTitlesUrl: partner.customFontTitlesUrl,
+    });
+    // Sla de gewijzigde partner op in de database
+    await partner.save();
+    res.json({});
     await partner.save();
     res.json({
       status: "success",
       message: "Partner updated successfully.",
       data: { partner },
     });
+    console.log("Partner updated successfully:", partner.name);
   } catch (err) {
-    console.error("Error updating partner:", err);
+    console.error("Error updating partner:", err); // <-- deze regel
     res.status(500).json({
       status: "error",
       message: "Could not update the partner.",
       error: err.message,
+      stack: err.stack, // <-- voeg deze toe voor meer info
     });
   }
 };
