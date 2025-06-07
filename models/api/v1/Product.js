@@ -38,15 +38,15 @@ const ProductSchema = new mongoose.Schema({
   },
   pageTitle: {
     type: String,
-    required: true,
+    required: false,
   },
   metaDescription: {
     type: String,
-    required: true,
+    required: false,
   },
   urlHandle: {
     type: String,
-    required: true,
+    required: false,
   },
   publishedInactive: {
     type: String,
@@ -101,7 +101,7 @@ const ProductSchema = new mongoose.Schema({
   },
   layers: [
     {
-      name: { type: String, required: true }, // bijv. "zool"
+      name: { type: String, required: false }, // bijv. "zool"
       configurationIds: [
         {
           type: mongoose.Schema.Types.ObjectId,
