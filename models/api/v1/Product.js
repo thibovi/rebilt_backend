@@ -91,6 +91,10 @@ const ProductSchema = new mongoose.Schema({
               required: false,
             },
           ],
+          textureUrl: {
+            type: String,
+            required: false, // <-- Add this line
+          },
         },
       ],
     },
