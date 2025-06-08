@@ -199,6 +199,31 @@ const show = async (req, res) => {
   }
 };
 
+const findByCode = async (req, res) => {
+  try {
+    const { productCode } = req.params;
+    const product = await Product.findOne({ productCode })
+      .populate("configurations.configurationId")
+      .populate("categoryIds", "_id name")
+      .populate("layers.configurationIds");
+
+    if (!product) {
+      return res.status(404).json({
+        status: "error",
+        message: "Product niet gevonden met deze code.",
+      });
+    }
+
+    res.status(200).json({ status: "success", data: product });
+  } catch (error) {
+    res.status(500).json({
+      status: "error",
+      message: "Fout bij ophalen van product op code.",
+      error: error.message,
+    });
+  }
+};
+
 const update = async (req, res) => {
   try {
     const { id } = req.params;
@@ -366,4 +391,5 @@ module.exports = {
   show,
   update,
   destroy,
+  findByCode,
 };
