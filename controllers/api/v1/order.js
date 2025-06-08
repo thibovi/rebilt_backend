@@ -161,27 +161,17 @@ const show = async (req, res) => {
 
 const update = async (req, res) => {
   try {
-    const { orderId } = req.params; // Verwacht orderId in de URL
+    const { orderId } = req.params;
     const { orderStatus } = req.body;
 
-    // Validatie van de velden
-    if (
-      !orderStatus ||
-      !lacesColor ||
-      !soleBottomColor ||
-      !soleTopColor ||
-      !insideColor ||
-      !outside1Color ||
-      !outside2Color ||
-      !outside3Color
-    ) {
+    // Alleen orderStatus verplicht maken
+    if (!orderStatus) {
       return res.status(400).json({
         status: "error",
         message: "Missing required fields.",
       });
     }
 
-    // Zoek de order op basis van orderId
     const order = await Order.findById(orderId);
 
     if (!order) {
@@ -191,10 +181,7 @@ const update = async (req, res) => {
       });
     }
 
-    // Werk de order bij
     order.orderStatus = orderStatus;
-
-    // Sla de gewijzigde order op
     await order.save();
 
     res.json({
