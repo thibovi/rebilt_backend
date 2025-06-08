@@ -49,6 +49,7 @@ const partnerSchema = new mongoose.Schema({
   metaDescription: { type: String, default: null }, // Meta description voor SEO
   seoImage: { type: String, default: null }, // URL van een afbeelding voor SEO
   allowPdfDownload: { type: Boolean, default: false }, // PDF van producten toestaan
+  allowOrders: { type: Boolean, default: false }, // Orders toestaan voor deze partner
 });
 
 const Partner = mongoose.model("Partner", partnerSchema);

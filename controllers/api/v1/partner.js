@@ -21,6 +21,7 @@ const create = async (req, res) => {
     package,
     domain,
     allowPdfDownload,
+    allowOrders,
     activeInactive,
     primary_color,
     secondary_color,
@@ -107,6 +108,7 @@ const create = async (req, res) => {
       package,
       domain,
       allowPdfDownload: allowPdfDownload || false,
+      allowOrders: allowOrders || false,
       activeInactive,
       primary_color,
       secondary_color,
@@ -250,6 +252,7 @@ const show = async (req, res) => {
           package: partner.package,
           domain: partner.domain,
           allowPdfDownload: partner.allowPdfDownload,
+          allowOrders: partner.allowOrders,
           activeInactive: partner.activeInactive,
           primary_color: partner.primary_color,
           secondary_color: partner.secondary_color,
@@ -308,6 +311,7 @@ const update = async (req, res) => {
       package,
       domain,
       allowPdfDownload,
+      allowOrders,
       activeInactive,
       primary_color,
       secondary_color,
@@ -402,6 +406,7 @@ const update = async (req, res) => {
     if (domain !== undefined) partner.domain = domain;
     if (allowPdfDownload !== undefined)
       partner.allowPdfDownload = allowPdfDownload;
+    if (allowOrders !== undefined) partner.allowOrders = allowOrders;
     if (activeInactive !== undefined) partner.activeInactive = activeInactive;
     if (primary_color !== undefined) partner.primary_color = primary_color;
     if (secondary_color !== undefined)

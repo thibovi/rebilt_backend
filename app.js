@@ -69,31 +69,6 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "dist")));
 
-// ✅ Middleware voor subdomeinen
-app.use(async (req, res, next) => {
-  try {
-    const host = req.headers["x-forwarded-host"] || req.headers.host;
-
-    // Haal het subdomein op (bijvoorbeeld "odettelunettes" van "odettelunettes.rebilt.be")
-    const subdomain = host.endsWith(".rebilt.be") ? host.split(".")[0] : null;
-
-    console.log(`🌐 Subdomein: ${subdomain}`);
-
-    if (subdomain) {
-      const partner = await PartnerModel.findOne({ domain: subdomain });
-      if (partner) {
-        console.log(`✅ Partner gevonden: ${partner.domain}`);
-        req.partner = partner;
-      } else {
-        console.log(`❌ Geen partner gevonden voor: ${subdomain}`);
-      }
-    }
-  } catch (err) {
-    console.error("❌ Fout bij ophalen van partner:", err);
-  }
-  next();
-});
-
 // ✅ Routers importeren
 const userRouter = require("./routes/api/v1/users");
 const productRouter = require("./routes/api/v1/products");

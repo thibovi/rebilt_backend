@@ -1,9 +1,13 @@
 const express = require("express");
 const router = express.Router();
-const orderController = require("../../../controllers/api/v1/order"); // Make sure this path is correct
+const orderController = require("../../../controllers/api/v1/order");
+const orderPaymentController = require("../../../controllers/api/v1/orderPayment"); // Voeg deze regel toe
 
 // Define your POST route
-router.post("/:productId", orderController.create); // Voeg :productId toe aan de route
+router.post("/:productId", orderController.create);
+
+// Route voor Stripe betaling van een order
+router.post("/:orderId/pay", orderPaymentController.createCheckoutSession); // <-- NIEUW
 
 // Similarly, define other routes like GET, PUT, DELETE
 router.get("/", orderController.index);

@@ -5,20 +5,6 @@ const mongoose = require("mongoose");
 
 const create = async (req, res) => {
   const {
-    lacesColor,
-    lacesTexture,
-    soleBottomColor,
-    soleBottomTexture,
-    soleTopColor,
-    soleTopTexture,
-    insideColor,
-    insideTexture,
-    outside1Color,
-    outside1Texture,
-    outside2Color,
-    outside2Texture,
-    outside3Color,
-    outside3Texture,
     firstName,
     lastName,
     email,
@@ -69,20 +55,6 @@ const create = async (req, res) => {
     // Maak een nieuwe bestelling aan
     const newOrder = new Order({
       productId: validProductId,
-      lacesColor,
-      lacesTexture,
-      soleBottomColor,
-      soleBottomTexture,
-      soleTopColor,
-      soleTopTexture,
-      insideColor,
-      insideTexture,
-      outside1Color,
-      outside1Texture,
-      outside2Color,
-      outside2Texture,
-      outside3Color,
-      outside3Texture,
       orderStatus: "pending", // Standaard status
       customer: {
         firstName,
@@ -183,23 +155,7 @@ const show = async (req, res) => {
 const update = async (req, res) => {
   try {
     const { orderId } = req.params; // Verwacht orderId in de URL
-    const {
-      orderStatus,
-      lacesColor,
-      lacesTexture,
-      soleBottomColor,
-      soleBottomTexture,
-      soleTopColor,
-      soleTopTexture,
-      insideColor,
-      insideTexture,
-      outside1Color,
-      outside1Texture,
-      outside2Color,
-      outside2Texture,
-      outside3Color,
-      outside3Texture,
-    } = req.body;
+    const { orderStatus } = req.body;
 
     // Validatie van de velden
     if (
@@ -230,20 +186,6 @@ const update = async (req, res) => {
 
     // Werk de order bij
     order.orderStatus = orderStatus;
-    order.lacesColor = lacesColor;
-    order.lacesTexture = lacesTexture;
-    order.soleBottomColor = soleBottomColor;
-    order.soleBottomTexture = soleBottomTexture;
-    order.soleTopColor = soleTopColor;
-    order.soleTopTexture = soleTopTexture;
-    order.insideColor = insideColor;
-    order.insideTexture = insideTexture;
-    order.outside1Color = outside1Color;
-    order.outside1Texture = outside1Texture;
-    order.outside2Color = outside2Color;
-    order.outside2Texture = outside2Texture;
-    order.outside3Color = outside3Color;
-    order.outside3Texture = outside3Texture;
 
     // Sla de gewijzigde order op
     await order.save();
@@ -288,10 +230,31 @@ const destroy = async (req, res) => {
   }
 };
 
+const updatePaymentStatus = async (
+  orderId,
+  status,
+  sessionId,
+  paymentIntentId
+) => {
+  try {
+    const order = await Order.findById(orderId);
+    if (!order) return null;
+    order.paymentStatus = status;
+    if (sessionId) order.stripeSessionId = sessionId;
+    if (paymentIntentId) order.stripePaymentIntentId = paymentIntentId;
+    await order.save();
+    return order;
+  } catch (err) {
+    console.error("Error updating payment status:", err);
+    return null;
+  }
+};
+
 module.exports = {
   create,
   index,
   show,
   update,
   destroy,
+  updatePaymentStatus,
 };
