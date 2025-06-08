@@ -4,7 +4,7 @@ const orderController = require("../../../controllers/api/v1/order");
 const orderPaymentController = require("../../../controllers/api/v1/orderPayment"); // Voeg deze regel toe
 
 // Define your POST route
-router.post("/:productId", orderController.create);
+router.post("/", orderController.create);
 
 // Route voor Stripe betaling van een order
 router.post("/:orderId/pay", orderPaymentController.create); // <-- NIEUW
