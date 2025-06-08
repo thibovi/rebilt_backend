@@ -215,6 +215,8 @@ const findByCode = async (req, res) => {
     }
 
     res.status(200).json({ status: "success", data: product });
+
+    console.log("✅ Product succesvol gevonden op code:", product.productCode);
   } catch (error) {
     res.status(500).json({
       status: "error",
