@@ -13,6 +13,8 @@ router.post("/:orderId/pay", orderPaymentController.create); // <-- NIEUW
 router.get("/", orderController.index);
 router.get("/:orderId", orderController.show);
 router.put("/:orderId", orderController.update);
+router.patch("/:orderId", orderController.update);
+
 router.delete("/:orderId", orderController.destroy);
 
 module.exports = router;

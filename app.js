@@ -30,10 +30,7 @@ const corsOptions = {
       "https://platform.rebilt.be",
       "https://rebilt-backend.onrender.com",
     ];
-
-    // Sta alle subdomeinen van rebilt.be toe
     const rebiltSubdomainRegex = /^https?:\/\/([a-z0-9-]+\.)?rebilt\.be$/;
-
     if (
       !origin ||
       allowedOrigins.includes(origin) ||
@@ -44,9 +41,9 @@ const corsOptions = {
       callback(new Error("Niet toegestane CORS-origin"));
     }
   },
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"], // PATCH toegevoegd!
   allowedHeaders: ["Content-Type", "Authorization"],
-  credentials: true, // Zorg ervoor dat credentials worden ondersteund
+  credentials: true,
 };
 
 // ✅ CORS middleware voor alle routes
