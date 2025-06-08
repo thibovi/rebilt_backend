@@ -13,20 +13,29 @@ const create = async (req, res) => {
     postalCode,
     city,
     message,
+    productId, // uit body!
+    productCode, // uit body!
+    orderConfig, // <-- toegevoegd!
+    // ...andere velden...
   } = req.body;
 
-  const productId = req.params.productId; // Haal productId uit de URL-parameter
+  // Zoek het product op basis van productId (MongoDB _id) of productCode
+  let product = null;
+  if (productId && mongoose.Types.ObjectId.isValid(productId)) {
+    product = await Product.findById(productId);
+  }
+  if (!product && productCode) {
+    product = await Product.findOne({ productCode });
+  }
+  if (!product) {
+    return res.status(400).json({
+      status: "error",
+      message: "Product niet gevonden (productId of productCode).",
+    });
+  }
 
-  // Valideer de verplichte velden
+  // Valideer de verplichte velden (pas aan naar jouw situatie)
   if (
-    !lacesColor ||
-    !soleBottomColor ||
-    !soleTopColor ||
-    !insideColor ||
-    !outside1Color ||
-    !outside2Color ||
-    !outside3Color ||
-    !productId ||
     !firstName ||
     !lastName ||
     !email ||
@@ -34,6 +43,7 @@ const create = async (req, res) => {
     !houseNumber ||
     !postalCode ||
     !city
+    // ...andere verplichte velden...
   ) {
     return res.status(400).json({
       status: "error",
@@ -41,21 +51,11 @@ const create = async (req, res) => {
     });
   }
 
-  // Valideer of productId een geldig ObjectId is
-  if (!mongoose.Types.ObjectId.isValid(productId)) {
-    return res.status(400).json({
-      status: "error",
-      message: "Invalid productId. It must be a valid 24-character hex string.",
-    });
-  }
-
   try {
-    const validProductId = new mongoose.Types.ObjectId(productId);
-
     // Maak een nieuwe bestelling aan
     const newOrder = new Order({
-      productId: validProductId,
-      orderStatus: "pending", // Standaard status
+      productId: product._id, // altijd een echte MongoDB _id opslaan!
+      orderStatus: "pending",
       customer: {
         firstName,
         lastName,
@@ -68,9 +68,10 @@ const create = async (req, res) => {
         },
         message,
       },
+      orderConfig: orderConfig, // <-- toegevoegd!
+      // ...andere velden...
     });
 
-    // Sla de bestelling op in de database
     await newOrder.save();
 
     res.status(201).json({
