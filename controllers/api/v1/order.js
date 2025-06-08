@@ -12,10 +12,12 @@ const create = async (req, res) => {
     houseNumber,
     postalCode,
     city,
+    country, // toegevoegd
+    phone, // toegevoegd
     message,
-    productId, // uit body!
-    productCode, // uit body!
-    orderConfig, // <-- toegevoegd!
+    productId,
+    productCode,
+    orderConfig,
     // ...andere velden...
   } = req.body;
 
@@ -34,7 +36,7 @@ const create = async (req, res) => {
     });
   }
 
-  // Valideer de verplichte velden (pas aan naar jouw situatie)
+  // Valideer de verplichte velden
   if (
     !firstName ||
     !lastName ||
@@ -42,7 +44,9 @@ const create = async (req, res) => {
     !street ||
     !houseNumber ||
     !postalCode ||
-    !city
+    !city ||
+    !country || // toegevoegd
+    !phone // toegevoegd
     // ...andere verplichte velden...
   ) {
     return res.status(400).json({
@@ -54,21 +58,23 @@ const create = async (req, res) => {
   try {
     // Maak een nieuwe bestelling aan
     const newOrder = new Order({
-      productId: product._id, // altijd een echte MongoDB _id opslaan!
+      productId: product._id,
       orderStatus: "pending",
       customer: {
         firstName,
         lastName,
         email,
+        phone, // toegevoegd
         address: {
           street,
           houseNumber,
           postalCode,
           city,
+          country, // toegevoegd
         },
         message,
       },
-      orderConfig: orderConfig, // <-- toegevoegd!
+      orderConfig: orderConfig,
       // ...andere velden...
     });
 
