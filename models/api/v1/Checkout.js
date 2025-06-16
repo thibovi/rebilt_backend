@@ -9,8 +9,7 @@ const CheckoutSchema = new mongoose.Schema({
   items: [
     {
       productId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Product",
+        type: String, // <-- maak dit een String!
         required: true,
       },
       quantity: { type: Number, required: true },
