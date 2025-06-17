@@ -28,13 +28,12 @@ const create = async (req, res) => {
 };
 
 // List all Options
-// List all Options
 const index = async (req, res) => {
   try {
     const options = await Option.find();
     res.status(200).json({
       status: "success",
-      data: { options }, // <-- Zet de array in een object met key 'options'
+      data: options,
     });
   } catch (error) {
     res.status(500).json({
